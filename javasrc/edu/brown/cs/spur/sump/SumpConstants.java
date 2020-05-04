@@ -17,6 +17,7 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import edu.brown.cs.ivy.jcomp.JcompControl;
 import edu.brown.cs.ivy.jcomp.JcompSymbol;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
+import edu.brown.cs.spur.rowel.RowelConstants.RowelMatch;
 
 import java.awt.Rectangle;
 import java.io.File;
@@ -124,7 +125,8 @@ interface SumpOperation extends SumpElement {
 }       // end of inner interface SumpOperation
 
 
-interface SumpParameter extends SumpElement {
+interface SumpParameter extends SumpElement, RowelMatch {
+
    SumpDataType getDataType();
    
 }       // end of inner interace SumpParameter

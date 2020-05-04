@@ -249,15 +249,13 @@ private void getValidWords()
 {
    english_words = new HashSet<>();
   
-   try {
-      BufferedReader br = new BufferedReader(new FileReader(WORDS_FILE));
+   try (BufferedReader br = new BufferedReader(new FileReader(WORDS_FILE))) {
       for ( ; ; ) {
          String ln = br.readLine();
          if (ln == null) break;
          if (ln.length() < 3) continue;      // skip short words                   
          english_words.add(ln.trim());
        }
-      br.close();
     }
    catch (IOException e) {
       IvyLog.logE("SWIFT","Problem processing words file",e);
@@ -301,8 +299,7 @@ private void outputResults()
 
 private void loadInput(String file)
 {
-   try {
-      BufferedReader br = new BufferedReader(new FileReader(file));
+   try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       document_counts = new HashMap<>();
       kgram_counts = new HashMap<>();
       boolean dokgrams = false;
@@ -324,7 +321,6 @@ private void loadInput(String file)
          if (dokgrams) kgram_counts.put(wd,ct);
          else document_counts.put(wd,ct);
        }
-      br.close();
     }
    catch (IOException e) { 
       IvyLog.logE("SWIFT","Problem reading saved IDF file",e);

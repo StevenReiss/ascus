@@ -40,10 +40,13 @@ import java.io.PrintWriter;
 import org.eclipse.jdt.core.dom.ASTNode;
 
 import edu.brown.cs.ivy.jcomp.JcompSymbol;
+import edu.brown.cs.ivy.file.IvyStringDiff;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
+import edu.brown.cs.spur.rowel.RowelConstants.RowelMatch;
+import edu.brown.cs.spur.rowel.RowelConstants.RowelMatchType;
 import edu.brown.cs.spur.sump.SumpConstants.SumpParameter;
 
-class SumpElementParameter extends SumpElementBase implements SumpParameter
+class SumpElementParameter extends SumpElementBase implements SumpParameter, RowelMatch
 {
 
 
@@ -92,6 +95,23 @@ SumpElementParameter(SumpModelBase mdl,JcompSymbol js,ASTNode n)
    return param_type;
 }
 
+
+/********************************************************************************/
+/*                                                                              */
+/*      Match methods                                                           */
+/*                                                                              */
+/********************************************************************************/
+
+@Override public double getMatchScore(RowelMatch rm,RowelMatchType mt)
+{
+   if (rm instanceof SumpElementParameter) {
+      SumpElementParameter sep = (SumpElementParameter) rm;
+      if (!SumpMatcher.matchType(getDataType(),sep.getDataType())) return 0;
+      return 1 + IvyStringDiff.normalizedStringDiff(getName(),sep.getName());  
+    }
+   
+   return 0;
+}
 
 /********************************************************************************/
 /*                                                                              */

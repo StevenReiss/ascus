@@ -35,8 +35,11 @@
 
 package edu.brown.cs.spur.scrap;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -80,6 +83,18 @@ boolean isUsed(ScrapComponent cc)
 {
    return used_components.contains(cc);
 }
+
+
+<T extends ScrapComponent> List<T> removeUsed(Collection<T> orig)
+{
+   List<T> rslt =  new ArrayList<>();
+   for (T sc : orig) {
+      if (!isUsed(sc)) rslt.add(sc);
+    }
+   
+   return rslt;
+}
+
 
 
 ScrapComponent getMapping(ScrapComponent cc) 

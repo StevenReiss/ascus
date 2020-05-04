@@ -59,6 +59,7 @@ import edu.brown.cs.cose.cosecommon.CoseConstants;
 import edu.brown.cs.cose.cosecommon.CoseResult;
 import edu.brown.cs.cose.cosecommon.CoseScores;
 import edu.brown.cs.spur.lids.LidsFinder;
+import edu.brown.cs.spur.rowel.RowelMatcher;
 import edu.brown.cs.spur.lids.LidsConstants.LidsLibrary;
 import edu.brown.cs.spur.sump.SumpConstants;
 import edu.brown.cs.spur.sump.SumpData;
@@ -135,12 +136,22 @@ ScrapPackageAbstraction(ScrapAbstractor abs,CoseResult cr,CompilationUnit cu)
    ScrapMergeData md = new ScrapMergeData();
    
    RowelMatcher<PackageClass> rm = new RowelMatcher<>(use_classes,spa.use_classes);
+   Map<PackageClass,PackageClass> map = rm.bestMatch(MatchType.MATCH_EXACT);
+   for (Map.Entry<PackageClass,PackageClass> ent : map.entrySet()) {
+      md.addMapping(ent.getKey(),ent.getValue());
+    }
+    
+   rm = new RowelMatcher<>(md.removeUsed(all_classes),md.removeUsed(spa.all_classes));
+   map = rm.bestMatch(MatchType.MATCH_EXACT);
    
-   matchItems(use_classes,spa.use_classes,md,true,false);
-   matchItems(use_classes,spa.use_classes,md,false,false);
-   matchItems(all_classes,spa.all_classes,md,false,false);
-   matchItems(use_classes,spa.use_classes,md,false,true);
-   
+   rm = new RowelMatcher<>(md.removeUsed(use_classes),md.removeUsed(spa.use_classes));
+   map = rm.bestMatch(MatchType.MATCH_APPROXIMATE);
+   // 
+   // matchItems(use_classes,spa.use_classes,md,true,false);
+   // matchItems(use_classes,spa.use_classes,md,false,false);
+   // matchItems(all_classes,spa.all_classes,md,false,false);
+   // matchItems(use_classes,spa.use_classes,md,false,true);
+   // 
    if (!checkForMatch(md,spa)) return false;
    
    String p1 = spa.getCoseResult().getSource().getProjectId();

@@ -47,6 +47,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import edu.brown.cs.ivy.file.IvyStringDiff;
+import edu.brown.cs.spur.rowel.RowelMatcher;
 
 class SumpMatcher implements SumpConstants
 {
@@ -426,7 +427,7 @@ private boolean matchAttribute(SumpAttribute base,SumpAttribute pat)
 }
 
 
-private boolean matchType(SumpDataType base,SumpDataType pat)
+static boolean matchType(SumpDataType base,SumpDataType pat)
 {
    // check for OBJECT in pattern or base? 
    
@@ -455,26 +456,32 @@ private Map<String,String> matchOperation(SumpOperation base,SumpOperation pat)
    Collection<SumpParameter> psps = pat.getParameters();
    if (bsps.size() != psps.size()) return null;
    
-   Set<SumpParameter> done = new HashSet<>();
-   for (SumpParameter pp : psps) {
-      // match with best based on name mapping
-      SumpParameter best = null;
-      double bestval = 0;
-      for (SumpParameter bp : bsps) {
-         if (done.contains(bp)) continue;
-         if (matchType(pp.getDataType(),bp.getDataType())) {
-            double v = IvyStringDiff.normalizedStringDiff(pp.getName(),bp.getName());
-            if (best == null || v > bestval) {
-               best = bp;
-               bestval = v;
-             }
-          }
-       }
-      if (best == null) return null;
-      namemap.put(best.getFullName(),pp.getFullName());
-      // add name mapping here
-      done.add(best);
+   RowelMatcher<SumpParameter> rm = new RowelMatcher<>(bsps,psps);
+   Map<SumpParameter,SumpParameter> map = rm.bestMatch(null);
+   for (Map.Entry<SumpParameter,SumpParameter> ent : map.entrySet()) {
+      namemap.put(ent.getKey().getFullName(),ent.getValue().getFullName());
     }
+ 
+   // Set<SumpParameter> done = new HashSet<>();
+   // for (SumpParameter pp : psps) {
+   // match with best based on name mapping
+      // SumpParameter best = null;
+      // double bestval = 0;
+      // for (SumpParameter bp : bsps) {
+         // if (done.contains(bp)) continue;
+         // if (matchType(pp.getDataType(),bp.getDataType())) {
+            // double v = IvyStringDiff.normalizedStringDiff(pp.getName(),bp.getName());
+            // if (best == null || v > bestval) {
+               // best = bp;
+               // bestval = v;
+             // }
+          // }
+       // }
+      // if (best == null) return null;
+      // namemap.put(best.getFullName(),pp.getFullName());
+      // add name mapping here
+      // done.add(best);
+    // }
    
    return namemap;
 }
