@@ -1,0 +1,63 @@
+@Ascus(source="/github.com/d3adspace/mantikor/blob/1f3d549e21ce7491a0b7ca4385c7609f0e6ed27c/server/src/main/java/de/d3adspace/mantikor/server/connection/MantikorConnection.java@0:0")
+@Ascus(library="io.netty:netty-all")
+@Ascus(keywords={"@embedded","@web","server"})
+@Ascus(keyterms={"server","request","ftp","@web","uri","url","routing","application","port","response","@embedded","property","http","callback","https"})
+package edu.brown.cs.SAMPLE;
+
+import edu.brown.cs.sump.annot.Ascus;
+import edu.brown.cs.sump.annot.AscusPackage;
+import edu.brown.cs.sump.annot.AscusClass;
+
+@AscusPackage
+public interface MantikorConnection {
+
+
+/**
+ * Wrapper around HTTP headers.
+ */
+@AscusClass(uses={Builder.class})
+class HttpHeaders {
+   private Map<Map,Map> headers;
+}
+
+@AscusClass
+class HttpRequestLine {
+   private HttpMethod method;
+   private HttpVersion version;
+}
+
+@AscusClass(uses={HttpHeaders.class})
+abstract class Builder {
+   public abstract HttpResponse build();
+   public abstract Builder withStatus(HttpStatus status);
+   public abstract Builder withVersion(HttpVersion version);
+}
+
+@AscusClass
+class HttpBody {
+   private char[] content;
+}
+
+@AscusClass(uses={HttpRequestProcessor.class})
+class MantikorConnection {
+}
+
+@AscusClass
+interface HttpRequestProcessor {
+   HttpResponse processRequest(HttpRequest request);
+}
+
+@AscusClass(uses={HttpHeaders.class,HttpBody.class})
+abstract class HttpMessage {
+   public HttpMessage(HttpHeaders headers,HttpBody body) { }
+   public abstract HttpBody getBody();
+   public abstract HttpHeaders getHeaders();
+}
+
+@AscusClass
+class HttpStatusLine {
+   private HttpVersion version;
+   private HttpStatus status;
+}
+
+}

@@ -1,0 +1,16 @@
+<project name='cose' default='all' >
+
+
+   <target name='all'>
+      <ant antfile="build.xml" dir="edu/brown/cs/spur/annot" />
+      <ant antfile="build.xml" dir="edu/brown/cs/spur/rowel" />
+      <ant antfile="build.xml" dir="edu/brown/cs/spur/lids" />
+      <ant antfile="build.xml" dir="edu/brown/cs/spur/swift" />
+      <ant antfile="build.xml" dir="edu/brown/cs/spur/sump" />
+      <ant antfile="build.xml" dir="edu/brown/cs/spur/etch" />
+      <ant antfile="build.xml" dir="edu/brown/cs/spur/scrap" />
+   </target>
+
+
+</project>
+

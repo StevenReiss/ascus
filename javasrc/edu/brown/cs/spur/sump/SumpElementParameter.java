@@ -1,0 +1,138 @@
+/********************************************************************************/
+/*                                                                              */
+/*              SumpElementParameter.java                                       */
+/*                                                                              */
+/*      UML parameter representation                                            */
+/*                                                                              */
+/********************************************************************************/
+/*      Copyright 2013 Brown University -- Steven P. Reiss                    */
+/*********************************************************************************
+ *  Copyright 2013, Brown University, Providence, RI.                            *
+ *                                                                               *
+ *                        All Rights Reserved                                    *
+ *                                                                               *
+ *  Permission to use, copy, modify, and distribute this software and its        *
+ *  documentation for any purpose other than its incorporation into a            *
+ *  commercial product is hereby granted without fee, provided that the          *
+ *  above copyright notice appear in all copies and that both that               *
+ *  copyright notice and this permission notice appear in supporting             *
+ *  documentation, and that the name of Brown University not be used in          *
+ *  advertising or publicity pertaining to distribution of the software          *
+ *  without specific, written prior permission.                                  *
+ *                                                                               *
+ *  BROWN UNIVERSITY DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS                *
+ *  SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND            *
+ *  FITNESS FOR ANY PARTICULAR PURPOSE.  IN NO EVENT SHALL BROWN UNIVERSITY      *
+ *  BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY          *
+ *  DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,              *
+ *  WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS               *
+ *  ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE          *
+ *  OF THIS SOFTWARE.                                                            *
+ *                                                                               *
+ ********************************************************************************/
+
+
+
+package edu.brown.cs.spur.sump;
+
+import java.io.PrintWriter;
+
+import org.eclipse.jdt.core.dom.ASTNode;
+
+import edu.brown.cs.ivy.jcomp.JcompSymbol;
+import edu.brown.cs.ivy.xml.IvyXmlWriter;
+import edu.brown.cs.spur.sump.SumpConstants.SumpParameter;
+
+class SumpElementParameter extends SumpElementBase implements SumpParameter
+{
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Private Storage                                                         */
+/*                                                                              */
+/********************************************************************************/
+
+private SumpDataType    param_type;
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Constructors                                                            */
+/*                                                                              */
+/********************************************************************************/
+
+SumpElementParameter(SumpModelBase mdl,JcompSymbol js,ASTNode n)
+{
+   super(mdl);
+   setAccess(js.getModifiers());
+   setName(js.getName());
+   param_type = new SumpDataType(js.getType(),n);
+   addCommentsFor(n);
+}
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Abstract Method Implementations                                         */
+/*                                                                              */
+/********************************************************************************/
+
+@Override public ElementType getElementType()
+{
+   return ElementType.PARAMETER;
+}
+
+
+
+@Override public SumpDataType getDataType()
+{
+   return param_type;
+}
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Output Methods                                                          */
+/*                                                                              */
+/********************************************************************************/
+
+@Override void outputXml(IvyXmlWriter xw)
+{
+   xw.begin("PARAMETER");
+   basicXml(xw);
+   if (param_type != null) param_type.outputXml("TYPE",xw);
+   xw.end("PARAMETER");
+}
+
+
+@Override void outputJava(PrintWriter pw)
+{
+   outputComment(pw);
+   
+   if (param_type != null) param_type.outputJava(pw);
+   else pw.print("Object");
+   pw.print(" " + getName());
+}
+
+
+@Override void setupJava()
+{
+   if (param_type != null) {
+      if (param_type.getName().contains("SocketChannel"))
+         System.err.println("CHECK HERE");
+      param_type.setupJava(getData());
+    }
+}
+
+
+
+}       // end of class SumpElementParameter
+
+
+
+
+/* end of SumpElementParameter.java */
+

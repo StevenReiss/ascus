@@ -1,0 +1,18 @@
+<project name='edu.brown.cs.spr.sample.httpserver' default='all' >
+
+     <path id='spr.classpath'>
+	<pathelement location='/research/people/spr/spur/java' />
+	<pathelement location='/research/people/spr/spur/javasrc' />
+	<pathelement location='/research/ivy/java' />
+	<fileset dir='/pro/bubbles/lib/' includes='junit.jar' />
+     </path>
+
+     <target name='compile'>
+	<javac srcdir='.' destdir='/research/people/spr/spur/java' debug='on' deprecation='on' includeantruntime='false'>
+	   <classpath refid='spr.classpath' />
+	</javac>
+     </target>
+
+     <target name='all' depends='compile' />
+
+</project>

@@ -1,0 +1,33 @@
+<project name='spur' default='jar'>
+
+   <path id='spur.classpath'>
+      <pathelement location='java' />
+      <pathelement location='/pro/ivy/lib/ivy.jar' />
+   </path>
+
+   <target name='clean'>
+     <delete dir='java'/>
+   </target>
+
+   <path id='jdocsrc'>
+      <pathelement location='./javasrc' />
+    </path>
+
+   <target name='doc'>
+      <ant antfile='build.xml' dir='javasrc' target='doc' />
+      <zip zipfile='lib/apidoc.zip' basedir='doc' />
+   </target>
+
+   <target name='all'>
+      <ant antfile='build.xml' dir='javasrc' />
+   </target>
+
+   <target name='jar' depends='all' >
+      <jar destfile='spur.jar'>
+	 <fileset dir='./java' includes='**/*.class' />
+      </jar>
+      <copy file='spur.jar' tofile='/pro/s6/lib/spur.jar' verbose='true' />
+   </target>
+
+</project>
+

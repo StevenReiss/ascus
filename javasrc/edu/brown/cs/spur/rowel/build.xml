@@ -1,0 +1,54 @@
+<project name='spur.rowel' default='compile'>
+
+   <property name='PRO' value='/pro' />
+   <property name='SPUR' value='/research/people/spr/spur' />
+   <property name='SPURLIB' value='/research/people/spr/spur/lib' />
+   <property name='IVY' value='${PRO}/ivy/java' />
+   <property name='IVYLIB' value='${PRO}/ivy/lib' />
+   <property name='S6' value='${PRO}/s6/java' />
+   <property name='COSE' value='/research/people/spr/cose' />
+
+
+   <path id='spur.classpath'>
+      <pathelement location='${SPUR}/java' />
+      <pathelement location='${IVY}' />
+      <pathelement location='${IVYLIB}/jsoup.jar' />
+      <pathelement location='${IVYLIB}/json.jar' />
+      <pathelement location='${IVYLIB}/junit.jar' />
+      <fileset dir='${PRO}/ivy/lib/' includes='asm6.jar' />
+      <fileset dir='${PRO}/ivy/lib/eclipsejar' includes='*.jar' />
+      <pathelement location='${COSE}/java' />
+      <pathelement location='${S6}' />
+   </path>
+   <path id='test.classpath'>
+      <pathelement location='${SPUR}/java' />
+      <pathelement location='${IVY}' />
+      <pathelement location='${IVYLIB}/jsoup.jar' />
+      <pathelement location='${IVYLIB}/json.jar' />
+      <pathelement location='${IVYLIB}/junit.jar' />
+      <fileset dir='${PRO}/ivy/lib/' includes='asm6.jar' />
+      <fileset dir='${PRO}/ivy/lib/eclipsejar' includes='*.jar' />
+      <pathelement location='${COSE}/java' />
+      <pathelement location='${S6}' />
+   </path>
+
+   <target name='compile'>
+      <javac srcdir='.' destdir='${SPUR}/java' debug='on' deprecation='on'
+		includeantruntime='false'>
+	 <classpath refid='spur.classpath' />
+      </javac>
+   </target>
+
+     <target name='test' depends='compile'>
+	<java classname='edu.brown.cs.spur.rowel.RowelMain' fork='true'>
+	   <classpath refid='testr.classpath' />
+	   <arg value='-t' />
+	   <arg value='/research/people/spr/spur/samples/HttpServerTest.java' />
+	   <arg value='httpserver' />
+	   <arg value='httpurlconnection' />
+	 </java>
+      </target>
+
+</project>
+
+

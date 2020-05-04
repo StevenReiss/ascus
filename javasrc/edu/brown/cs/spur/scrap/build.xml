@@ -1,0 +1,41 @@
+<project name='spur.scrap' default='compile'>
+
+   <property name='PRO' value='/pro' />
+   <property name='COSE' value='/research/people/spr/cose' />
+   <property name='SPUR' value='/research/people/spr/spur' />
+   <property name='SPURLIB' value='/research/people/spr/spur/lib' />
+   <property name='IVY' value='${PRO}/ivy/java' />
+   <property name='IVYLIB' value='${PRO}/ivy/lib' />
+
+
+   <path id='spur.classpath'>
+      <pathelement location='${SPUR}/java' />
+      <pathelement location='${IVY}' />
+      <pathelement location='${IVYLIB}/jsoup.jar' />
+      <pathelement location='${IVYLIB}/json.jar' />
+      <pathelement location='${IVYLIB}/junit.jar' />
+      <pathelement location='${COSE}/java' />
+      <pathelement location='${SPUR}/lib/jtar-1.1.jar'  />
+      <fileset dir='${PRO}/ivy/lib/' includes='asm6.jar' />
+      <fileset dir='${PRO}/ivy/lib/eclipsejar' includes='*.jar' />
+   </path>
+   <path id='test.classpath'>
+      <pathelement location='${SPUR}/java' />
+      <pathelement location='${IVY}' />
+      <pathelement location='${IVYLIB}/jsoup.jar' />
+      <pathelement location='${IVYLIB}/json.jar' />
+      <pathelement location='${IVYLIB}/junit.jar' />
+      <fileset dir='${PRO}/ivy/lib/' includes='asm6.jar' />
+      <fileset dir='${PRO}/ivy/lib/eclipsejar' includes='*.jar' />
+   </path>
+
+   <target name='compile'>
+      <javac srcdir='.' destdir='${SPUR}/java' debug='on' deprecation='on'
+		includeantruntime='false'>
+	 <classpath refid='spur.classpath' />
+      </javac>
+   </target>
+
+</project>
+
+
