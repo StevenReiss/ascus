@@ -41,6 +41,7 @@ import java.util.Map;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
@@ -74,7 +75,7 @@ private Map<String,String>      name_map;
 EtchTransformRename(Map<String,String> namemap)
 {
    super("Rename");
-   name_map = namemap;
+   name_map = new HashMap<>(namemap);
    for (Iterator<String> it = name_map.keySet().iterator(); it.hasNext(); ) {
       String k = it.next();
       String v = name_map.get(k);
@@ -109,7 +110,7 @@ EtchTransformRename(Map<String,String> namemap)
 
 private NameMapper findMappings(ASTNode cu,SumpModel target)
 {
-   NameMapper mapper = new NameMapper();
+   NameMapper mapper = new NameMapper(target);
    FindNameVisitor fnv = new FindNameVisitor(mapper);
    cu.accept(fnv);
    if (mapper.isEmpty()) return null;
@@ -165,13 +166,15 @@ private class FindNameVisitor extends ASTVisitor {
 /********************************************************************************/
 
 private class NameMapper extends EtchMapper {
-
+ 
+   private SumpModel target_model;
    private Map<JcompSymbol,String> sym_mapping;
    private String from_prefix;
    private String to_prefix;
    
-   NameMapper() {
+   NameMapper(SumpModel tgt) {
       super(EtchTransformRename.this);
+      target_model = tgt;
       sym_mapping = new HashMap<>();
       from_prefix = null;
       to_prefix = null;
@@ -194,32 +197,37 @@ private class NameMapper extends EtchMapper {
    @Override void rewriteTree(ASTNode orig,ASTRewrite rw) {
       JcompSymbol js = JcompAst.getDefinition(orig);
       if (js != null) {
-	 String newname = sym_mapping.get(js);
-	 if (newname == null && js.getName().equals("<init>")) {
-	    for (ASTNode p = orig; p != null; p = p.getParent()) {
-	       if (p instanceof TypeDeclaration) {
-		  JcompSymbol tjs = JcompAst.getDefinition(p);
-		  newname = sym_mapping.get(tjs);
-		  break;
-		}
-	     }
-            
-	  }
-	 if (newname != null) {
-	    rewriteName(orig,rw,newname);
-	  }
+         String newname = sym_mapping.get(js);
+         if (newname == null && js.getName().equals("<init>")) {
+            for (ASTNode p = orig; p != null; p = p.getParent()) {
+               if (p instanceof TypeDeclaration) {
+                  JcompSymbol tjs = JcompAst.getDefinition(p);
+                  newname = sym_mapping.get(tjs);
+                  break;
+                }
+             }
+          }
+         if (newname != null) {
+            rewriteName(orig,rw,newname);
+          }
        }
       js = JcompAst.getReference(orig);
       if (js != null) {
-	 String newname = sym_mapping.get(js);
-	 if (newname != null) {
-	    rewriteName(orig,rw,newname);
-	  }
+         String newname = sym_mapping.get(js);
+         if (newname != null) {
+            rewriteName(orig,rw,newname);
+          }
        }
       if (orig instanceof PackageDeclaration) {
-         // rewrite package
+         PackageDeclaration pd = (PackageDeclaration) orig;
+         String nm = pd.getName().getFullyQualifiedName();
+         String rnm = target_model.getPackage().getFullName();
+         if (rnm != null) {
+            Name n = JcompAst.getQualifiedName(rw.getAST(),rnm);
+            rw.set(pd,PackageDeclaration.NAME_PROPERTY,n,null);
+          }
        }
-    }
+   }
    
    private void rewriteName(ASTNode nd,ASTRewrite rw,String name) {
       if (nd instanceof SimpleName) {

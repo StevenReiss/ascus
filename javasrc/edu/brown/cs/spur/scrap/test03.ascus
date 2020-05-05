@@ -110,13 +110,13 @@ interface WriteFinishListener {
 
 @AscusClass
 interface ReadListener {
-   void onReadFinished(SocketChannel socketChannel,RequestParser parser);
+   void onReadFinished(SocketChannel channel,RequestParser parser);
 }
 
 @AscusClass
 interface WriteListener {
    void onWrite(SocketChannel s,byte[] b);
-   void onWriteStream(SocketChannel s,byte[] data,InputStream is,int len);
+   void onWriteStream(SocketChannel s,byte[] data,InputStream is,long len);
 }
 
 }

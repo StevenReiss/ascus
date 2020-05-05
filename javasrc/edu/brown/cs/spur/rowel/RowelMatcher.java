@@ -112,6 +112,10 @@ public RowelMatcher(Collection<T> src,Collection<T> tgt)
 
 public Map<T,T> bestMatch(RowelMatchType mt)
 {
+   Map<T,T> rslt = new HashMap<>();
+   
+   if (source_set.isEmpty() || target_set.isEmpty()) return rslt;
+   
    setup(mt);
    
    reduce();
@@ -125,7 +129,6 @@ public Map<T,T> bestMatch(RowelMatchType mt)
       w = fetchUnmatchedWorker();
     }
    
-   Map<T,T> rslt = new HashMap<>();
    for (w = 0; w < row_count; ++w) {
       int j = match_job_by_worker[w];
       if (j >= 0 && j < col_count) {

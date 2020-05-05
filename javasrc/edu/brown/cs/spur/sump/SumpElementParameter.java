@@ -71,6 +71,7 @@ SumpElementParameter(SumpModelBase mdl,JcompSymbol js,ASTNode n)
    super(mdl);
    setAccess(js.getModifiers());
    setName(js.getName());
+   setFullName(js.getCompleteName());
    param_type = new SumpDataType(js.getType(),n);
    addCommentsFor(n);
 }

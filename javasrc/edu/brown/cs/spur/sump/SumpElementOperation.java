@@ -74,7 +74,7 @@ SumpElementOperation(SumpModelBase mdl,JcompSymbol js,ASTNode n)
    super(mdl);
    setAccess(js.getModifiers());
    setName(js.getName());
-   setFullName(js.getFullName());
+   setFullName(js.getCompleteName());
    return_type = new SumpDataType(js.getType().getBaseType(),n);
    param_values = null;
    MethodDeclaration md = (MethodDeclaration) js.getDefinitionNode();
@@ -118,6 +118,8 @@ SumpElementOperation(SumpModelBase mdl,JcompSymbol js,ASTNode n)
 {
    return new ArrayList<>(param_values);
 }
+
+
 
 @Override public int getParameterIndex(SumpParameter sp)
 {

@@ -204,7 +204,7 @@ private double matchClasses(SumpModel base,SumpModel pat,
    double bestscore = 0;
    SumpClass bestcls = null;
  
-   for (ScoredClass sccls : ms.getToClasses(5)) {
+   for (ScoredClass sccls : ms.getToClasses(4)) {
       SumpClass sc = sccls.getSumpClass();
       // System.err.println("MAP " + ms.getFromClass() + " ->  " + sc);
 
