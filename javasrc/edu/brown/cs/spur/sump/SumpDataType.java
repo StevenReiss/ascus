@@ -64,15 +64,22 @@ SumpDataType(JcompType jt,ASTNode n)
 /*                                                                              */
 /********************************************************************************/
 
-String getName()                
+public String getName()                
 {
    return type_name;
 }
 
-SumpArgType getArgType()
+public SumpArgType getArgType()
 {
    return arg_type;
 }
+
+
+public JcompType getBaseType()
+{
+   return base_type; 
+}
+
 
 
 

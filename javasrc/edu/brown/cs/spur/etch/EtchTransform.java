@@ -35,20 +35,36 @@
 
 package edu.brown.cs.spur.etch;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.Assignment;
+import org.eclipse.jdt.core.dom.CastExpression;
 import org.eclipse.jdt.core.dom.ChildPropertyDescriptor;
+import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.ExpressionStatement;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.ReturnStatement;
+import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.StructuralPropertyDescriptor;
+import org.eclipse.jdt.core.dom.Type;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import edu.brown.cs.cose.cosecommon.CoseResult;
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompControl;
 import edu.brown.cs.ivy.jcomp.JcompProject;
-
+import edu.brown.cs.ivy.jcomp.JcompType;
+import edu.brown.cs.spur.sump.SumpDataType;
+import edu.brown.cs.spur.sump.SumpConstants.SumpClass;
 import edu.brown.cs.spur.sump.SumpConstants.SumpModel;
+import edu.brown.cs.spur.sump.SumpConstants.SumpOperation;
+import edu.brown.cs.spur.sump.SumpConstants.SumpParameter;
 
 abstract class EtchTransform implements EtchConstants
 {
@@ -204,6 +220,126 @@ private static class TreeCopy {
     }
    
 }	// end of subclass TreeCopy   
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Handle type conversions                                                 */
+/*                                                                              */
+/********************************************************************************/
+
+protected Statement createCast(AST ast,String nm,JcompType typ,String onm,JcompType otyp)
+{
+   // needs to be extended to handle more complex mappings
+   //           File <-> String <-> CharSequence
+   //           Date <-> Sql Date,TimeStamp
+   //           URL <-> URI
+   //           AWT Shapes
+   //           Collection types
+   //           number <-> enum
+   //           Reader,Writer <-> Streams
+   //           Enum <-> Iterator
+   //           Exceptions
+   // look for getter methods in source type returning target type
+   
+   Assignment as = ast.newAssignment();
+   SimpleName lhs = JcompAst.getSimpleName(ast,nm);
+   as.setLeftHandSide(lhs);
+   CastExpression cast = ast.newCastExpression();
+   cast.setType(typ.createAstNode(ast));
+   cast.setExpression(JcompAst.getSimpleName(ast,onm));
+   as.setRightHandSide(cast);
+   ExpressionStatement est = ast.newExpressionStatement(as);
+   return est;
+}
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Create emtpy classes and methods                                        */
+/*                                                                              */
+/********************************************************************************/
+
+@SuppressWarnings("unchecked")
+protected TypeDeclaration createDummyClass(AST ast,SumpClass sc)
+{
+   TypeDeclaration td = ast.newTypeDeclaration();
+   if (sc.isInterface()) td.setInterface(true);
+   
+   td.setName(JcompAst.getSimpleName(ast,sc.getName()));
+   if (sc.getSuperClass() != null) {
+      // add super class
+    }
+   Collection<SumpClass> ints = sc.getInterfaces();
+   if (ints != null && !ints.isEmpty()) {
+      // add interfaces
+    }
+   
+   for (SumpOperation op : sc.getOperations()) {
+      MethodDeclaration md = createDummyMethod(ast,op);
+      td.bodyDeclarations().add(md);
+    }
+   
+   return td;
+}
+
+@SuppressWarnings("unchecked")
+protected MethodDeclaration createDummyMethod(AST ast,SumpOperation op)
+{
+   SumpDataType sdt = op.getReturnType();
+   
+   MethodDeclaration md = ast.newMethodDeclaration();
+   if (op.getName().equals("<init>")) {
+      md.setConstructor(true);
+      String fnm = op.getFullName();
+      int idx = fnm.lastIndexOf(".");
+      String cnm = fnm.substring(0,idx);
+      int idx1 = fnm.lastIndexOf(".");
+      md.setName(JcompAst.getSimpleName(ast,cnm.substring(idx1+1)));
+      sdt = null;
+    }
+   else {
+      md.setName(JcompAst.getSimpleName(ast,op.getName()));
+      Type t = sdt.getBaseType().createAstNode(ast);
+      md.setReturnType2(t);
+    }
+   
+   for (SumpParameter sp : op.getParameters()) {
+      SingleVariableDeclaration svd = ast.newSingleVariableDeclaration();
+      svd.setName(JcompAst.getSimpleName(ast,sp.getName()));
+      JcompType jt = sp.getDataType().getBaseType();
+      Type t = jt.createAstNode(ast);
+      svd.setType(t);
+      md.parameters().add(svd);
+    }
+   
+   if (sdt != null && !sdt.getName().equals("void")) {
+      Expression ret = null;
+      switch (sdt.getArgType()) {
+         case BOOLEAN :
+           ret = ast.newBooleanLiteral(false);
+           break;
+         case NUMBER :
+           if (sdt.getBaseType().isEnumType()) ret = ast.newNullLiteral();
+           else ret = ast.newNumberLiteral("0");
+           break;
+         case VOID :
+            break;
+         default :
+            ret = ast.newNullLiteral();
+            break;
+       }
+      if (ret != null) {
+         ReturnStatement rets = ast.newReturnStatement();
+         rets.setExpression(ret);
+         md.getBody().statements().add(rets);
+       }
+    }
+   
+   return md;
+}
 
 
 

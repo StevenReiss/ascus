@@ -38,6 +38,7 @@ package edu.brown.cs.spur.sump;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -59,7 +60,7 @@ class SumpElementOperation extends SumpElementBase implements SumpOperation
 /********************************************************************************/
 
 private SumpDataType return_type;
-private Collection<SumpElementParameter> param_values;
+private List<SumpElementParameter> param_values;
 
 
 /********************************************************************************/
@@ -117,6 +118,13 @@ SumpElementOperation(SumpModelBase mdl,JcompSymbol js,ASTNode n)
 {
    return new ArrayList<>(param_values);
 }
+
+@Override public int getParameterIndex(SumpParameter sp)
+{
+   if (param_values == null) return -1;
+   return param_values.indexOf(sp);
+}
+
 
 
 /********************************************************************************/

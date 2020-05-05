@@ -122,6 +122,7 @@ interface SumpOperation extends SumpElement {
    SumpDataType getReturnType();
    Collection<SumpParameter> getParameters();
    ElementAccess getAccess();
+   int getParameterIndex(SumpParameter sp);
 }       // end of inner interface SumpOperation
 
 

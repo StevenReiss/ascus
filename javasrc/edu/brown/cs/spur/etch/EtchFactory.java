@@ -89,12 +89,13 @@ public CoseResult fixNames(CoseResult orig,Map<String,String> namemap)
    
    work = renamer.transform(work,target_model);
    
-   // fix data types to match model types for parameters and fields
+   EtchTransformFixParameters paramfix = new EtchTransformFixParameters(namemap);
    
-   // fix parameter order
+   work = paramfix.transform(work,target_model);
    
-   // add any new methods and classes (things not matched)
+   EtchTransformAddMissing addmissing = new EtchTransformAddMissing(namemap);
    
+   work = addmissing.transform(work,target_model);
    
    return work;
 }
