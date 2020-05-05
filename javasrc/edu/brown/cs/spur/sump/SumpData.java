@@ -111,7 +111,7 @@ public void addLibrary(String lib)
 
 public void addSource(CoseSource src)
 {
-   source_set.add(src.toString());
+   source_set.add(src.getName());
 }
 
 

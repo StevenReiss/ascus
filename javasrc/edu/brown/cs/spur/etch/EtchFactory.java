@@ -93,6 +93,8 @@ public CoseResult fixNames(CoseResult orig,Map<String,String> namemap)
    
    work = paramfix.transform(work,target_model);
    
+   // need to change return types 
+   
    EtchTransformAddMissing addmissing = new EtchTransformAddMissing(namemap);
    
    work = addmissing.transform(work,target_model);
