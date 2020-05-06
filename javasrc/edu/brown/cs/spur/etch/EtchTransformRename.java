@@ -220,7 +220,6 @@ private class NameMapper extends EtchMapper {
        }
       if (orig instanceof PackageDeclaration) {
          PackageDeclaration pd = (PackageDeclaration) orig;
-         String nm = pd.getName().getFullyQualifiedName();
          String rnm = target_model.getPackage().getFullName();
          if (rnm != null) {
             Name n = JcompAst.getQualifiedName(rw.getAST(),rnm);

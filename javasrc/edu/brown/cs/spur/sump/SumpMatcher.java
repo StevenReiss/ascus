@@ -153,6 +153,8 @@ private SortedSet<MatchSet> setupClassMatchings(SumpModel base,SumpModel pat)
       for (SumpClass bcls : base.getPackage().getClasses()) {
          Map<String,String> namemap = new HashMap<>();
          double score = containsClass(bcls,cls,namemap);
+         double nmscore = IvyStringDiff.normalizedStringDiff(cls.getName(),bcls.getName());
+         score = score * 0.8 + nmscore * 0.2;
          if (score >= CLASS_CUTOFF) {
             ms.addMatch(bcls,score,namemap);
           }
@@ -222,6 +224,9 @@ private double matchClasses(SumpModel base,SumpModel pat,
       double rscore = matchClasses(base,pat,nsets,nmap,score,max,maxtogo-1,rmap);
       if (rscore > 0) {
          if (rscore > bestscore) {
+            if (bestscore != 0) {
+               System.err.println("CHECK HERE");
+             }
             if (rmap != null) {
                bestmap = new HashMap<>(rmap);
                bestmap.putAll(sccls.getNameMap());
