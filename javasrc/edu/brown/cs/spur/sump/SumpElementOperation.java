@@ -83,7 +83,7 @@ SumpElementOperation(SumpModelBase mdl,JcompSymbol js,ASTNode n)
       for (Object o : md.parameters()) {
          SingleVariableDeclaration svd = (SingleVariableDeclaration) o;
          JcompSymbol s = JcompAst.getDefinition(svd);
-         SumpElementParameter sp = new SumpElementParameter(mdl,s,n);
+         SumpElementParameter sp = new SumpElementParameter(mdl,s,svd);
          param_values.add(sp);
        }
     }

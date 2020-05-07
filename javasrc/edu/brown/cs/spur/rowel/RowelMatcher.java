@@ -132,7 +132,9 @@ public Map<T,T> bestMatch(RowelMatchType mt)
    for (w = 0; w < row_count; ++w) {
       int j = match_job_by_worker[w];
       if (j >= 0 && j < col_count) {
-         rslt.put(source_set.get(w),target_set.get(j));
+         double sc = cost_matrix[w][j];
+         if (sc > 0)
+            rslt.put(source_set.get(w),target_set.get(j));
        }
     }
    
@@ -156,7 +158,7 @@ private void setup(RowelMatchType mt)
    for (int i = 0; i < source_set.size(); ++i) {
       RowelMatch src = source_set.get(i);
       for (int j = 0; j < target_set.size(); ++j) {
-         RowelMatch tgt = target_set.get(i);
+         RowelMatch tgt = target_set.get(j);
          double score = src.getMatchScore(tgt,mt);
          cost_matrix[i][j] = score;
        }

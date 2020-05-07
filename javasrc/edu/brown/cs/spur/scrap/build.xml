@@ -36,6 +36,86 @@
       </javac>
    </target>
 
+   <target name='test'>
+      <junit fork='yes' printsummary='true' haltonerror='false' >
+	 <classpath refid='test.classpath' />
+	 <assertions><enable/></assertions>
+	 <formatter type='plain' usefile='true' />
+	 <test name='edu.brown.cs.spur.scrap.ScrapTest' haltonfailure='no'
+	      methods='packagetest01' outfile='test.out' />
+      </junit>
+   </target>
+
 </project>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

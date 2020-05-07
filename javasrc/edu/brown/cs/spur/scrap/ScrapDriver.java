@@ -223,7 +223,13 @@ void processAbstractor()
    List<CoseResult> trslts = getFilteredResults(rslts);
    AbstractionType at = getAbstractionType();
    
-   findAbstraction(at,trslts,rslts);
+   try {
+      findAbstraction(at,trslts,rslts);
+    }
+   catch (Throwable t) {
+      t.printStackTrace();
+      System.err.println("Problem creating abstraction");
+    }
 }
 
 
@@ -333,6 +339,7 @@ private void findAbstraction(AbstractionType at,List<CoseResult> rslts,List<Cose
       computeUmlMatches(sa,at,all);
     }
    catch (Throwable t) {
+      t.printStackTrace();
       IvyLog.logE("Problem finding abstraction: " + t,t);
     }
 }

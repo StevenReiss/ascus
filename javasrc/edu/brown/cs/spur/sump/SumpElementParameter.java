@@ -38,6 +38,7 @@ package edu.brown.cs.spur.sump;
 import java.io.PrintWriter;
 
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
 import edu.brown.cs.ivy.jcomp.JcompSymbol;
 import edu.brown.cs.ivy.file.IvyStringDiff;
@@ -66,13 +67,14 @@ private SumpDataType    param_type;
 /*                                                                              */
 /********************************************************************************/
 
-SumpElementParameter(SumpModelBase mdl,JcompSymbol js,ASTNode n)
+SumpElementParameter(SumpModelBase mdl,JcompSymbol js,SingleVariableDeclaration n)
 {
    super(mdl);
    setAccess(js.getModifiers());
    setName(js.getName());
    setFullName(js.getCompleteName());
    param_type = new SumpDataType(js.getType(),n);
+   addCommentsFor(n.getName());
    addCommentsFor(n);
 }
 

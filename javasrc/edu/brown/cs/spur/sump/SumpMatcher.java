@@ -205,8 +205,13 @@ private double matchClasses(SumpModel base,SumpModel pat,
    Map<String,String> bestmap = null;
    double bestscore = 0;
    SumpClass bestcls = null;
+   
+   int ct = 4;
+   if (max > 4) ct = 3;
+   if (max > 6) ct = 2;
+   if (max > 8) ct = 1;
  
-   for (ScoredClass sccls : ms.getToClasses(4)) {
+   for (ScoredClass sccls : ms.getToClasses(ct)) {
       SumpClass sc = sccls.getSumpClass();
       // System.err.println("MAP " + ms.getFromClass() + " ->  " + sc);
 
@@ -224,9 +229,6 @@ private double matchClasses(SumpModel base,SumpModel pat,
       double rscore = matchClasses(base,pat,nsets,nmap,score,max,maxtogo-1,rmap);
       if (rscore > 0) {
          if (rscore > bestscore) {
-            if (bestscore != 0) {
-               System.err.println("CHECK HERE");
-             }
             if (rmap != null) {
                bestmap = new HashMap<>(rmap);
                bestmap.putAll(sccls.getNameMap());
@@ -283,7 +285,7 @@ private static class MatchSet implements Comparable<MatchSet> {
       int ct = 0;
       for (ScoredClass sc : matched_classes) {
          rslt.add(sc);
-         if (max > 0 && ct++ >= max) break;
+         if (max > 0 && ++ct >= max) break;
        }
       return rslt;
     }

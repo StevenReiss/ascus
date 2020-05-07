@@ -156,7 +156,8 @@ void addCommentsFor(ASTNode n)
     }
    if (bd != null) {
       Javadoc jd = bd.getJavadoc();
-      if (jd != null) addComment(jd);
+      if (jd != null)
+         addComment(jd);
     }
    
    CompilationUnit cu = (CompilationUnit) n.getRoot();

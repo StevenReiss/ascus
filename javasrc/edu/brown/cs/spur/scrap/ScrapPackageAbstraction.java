@@ -143,9 +143,15 @@ ScrapPackageAbstraction(ScrapAbstractor abs,CoseResult cr,CompilationUnit cu)
     
    rm = new RowelMatcher<>(md.removeUsed(all_classes),md.removeUsed(spa.all_classes));
    map = rm.bestMatch(MatchType.MATCH_EXACT);
+   for (Map.Entry<PackageClass,PackageClass> ent : map.entrySet()) {
+      md.addMapping(ent.getKey(),ent.getValue());
+    }  
    
    rm = new RowelMatcher<>(md.removeUsed(use_classes),md.removeUsed(spa.use_classes));
    map = rm.bestMatch(MatchType.MATCH_APPROXIMATE);
+   for (Map.Entry<PackageClass,PackageClass> ent : map.entrySet()) {
+      md.addMapping(ent.getKey(),ent.getValue());
+    }
    // 
    // matchItems(use_classes,spa.use_classes,md,true,false);
    // matchItems(use_classes,spa.use_classes,md,false,false);
@@ -154,11 +160,11 @@ ScrapPackageAbstraction(ScrapAbstractor abs,CoseResult cr,CompilationUnit cu)
    // 
    if (!checkForMatch(md,spa)) return false;
    
-   String p1 = spa.getCoseResult().getSource().getProjectId();
-   String p2 = abs.getCoseResult().getSource().getProjectId();
+   String p1 = getCoseResult().getSource().getProjectId();
+   String p2 = spa.getCoseResult().getSource().getProjectId();
    if (p1.equals(p2)) {
-      String t1 = spa.getCoseResult().getEditText();
-      String t2 = abs.getCoseResult().getEditText();
+      String t1 = getCoseResult().getEditText();
+      String t2 = spa.getCoseResult().getEditText();
       SwiftScorer scorer = new SwiftScorer(t1,false);
       double v = scorer.getScore(t2);
       if (v > 0.99) {

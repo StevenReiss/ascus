@@ -1,0 +1,93 @@
+@Ascus(source="GITREPO:https://github.com/shannah/CN1Webserver/blob/a3edc053c14e53dc8640efb85e716ef6ba062c56/native/android/com/codename1/webserver/SimpleWebServer.java")
+@Ascus(search="PACKAGE,PACKAGE_USED,500,GITREPO")
+@Ascus(keywords={"@embedded","@web","server"})
+@Ascus(keyterms={"server","request","ftp","@web","uri","url","routing","application","port","response","@embedded","property","http","callback","https"})
+package edu.brown.cs.SAMPLE;
+
+import edu.brown.cs.sump.annot.Ascus;
+import edu.brown.cs.sump.annot.AscusPackage;
+import edu.brown.cs.sump.annot.AscusClass;
+import java.io.File;
+
+@AscusPackage
+public interface SimpleWebServer {
+
+
+/**
+ * Implementation of a very basic HTTP server. The contents are loaded from the assets folder. This server handles one request at a time. It only supports GET method.
+ */
+@AscusClass
+abstract class SimpleWebServer implements java.lang.Runnable {
+/**
+ * True if the server is running.
+ */
+   private boolean mIsRunning;
+/**
+ * Implementation of a very basic HTTP server. The contents are loaded from the assets folder. This server handles one request at a time. It only supports GET method.
+ */
+   public SimpleWebServer(int port,File docRoot) { }
+/**
+ * Implementation of a very basic HTTP server. The contents are loaded from the assets folder. This server handles one request at a time. It only supports GET method.
+ */
+   public abstract void start();
+/**
+ * Implementation of a very basic HTTP server. The contents are loaded from the assets folder. This server handles one request at a time. It only supports GET method.
+ */
+   public abstract void stop();
+/**
+ * Implementation of a very basic HTTP server. The contents are loaded from the assets folder. This server handles one request at a time. It only supports GET method.
+ */
+   public abstract int getPort();
+/**
+ * Implementation of a very basic HTTP server. The contents are loaded from the assets folder. This server handles one request at a time. It only supports GET method.
+ */
+   public abstract void run();
+}
+
+@AscusClass
+abstract class NativeWebServerImpl {
+   public abstract boolean isSupported();
+}
+
+/**
+ * @author shannah
+ */
+@AscusClass
+interface NativeWebServer {
+/**
+ * @author shannah
+ */
+   boolean isRunning();
+/**
+ * @author shannah
+ */
+   boolean start(String docRoot,int port);
+/**
+ * @author shannah
+ */
+   boolean stop();
+}
+
+/**
+ * @author shannah
+ */
+@AscusClass(uses={NativeWebServer.class})
+abstract class WebServer {
+   private NativeWebServer peer;
+/**
+ * @author shannah
+ */
+   public WebServer(String docRoot,int port) { }
+/**
+ * @author shannah
+ */
+   public abstract void start();
+/**
+ * @author shannah
+ */
+   public abstract void stop();
+}
+
+}
+
+

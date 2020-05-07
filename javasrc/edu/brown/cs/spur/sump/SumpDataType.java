@@ -233,6 +233,18 @@ private String computeName(JcompType base)
 
 
 
+/********************************************************************************/
+/*                                                                              */
+/*      Output methods                                                          */
+/*                                                                              */
+/********************************************************************************/
+
+@Override public String toString()
+{
+   return getName();
+}
+
+
 }       // end of class SumpDataType
 
 
