@@ -39,7 +39,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -48,6 +47,7 @@ import java.util.TreeSet;
 
 import edu.brown.cs.ivy.file.IvyStringDiff;
 import edu.brown.cs.spur.rowel.RowelMatcher;
+import edu.brown.cs.spur.scrap.ScrapConstants.MatchType;
 
 class SumpMatcher implements SumpConstants
 {
@@ -358,62 +358,82 @@ private static class MatchComparer implements Comparator<SumpClass>
 
 private double containsClass(SumpClass base,SumpClass pat,Map<String,String> namemap)
 {
-   Set<Object> done = new HashSet<>();
+   // Set<Object> done = new HashSet<>();
    
-   double atot = 0;
-   double afnd = 0;
-   for (SumpAttribute att : pat.getAttributes()) {
-      atot += 1;
-      double v = -1;
-      SumpAttribute best = null;
-      for (SumpAttribute batt : base.getAttributes()) {
-         if (done.contains(batt)) continue;
-         if (matchAttribute(batt,att)) {
-            double v1 = IvyStringDiff.normalizedStringDiff(batt.getName(),att.getName());
-            if (best == null || v1 > v) {
-               v = v1;
-               best = batt;
-             }
-          }
-       }
-      if (best != null) {
-         afnd += 1;
-         done.add(best);
-         if (namemap != null) {
-            namemap.put(best.getFullName(),att.getFullName());
-          }
-       }
+   RowelMatcher<SumpAttribute> rm = new RowelMatcher<>(pat.getAttributes(),base.getAttributes());
+   Map<SumpAttribute,SumpAttribute> map = rm.bestMatch(MatchType.MATCH_EXACT);
+   for (Map.Entry<SumpAttribute,SumpAttribute> ent : map.entrySet()) {
+      namemap.put(ent.getValue().getFullName(),ent.getKey().getFullName());
     }
+   double atot = pat.getAttributes().size();
+   double afnd = map.size();
+   
+   // double atot = 0;
+   // double afnd = 0;
+   // for (SumpAttribute att : pat.getAttributes()) {
+      // atot += 1;
+      // double v = -1;
+      // SumpAttribute best = null;
+      // for (SumpAttribute batt : base.getAttributes()) {
+         // if (done.contains(batt)) continue;
+         // if (matchAttribute(batt,att)) {
+            // double v1 = IvyStringDiff.normalizedStringDiff(batt.getName(),att.getName());
+            // if (best == null || v1 > v) {
+               // v = v1;
+               // best = batt;
+             // }
+          // }
+       // }
+      // if (best != null) {
+         // afnd += 1;
+         // done.add(best);
+         // if (namemap != null) {
+            // namemap.put(best.getFullName(),att.getFullName());
+          // }
+       // }
+    // }
+   
    if (atot > 0 && afnd / atot < ATTR_CUTOFF) return 0;
    
-   double mtot = 0;
-   double mfnd = 0;
-   for (SumpOperation op : pat.getOperations()) {
-      mtot += 1;
-      double v = -1;
-      SumpOperation best = null;
-      Map<String,String> bestmap = null;
-      for (SumpOperation bop : base.getOperations()) {
-         if (done.contains(bop)) continue;
-         Map<String,String> pnamemap = matchOperation(bop,op);
-         if (pnamemap != null) {
-            double v1 = IvyStringDiff.normalizedStringDiff(bop.getName(),op.getName());
-            if (best == null || v1 > v) {
-               v = v1;
-               best = bop;
-               bestmap = pnamemap;
-             }
-          }
-       }
-      if (best != null) {
-         mfnd += 1;
-         done.add(best);
-         if (namemap != null) {
-            namemap.put(best.getFullName(),op.getFullName());
-            namemap.putAll(bestmap);
-          }
-       }
-    }
+   RowelMatcher<SumpOperation> orm = new RowelMatcher<>(pat.getOperations(),base.getOperations());
+   Map<SumpOperation,SumpOperation> omap = orm.bestMatch(MatchType.MATCH_EXACT);
+   for (Map.Entry<SumpOperation,SumpOperation> ent : omap.entrySet()) {
+      Map<String,String> pnamemap = matchOperation(ent.getValue(),ent.getKey());
+      namemap.put(ent.getValue().getFullName(),ent.getKey().getFullName());
+      namemap.putAll(pnamemap);
+    }  
+   double mtot = pat.getOperations().size();
+   double mfnd = omap.size();
+   
+   // double mtot = 0;
+   // double mfnd = 0;
+   // for (SumpOperation op : pat.getOperations()) {
+      // mtot += 1;
+      // double v = -1;
+      // SumpOperation best = null;
+      // Map<String,String> bestmap = null;
+      // for (SumpOperation bop : base.getOperations()) {
+         // if (done.contains(bop)) continue;
+         // Map<String,String> pnamemap = matchOperation(bop,op);
+         // if (pnamemap != null) {
+            // double v1 = IvyStringDiff.normalizedStringDiff(bop.getName(),op.getName());
+            // if (best == null || v1 > v) {
+               // v = v1;
+               // best = bop;
+               // bestmap = pnamemap;
+             // }
+          // }
+       // }
+      // if (best != null) {
+         // mfnd += 1;
+         // done.add(best);
+         // if (namemap != null) {
+            // namemap.put(best.getFullName(),op.getFullName());
+            // namemap.putAll(bestmap);
+          // }
+       // }
+    // }
+   
    if (mtot > 0 && mfnd / mtot < METHOD_CUTOFF) return 0; 
    
    double score = 1;
@@ -425,7 +445,7 @@ private double containsClass(SumpClass base,SumpClass pat,Map<String,String> nam
 }
 
 
-private boolean matchAttribute(SumpAttribute base,SumpAttribute pat)
+boolean matchAttribute(SumpAttribute base,SumpAttribute pat)
 {
    SumpDataType bdt = base.getDataType();
    SumpDataType pdt = pat.getDataType();

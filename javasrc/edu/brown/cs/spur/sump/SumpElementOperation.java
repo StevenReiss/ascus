@@ -38,15 +38,20 @@ package edu.brown.cs.spur.sump;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
+import edu.brown.cs.ivy.file.IvyStringDiff;
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompSymbol;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
+import edu.brown.cs.spur.rowel.RowelConstants.RowelMatch;
+import edu.brown.cs.spur.rowel.RowelConstants.RowelMatchType;
 import edu.brown.cs.spur.sump.SumpConstants.SumpOperation;
 
 class SumpElementOperation extends SumpElementBase implements SumpOperation
@@ -126,6 +131,57 @@ SumpElementOperation(SumpModelBase mdl,JcompSymbol js,ASTNode n)
    if (param_values == null) return -1;
    return param_values.indexOf(sp);
 }
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Matching methods                                                        */
+/*                                                                              */
+/********************************************************************************/
+
+@Override public double getMatchScore(RowelMatch rm,RowelMatchType mt)
+{
+   if (rm instanceof SumpElementOperation) {
+      SumpElementOperation op = (SumpElementOperation) rm;
+      if (!matchOperation(op)) return 0;
+      return 1 + IvyStringDiff.normalizedStringDiff(getName(),op.getName());
+    }
+   
+   return 0;
+}
+
+
+private boolean matchOperation(SumpElementOperation op)
+{
+   SumpDataType bdt = getReturnType();
+   SumpDataType pdt = op.getReturnType();
+   
+   if (!SumpMatcher.matchType(bdt,pdt)) return false;
+   
+   Collection<SumpParameter> bsps = getParameters();
+   Collection<SumpParameter> psps = op.getParameters();
+   if (bsps.size() != psps.size()) return false;
+   
+   Set<SumpParameter> done = new HashSet<>();
+   for (SumpParameter base : bsps) {
+      SumpDataType bt = base.getDataType();
+      boolean fnd = false;
+      for (SumpParameter pat : psps) {
+         if (done.contains(pat)) continue;
+         SumpDataType pt = pat.getDataType();
+         if (SumpMatcher.matchType(bt,pt)) {
+            done.add(pat);
+            fnd = true;
+            break;
+          }
+       }
+      if (!fnd) return false;
+    }
+   
+   return true;
+}
+
 
 
 

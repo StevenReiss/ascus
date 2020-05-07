@@ -37,7 +37,6 @@ package edu.brown.cs.spur.sump;
 
 import java.io.PrintWriter;
 
-import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
 import edu.brown.cs.ivy.jcomp.JcompSymbol;
@@ -144,8 +143,6 @@ SumpElementParameter(SumpModelBase mdl,JcompSymbol js,SingleVariableDeclaration 
 @Override void setupJava()
 {
    if (param_type != null) {
-      if (param_type.getName().contains("SocketChannel"))
-         System.err.println("CHECK HERE");
       param_type.setupJava(getData());
     }
 }

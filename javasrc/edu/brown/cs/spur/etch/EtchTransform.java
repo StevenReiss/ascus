@@ -343,6 +343,28 @@ protected MethodDeclaration createDummyMethod(AST ast,SumpOperation op)
 
 
 
+
+/********************************************************************************/
+/*                                                                              */
+/*      Hnadle model lookup                                                     */
+/*                                                                              */
+/********************************************************************************/
+
+protected static SumpOperation findOperation(String nm,SumpModel target)
+{
+   for (SumpClass sc : target.getPackage().getClasses()) {
+      if (nm.startsWith(sc.getFullName())) {
+         for (SumpOperation op : sc.getOperations()) {
+            if (nm.startsWith(op.getFullName())) {
+               return op;
+             }
+          }
+       }
+    }
+   
+   return null;
+}
+
 }       // end of class EtchTransform
 
 

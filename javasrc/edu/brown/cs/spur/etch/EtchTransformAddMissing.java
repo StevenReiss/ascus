@@ -83,7 +83,9 @@ EtchTransformAddMissing(Map<String,String> namemap)
    
    if (amm.isEmpty()) return null;
    
-   return null;
+   EtchMemo memo = amm.getMapMemo(n);
+   
+   return memo;
 }
 
 

@@ -57,7 +57,6 @@ import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompSymbol;
 import edu.brown.cs.ivy.jcomp.JcompType;
 import edu.brown.cs.ivy.jcomp.JcompTyper;
-import edu.brown.cs.spur.sump.SumpConstants.SumpClass;
 import edu.brown.cs.spur.sump.SumpConstants.SumpModel;
 import edu.brown.cs.spur.sump.SumpConstants.SumpParameter;
 import edu.brown.cs.spur.sump.SumpConstants.SumpOperation;
@@ -141,20 +140,7 @@ private void findMatchings(ASTNode cu,SumpModel target,ParamMapper mapper)
 }
 
 
-private SumpOperation findOperation(String nm,SumpModel target)
-{
-   for (SumpClass sc : target.getPackage().getClasses()) {
-      if (nm.startsWith(sc.getFullName())) {
-         for (SumpOperation op : sc.getOperations()) {
-            if (nm.startsWith(op.getFullName())) {
-               return op;
-             }
-          }
-       }
-    }
-   
-   return null;
-}
+
 
 
 

@@ -112,13 +112,13 @@ interface SumpClass extends SumpElement {
 }       // end of inner interface SumpClassElement
 
 
-interface SumpAttribute extends SumpElement {
+interface SumpAttribute extends SumpElement, RowelMatch {
    SumpDataType getDataType();
    ElementAccess getAccess();
    
 }       // end of inner interface SumpAttribute
 
-interface SumpOperation extends SumpElement {
+interface SumpOperation extends SumpElement, RowelMatch {
    SumpDataType getReturnType();
    Collection<SumpParameter> getParameters();
    ElementAccess getAccess();

@@ -360,6 +360,13 @@ private void computeTextMatches(ScrapAbstractor sa,AbstractionType at,List<CoseR
        }
       for (CoseResult orig : all) {
          double sc = scorer.getScore(orig.getText());
+         String t1 = pa.getCoseResult().getSource().toString();
+         String t2 = orig.getSource().toString();
+         if (t1.contains("AcceptTask") || t1.contains("SimpleWebServer")) {
+            if (t2.contains("AcceptTask") || t2.contains("SimpleWebServer")) {
+             }
+          }
+         
          if (sc < 0.4) continue;
          if (sc >= 0.90) {
             if (orig == pa.getCoseResult()) continue;
@@ -370,7 +377,7 @@ private void computeTextMatches(ScrapAbstractor sa,AbstractionType at,List<CoseR
             // System.err.println("COMPARE2:\n" + txt2);
             // sc = scorer.getScore(orig.getText());
             // same text, but different order? -- is continue correct or should we accept?
-            continue;
+            // continue;
           }
          queue.add(new ScoredResult(orig,sc));
        }
