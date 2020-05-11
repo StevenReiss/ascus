@@ -36,6 +36,7 @@
 package edu.brown.cs.spur.scrap;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -221,6 +222,7 @@ private void badArgs()
 void processAbstractor()
 {
    List<CoseResult> rslts = getSearchResults();
+   rslts = removeOverlaps(rslts);
    List<CoseResult> trslts = getFilteredResults(rslts);
    AbstractionType at = getAbstractionType();
    
@@ -365,13 +367,6 @@ private void computeTextMatches(ScrapAbstractor sa,AbstractionType at,List<CoseR
        }
       for (CoseResult orig : all) {
          double sc = scorer.getScore(orig.getText());
-         String t1 = pa.getCoseResult().getSource().toString();
-         String t2 = orig.getSource().toString();
-         if (t1.contains("AcceptTask") || t1.contains("SimpleWebServer")) {
-            if (t2.contains("AcceptTask") || t2.contains("SimpleWebServer")) {
-             }
-          }
-         
          if (sc < 0.4) continue;
          if (sc >= 0.90) {
             if (orig == pa.getCoseResult()) continue;
@@ -461,7 +456,49 @@ private List<CoseResult> filterResults(List<CoseResult> results,boolean tight)
       CoseScores scores = cr.getScores(search_request);
       if (acceptResult(scores,tight)) filtered.add(cr);
     }
+   
+   filtered = removeOverlaps(filtered);
+   
    return filtered;
+}
+
+
+
+private List<CoseResult> removeOverlaps(List<CoseResult> results)
+{
+   Map<String,List<CoseResult>> projmap = new HashMap<>();
+   for (CoseResult cr : results) {
+      String pid = cr.getSource().getProjectId();
+      List<CoseResult> rs = projmap.get(pid);
+      if (rs == null) {
+         rs = new ArrayList<>();
+         projmap.put(pid,rs);
+       }
+      rs.add(cr);
+    }
+   
+   Set<CoseResult> remove = new HashSet<>();
+   for (List<CoseResult> check : projmap.values()) {
+      if (check.size() <= 1) continue;
+      for (int i = 0; i < check.size(); ++i) {
+         CoseResult cr1 = check.get(i);
+         if (remove.contains(cr1)) continue;
+         Collection<String> p1 = cr1.getPackages();
+         for (int j = i+1; j < check.size(); ++j) {
+            CoseResult cr2 = check.get(j);
+            if (remove.contains(cr2)) continue;
+            Collection<String> p2 = cr2.getPackages();
+            if (p1.containsAll(p2)) remove.add(cr2);
+            else if (p2.containsAll(p1)) remove.add(cr1);
+          }
+       }
+    }
+   
+   if (remove.isEmpty()) return results;
+   
+   List<CoseResult> rslt = new ArrayList<>(results);
+   rslt.removeAll(remove);
+   return rslt;
 }
 
 
