@@ -220,10 +220,10 @@ private double matchClasses(SumpModel base,SumpModel pat,
       Map<SumpClass,SumpClass> nmap = new HashMap<>(cmap);
       nmap.put(ms.getFromClass(),sc);
       SortedSet<MatchSet> nsets = new TreeSet<>();
+      Collection<SumpClass> d1 = pat.getDependentClasses(ms.getFromClass());
+      Collection<SumpClass> d2 = base.getDependentClasses(sc); 
       for (MatchSet s : sets) {
          if (ms.getFromClass() == s.getFromClass()) continue;
-         Collection<SumpClass> d1 = pat.getDependentClasses(ms.getFromClass());
-         Collection<SumpClass> d2 = base.getDependentClasses(sc);
          MatchSet ns = new MatchSet(s,sc,d1,d2,pat);
          nsets.add(ns);
        }

@@ -1,0 +1,155 @@
+@Ascus(source="GITREPO:https://github.com/kasra-sh/PicoHTTPd/blob/d1f5426a1cde4857fde7247ed77a680567b1e135/src/main/java/ir/kasra_sh/picohttpd/server/Pico.java")
+@Ascus(search="PACKAGE,PACKAGE_USED,500,GITREPO")
+@Ascus(keywords={"@embedded","@web","server"})
+@Ascus(keyterms={"server","request","ftp","@web","uri","url","routing","application","port","response","@embedded","property","http","callback","https"})
+package edu.brown.cs.SAMPLE;
+
+import edu.brown.cs.sump.annot.Ascus;
+import edu.brown.cs.sump.annot.AscusPackage;
+import edu.brown.cs.sump.annot.AscusClass;
+import java.io.InputStream;
+import java.nio.channels.ServerSocketChannel;
+import java.nio.channels.SocketChannel;
+import java.util.ArrayList;
+import java.util.Map.Entry;
+
+@AscusPackage
+public interface Pico {
+
+
+@AscusClass(uses={Stat.class,HTTPHandler.class})
+abstract class Pico {
+   private PicoServer picoServer;
+   public abstract Pico setHandler(HTTPHandler handler);
+   public abstract void start(int port);
+}
+
+@AscusClass
+abstract class Cookie {
+   private StringBuilder ck;
+   public abstract Cookie set(String key,String value);
+   public abstract Cookie opt(String op);
+}
+
+@AscusClass(uses={AcceptListener.class})
+abstract class AcceptTask implements java.lang.Runnable {
+   public AcceptTask(AcceptListener listener,ServerSocketChannel serverSocketChannel) { }
+}
+
+@AscusClass
+interface FailListener {
+}
+
+@AscusClass
+interface HTTPHandler {
+   void handleRequest(Request r,ResponseWriter w);
+}
+
+@AscusClass
+abstract class WritePair {
+   public WritePair() { }
+   public WritePair(SocketChannel socket,byte[] bytes) { }
+   public WritePair(SocketChannel socket,byte[] data,InputStream inputStream,int length) { }
+}
+
+@AscusClass
+abstract class StreamBuffer {
+   public StreamBuffer(InputStream inputStream,int length) { }
+}
+
+@AscusClass
+abstract class Request {
+   public Request() { }
+}
+
+@AscusClass
+abstract class DeadWatcher {
+   public abstract void remove(SocketChannel s);
+}
+
+@AscusClass
+interface ReadListener {
+}
+
+@AscusClass(uses={Cookie.class})
+abstract class Response {
+   private boolean streamBody;
+   private InputStream sBody;
+   private int sBodyLen;
+   private int status;
+   private ArrayList<Entry<String,String>> headers;
+   private ArrayList<Cookie> cookies;
+   public abstract Response type(String mime);
+   public abstract Response body(byte[] body);
+   public abstract Response body(byte[] body,String mime);
+   public abstract Response bodyJson(byte[] body);
+   public abstract Response bodyHtml(byte[] body);
+   public abstract Response bodyText(byte[] body);
+   public abstract Response bodyBinary(byte[] body);
+   public abstract Response header(String k,String v);
+   public abstract byte[] asByteArray();
+   public abstract Response setCookie(String key,String value,String[] opts);
+   public abstract Response setMime(String mime);
+}
+
+@AscusClass(uses={RequestParser.class})
+abstract class ReadPair {
+   public ReadPair(SocketChannel socket,RequestParser parser) { }
+}
+
+@AscusClass
+abstract class Stat {
+   private float rps;
+   private int awaitRead;
+   private int awaitWrite;
+   public Stat(int awaitRead,int awaitWrite,float rps) { }
+   public abstract void setRps(float rps);
+}
+
+@AscusClass
+abstract class NIOSocketReader {
+   public NIOSocketReader(SocketChannel channel) { }
+}
+
+@AscusClass(uses={WriteListener.class})
+abstract class ResponseWriter {
+   public ResponseWriter(WriteListener listener,SocketChannel socketChannel) { }
+}
+
+@AscusClass(uses={NIOSocketReader.class,Request.class})
+abstract class RequestParser {
+   public RequestParser(NIOSocketReader reader) { }
+}
+
+@AscusClass
+interface AcceptListener {
+}
+
+@AscusClass(uses={StreamBuffer.class})
+abstract class NIOSocketWriter {
+   public NIOSocketWriter(SocketChannel socketChannel,byte[] bytes) { }
+   public NIOSocketWriter(SocketChannel socketChannel,byte[] bytes,InputStream stream,int len) { }
+}
+
+@AscusClass(uses={WritePair.class,WriteFinishListener.class,DeadWatcher.class})
+abstract class WriteTask implements java.lang.Runnable {
+   public WriteTask(WriteFinishListener listener) { }
+}
+
+@AscusClass
+interface WriteFinishListener {
+}
+
+@AscusClass
+interface WriteListener {
+   void onWrite(SocketChannel s,byte[] b);
+   void onWriteStream(SocketChannel s,byte[] data,InputStream is,int len);
+}
+
+@AscusClass(uses={ReadPair.class,DeadWatcher.class,ReadListener.class})
+abstract class ReadTask implements java.lang.Runnable {
+   public ReadTask(ReadListener listener) { }
+}
+
+}
+

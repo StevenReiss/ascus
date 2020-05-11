@@ -88,6 +88,7 @@ private int []          match_job_by_worker;
 private int []          match_worker_by_job;
 private int []          parent_worker_by_committed_job;
 private boolean []      committed_workers;
+private double [][]     orig_match;
 
 
 
@@ -132,9 +133,11 @@ public Map<T,T> bestMatch(RowelMatchType mt)
    for (w = 0; w < row_count; ++w) {
       int j = match_job_by_worker[w];
       if (j >= 0 && j < col_count) {
-         double sc = cost_matrix[w][j];
-         if (sc > 0)
+         // double sc = cost_matrix[w][j];
+         double nm = orig_match[w][j];
+         if (nm != 0) {
             rslt.put(source_set.get(w),target_set.get(j));
+          }
        }
     }
    
@@ -155,12 +158,14 @@ private void setup(RowelMatchType mt)
    col_count = target_set.size();
    row_col_dim = Math.max(row_count,col_count);
    cost_matrix = new double[row_col_dim][row_col_dim];
+   orig_match = new double[row_col_dim][row_col_dim];
    for (int i = 0; i < source_set.size(); ++i) {
       RowelMatch src = source_set.get(i);
       for (int j = 0; j < target_set.size(); ++j) {
          RowelMatch tgt = target_set.get(j);
          double score = src.getMatchScore(tgt,mt);
-         cost_matrix[i][j] = score;
+         cost_matrix[i][j] = -score;
+         orig_match[i][j] = score;
        }
     }
    label_by_worker = new double[row_col_dim];

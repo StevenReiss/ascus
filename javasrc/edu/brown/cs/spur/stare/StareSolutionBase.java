@@ -154,7 +154,7 @@ private void setup(CompilationUnit cu,Map<String,String> idmap)
    StringBuffer buf = new StringBuffer();
    for (Object o : cu.imports()) {
       ImportDeclaration id = (ImportDeclaration) o;
-      buf.append(id.toString() + ";\n");
+      buf.append(id.toString());
     }
    idmap.put("IMPORTS", buf.toString());
    

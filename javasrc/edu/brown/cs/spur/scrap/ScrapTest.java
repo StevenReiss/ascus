@@ -214,6 +214,8 @@ public void candidateTest02()
    cdr.setSearchEngine(CoseSearchEngine.GITREPO);
    cdr.setNumberOfResults(500);
    cdr.setNumberOfThreads(8);
+   
+   cdr.setNumberOfThreads(1);
    cdr.addSpecificSource(sd.getSources());
    
    ScrapDriver driver = new ScrapDriver(sd);
