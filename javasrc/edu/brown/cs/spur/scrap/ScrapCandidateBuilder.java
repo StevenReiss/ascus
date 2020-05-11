@@ -35,11 +35,12 @@
 
 package edu.brown.cs.spur.scrap;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
@@ -86,9 +87,9 @@ ScrapCandidateBuilder(List<CoseResult> ar)
 /*                                                                              */
 /********************************************************************************/
 
-void buildCandidates(SumpModel model)
+List<ScrapCandidate> buildCandidates(SumpModel model)
 {
-   Set<CandidateMatch> match = findInitialMatches(model);
+   List<CandidateMatch> match = findInitialMatches(model);
    
    System.err.println("FOUND " + match.size() + " MATCHES");
    
@@ -98,14 +99,16 @@ void buildCandidates(SumpModel model)
       Map<String,String> namemap = cm.getNameMap();
       CoseResult cr = cm.getCoseResult();
       CoseResult cr1 = etcher.fixNames(cr,namemap);
-      System.err.println("MATCH " + cr1.getEditText());
+      cm.updateResult(cr1);
     }
+   
+   return new ArrayList<>(match);
 }
 
 
 
 
-private Set<CandidateMatch> findInitialMatches(SumpModel model)
+private List<CandidateMatch> findInitialMatches(SumpModel model)
 {
    Map<CoseResult,SumpModel> mmap = new HashMap<>();
    for (CoseResult orig : all_results) {
@@ -125,17 +128,17 @@ private Set<CandidateMatch> findInitialMatches(SumpModel model)
        }
     }
    
-   Set<CandidateMatch> match = new HashSet<>(); 
+   Set<CandidateMatch> match = new TreeSet<>(); 
    for (Map.Entry<CoseResult,SumpModel> ent : mmap.entrySet()) {
       Map<String,String> rmap = new HashMap<>();
       double sv = ent.getValue().matchScore(model,rmap);
       if (sv != 0) {
-         CandidateMatch cm = new CandidateMatch(ent.getKey(),sv,rmap);
+         CandidateMatch cm = new CandidateMatch(model,ent.getKey(),sv,rmap);
          match.add(cm);
        }
     }
    
-   return match;
+   return new ArrayList<>(match);
 }
 
 
@@ -146,20 +149,31 @@ private Set<CandidateMatch> findInitialMatches(SumpModel model)
 /*                                                                              */
 /********************************************************************************/
 
-private static class CandidateMatch {
+private static class CandidateMatch implements Comparable<CandidateMatch>, ScrapCandidate {
  
+   private SumpModel for_model;
    private CoseResult for_result;
    private Map<String,String> name_map;
    private double match_value;
    
-   CandidateMatch(CoseResult cr,double v,Map<String,String> nmap) {
+   CandidateMatch(SumpModel mdl,CoseResult cr,double v,Map<String,String> nmap) {
+      for_model = mdl;
       for_result = cr;
       match_value = v;
       name_map = new HashMap<>(nmap);
     }
    
-   CoseResult getCoseResult()                   { return for_result; }
-   Map<String,String> getNameMap()              { return name_map; }
+   @Override public SumpModel getModel()                        { return for_model; }
+   @Override public CoseResult getCoseResult()                  { return for_result; }
+   @Override public Map<String,String> getNameMap()             { return name_map; }
+   
+   void updateResult(CoseResult cr)                             { for_result = cr; }
+   
+   @Override public int compareTo(CandidateMatch cm) {
+      int v = Double.compare(cm.match_value,match_value);
+      if (v != 0) return v;
+      return for_result.getSource().toString().compareTo(cm.for_result.getSource().toString());
+    }
    
    @Override public String toString() {
       return match_value + ": " + for_result;

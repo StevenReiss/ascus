@@ -47,10 +47,13 @@ import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
+import edu.brown.cs.ivy.file.IvyStringDiff;
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompSymbol;
 import edu.brown.cs.ivy.jcomp.JcompType;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
+import edu.brown.cs.spur.rowel.RowelConstants.RowelMatch;
+import edu.brown.cs.spur.rowel.RowelConstants.RowelMatchType;
 import edu.brown.cs.spur.sump.SumpConstants.SumpClass;
 
 class SumpElementClass extends SumpElementBase implements SumpClass
@@ -134,6 +137,26 @@ SumpElementClass(SumpModelBase mdl,AbstractTypeDeclaration atd)
 @Override public Collection<SumpOperation> getOperations()
 {
    return new ArrayList<>(operation_list);
+}
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Matching methods                                                        */
+/*                                                                              */
+/********************************************************************************/
+
+@Override public double getMatchScore(RowelMatch rm,RowelMatchType mt)
+{
+   if (rm instanceof SumpElementClass) {
+      SumpElementClass sc = (SumpElementClass) rm;
+      double score = SumpMatcher.computeClassMatchScore(this,sc,null);
+      if (score < SumpMatcher.CLASS_CUTOFF) return 0;
+      double nscore = IvyStringDiff.normalizedStringDiff(getName(),sc.getName());
+      return 0.8*score + 0.2*nscore;
+    }
+   
+   return 0;
 }
 
 

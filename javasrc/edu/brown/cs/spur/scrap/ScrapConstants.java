@@ -36,6 +36,7 @@
 package edu.brown.cs.spur.scrap;
 
 import edu.brown.cs.spur.rowel.RowelConstants.RowelMatchType;
+import edu.brown.cs.spur.stare.StareConstants.StareCandidateSolution;
 
 public interface ScrapConstants
 {
@@ -63,6 +64,19 @@ enum MatchType implements RowelMatchType {
    MATCH_EXACT,
    MATCH_APPROXIMATE,
 }
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Candidate result                                                         */
+/*                                                                              */
+/********************************************************************************/
+
+interface ScrapCandidate extends StareCandidateSolution {
+   
+}       // end of inner interface ScrapCandidate
+
+
 
 }	// end of interface ScrapConstants
 

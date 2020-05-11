@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -157,6 +158,21 @@ Set<SumpElementClass> findUsedClasses(SumpElementClass cls)
 @Override public SumpData getModelData()                { return model_data; }
 
 
+@Override public Collection<SumpClass> getDependentClasses(SumpClass sc)
+{
+   Set<SumpClass> rslt = new HashSet<>();
+   
+   for (SumpDependency sd : getPackage().getDependencies()) {
+      if (sd.getFromClass() == sc) {
+         rslt.add(sd.getToClass());
+       }
+      else if (sd.getToClass() == sc) {
+         rslt.add(sd.getFromClass());
+       }
+    }
+   
+   return rslt;
+}
 
 /********************************************************************************/
 /*                                                                              */

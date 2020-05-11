@@ -1,8 +1,8 @@
 /********************************************************************************/
 /*                                                                              */
-/*              AscusTest.java                                                  */
+/*              StareConstants.java                                             */
 /*                                                                              */
-/*      Inidcation of a test case                                               */
+/*      Search Transformations for Automatic Repair and Editing constants       */
 /*                                                                              */
 /********************************************************************************/
 /*      Copyright 2013 Brown University -- Steven P. Reiss                    */
@@ -33,32 +33,50 @@
 
 
 
-package edu.brown.cs.spur.annot;
+package edu.brown.cs.spur.stare;
 
+import java.util.Map;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import edu.brown.cs.cose.cosecommon.CoseResult;
+import edu.brown.cs.spur.sump.SumpConstants.SumpModel;
 
-import org.junit.Test.None;
-
-
-
-@Documented
-@Target(ElementType.TYPE)
-@Retention(RetentionPolicy.SOURCE)
-public @interface AscusTest
+public interface StareConstants
 {
 
-   Class<? extends Throwable> expected() default None.class;
-   long timeout() default 0;
+String TEST_BASE = "/vol/tmp/ascus";
+String TEST_DIRECTORY = "Ascus_#";
+
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Representation of a solution                                            */
+/*                                                                              */
+/********************************************************************************/
+
+interface StareCandidateSolution {
+
+   SumpModel getModel();
+   CoseResult getCoseResult();
+   Map<String,String> getNameMap();
+
+}       // end of inner interface StareSolution
+
+
+interface StareSolution extends StareCandidateSolution {
+
+   boolean generateCode();
    
-}       // end of annotation AscusTest
+}
 
 
 
 
-/* end of AscusTest.java */
+}       // end of interface StareConstants
+
+
+
+
+/* end of StareConstants.java */
 

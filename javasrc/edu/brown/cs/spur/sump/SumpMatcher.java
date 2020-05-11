@@ -59,11 +59,11 @@ class SumpMatcher implements SumpConstants
 /*                                                                              */
 /********************************************************************************/
 
-private static final double     CLASS_CUTOFF = 0.5;
-private static final double     ATTR_CUTOFF = 0.75;
-private static final double     METHOD_CUTOFF = 0.75;
-private static final double     DEPEND_CUTOFF = 0.5;
-private static final double     SCORE_CUTOFF = 0.75;
+static final double     CLASS_CUTOFF = 0.5;
+static final double     ATTR_CUTOFF = 0.75;
+static final double     METHOD_CUTOFF = 0.75;
+static final double     DEPEND_CUTOFF = 0.5;
+static final double     SCORE_CUTOFF = 0.75;
 
 
 
@@ -152,7 +152,7 @@ private SortedSet<MatchSet> setupClassMatchings(SumpModel base,SumpModel pat)
       MatchSet ms = new MatchSet(cls);
       for (SumpClass bcls : base.getPackage().getClasses()) {
          Map<String,String> namemap = new HashMap<>();
-         double score = containsClass(bcls,cls,namemap);
+         double score = computeClassMatchScore(bcls,cls,namemap);
          double nmscore = IvyStringDiff.normalizedStringDiff(cls.getName(),bcls.getName());
          score = score * 0.8 + nmscore * 0.2;
          if (score >= CLASS_CUTOFF) {
@@ -185,6 +185,8 @@ private double matchClasses(SumpModel base,SumpModel pat,
    if (sets.isEmpty()) {
       double ascore = checkAssociations(base,pat,cmap);
       if (ascore == 0) return 0;
+      if (pat.getPackage().getDependencies().size() == 0) ascore = 1;
+      else ascore = 0;
       return inscore+ascore;
     }
    
@@ -195,7 +197,7 @@ private double matchClasses(SumpModel base,SumpModel pat,
       SortedSet<MatchSet> nsets = new TreeSet<>();
       for (MatchSet s : sets) {
          if (ms.getFromClass() == s.getFromClass()) continue;
-         MatchSet ns = new MatchSet(s,null);
+         MatchSet ns = new MatchSet(s,null,null,null,pat);
          nsets.add(ns);
        }
       double rscore = matchClasses(base,pat,nsets,nmap,inscore,max,maxtogo-1,rsltmap);
@@ -220,7 +222,9 @@ private double matchClasses(SumpModel base,SumpModel pat,
       SortedSet<MatchSet> nsets = new TreeSet<>();
       for (MatchSet s : sets) {
          if (ms.getFromClass() == s.getFromClass()) continue;
-         MatchSet ns = new MatchSet(s,sc);
+         Collection<SumpClass> d1 = pat.getDependentClasses(ms.getFromClass());
+         Collection<SumpClass> d2 = base.getDependentClasses(sc);
+         MatchSet ns = new MatchSet(s,sc,d1,d2,pat);
          nsets.add(ns);
        }
       double score = inscore + sccls.getScore();
@@ -257,19 +261,29 @@ private static class MatchSet implements Comparable<MatchSet> {
    private Set<ScoredClass> matched_classes;
    private MatchComparer match_comparer;
   
-   
    MatchSet(SumpClass base) {
       for_class = base;
       match_comparer = new MatchComparer(base.getName());
       matched_classes = new TreeSet<>();
     }
    
-   MatchSet(MatchSet orig,SumpClass remove) {
+   MatchSet(MatchSet orig,SumpClass remove,Collection<SumpClass> od,Collection<SumpClass> nd,SumpModel pat) {
       for_class = orig.for_class;
       match_comparer = orig.match_comparer;
       matched_classes = new TreeSet<>();
       for (ScoredClass sc : orig.matched_classes) {
-         if (sc.getSumpClass() != remove) addMatch(sc.getSumpClass(),sc.getScore(),sc.getNameMap());
+         if (sc.getSumpClass() != remove){
+            double score = sc.getScore();
+            SumpClass tocls = sc.getSumpClass();
+            if (od != null && od.contains(for_class)) {
+               if (nd != null && nd.contains(tocls)) {
+                  double x = pat.getPackage().getDependencies().size();
+                  score += 1/x;
+                }
+             }
+            addMatch(tocls,score,sc.getNameMap());
+   
+          }   
        }
     }
    
@@ -349,6 +363,37 @@ private static class MatchComparer implements Comparator<SumpClass>
 
 
 
+/********************************************************************************/
+/*                                                                              */
+/*      Match classes using maximal matching algorithm                          */
+/*                                                                              */
+/********************************************************************************/
+
+@SuppressWarnings("unused")
+private double maxMatchClasss(SumpModel base,SumpModel pat,Map<String,String> rsltmap)
+{
+   Collection<SumpClass> basecls = base.getPackage().getClasses();
+   Collection<SumpClass> patcls = pat.getPackage().getClasses();
+   RowelMatcher<SumpClass> matcher = new RowelMatcher<>(basecls,patcls);
+   Map<SumpClass,SumpClass> rslt = matcher.bestMatch(null);
+  
+   // next go through the result and compute the individual scores, accumulating names
+   double total = 0;
+   for (Map.Entry<SumpClass,SumpClass> ent : rslt.entrySet()) {
+      SumpClass bc = ent.getKey();
+      SumpClass pc = ent.getValue();
+      if (rsltmap != null) rsltmap.put(bc.getFullName(),pc.getFullName());
+      // this computes score and adds attribute and operator names to results
+      double score = computeClassMatchScore(bc,pc,rsltmap);     
+      total += score;
+    }
+   
+   // associations should be accounted for as part of matching
+   double assoc = checkAssociations(base,pat,rslt);
+   total += assoc;
+   
+   return total;
+}
 
 /********************************************************************************/
 /*                                                                              */
@@ -356,7 +401,7 @@ private static class MatchComparer implements Comparator<SumpClass>
 /*                                                                              */
 /********************************************************************************/
 
-private double containsClass(SumpClass base,SumpClass pat,Map<String,String> namemap)
+static double computeClassMatchScore(SumpClass base,SumpClass pat,Map<String,String> namemap)
 {
    // Set<Object> done = new HashSet<>();
    
@@ -469,7 +514,7 @@ static boolean matchType(SumpDataType base,SumpDataType pat)
    return true; 
 }
 
-private Map<String,String> matchOperation(SumpOperation base,SumpOperation pat)
+private static Map<String,String> matchOperation(SumpOperation base,SumpOperation pat)
 {
    // should return name map or null
    Map<String,String> namemap = new HashMap<>();

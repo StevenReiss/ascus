@@ -57,6 +57,7 @@ import edu.brown.cs.ivy.file.IvyFile;
 import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompProject;
+import edu.brown.cs.spur.stare.StareDriver;
 import edu.brown.cs.spur.sump.SumpConstants;
 import edu.brown.cs.spur.sump.SumpData;
 import edu.brown.cs.spur.sump.SumpConstants.SumpModel;
@@ -237,16 +238,20 @@ void processAbstractor()
 void processBuildCandidates(SumpModel mdl)
 {
    List<CoseResult> rslts = getSearchResults();
- //  List<CoseResult> trslts = getFilteredResults(rslts);
   
+   List<ScrapCandidate> cands = null;
    ScrapCandidateBuilder scb = new ScrapCandidateBuilder(rslts);
    try {
-      scb.buildCandidates(mdl);
+      cands = scb.buildCandidates(mdl);
     }
    catch (Throwable t) {
       System.err.println("Problem building candidate: " + t);
       t.printStackTrace();
     }
+   
+   StareDriver stare = new StareDriver();
+   stare.addInitialSolutions(cands);
+   stare.process();
 }
 
 

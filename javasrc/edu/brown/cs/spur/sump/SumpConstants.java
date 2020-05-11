@@ -73,6 +73,7 @@ interface SumpModel {
   void generateXMI(File file) throws IOException;
   void computeLayout();
   Rectangle getBounds(SumpClass cls);
+  Collection<SumpClass> getDependentClasses(SumpClass sc);
 }
 
 
@@ -98,7 +99,7 @@ interface SumpPackage extends SumpElement {
 }       // end of inner interface SumpPackageElement
 
 
-interface SumpClass extends SumpElement {
+interface SumpClass extends SumpElement, RowelMatch {
    boolean isInterface();
    SumpClass getSuperClass();
    Collection<SumpClass> getInterfaces();
