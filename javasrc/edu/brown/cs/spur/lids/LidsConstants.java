@@ -46,6 +46,14 @@ interface LidsLibrary {
    String getVersion();
    String getId();
    String getFullId();
+   
+   default String getGroup() {
+      String s = getId();
+      int idx = s.indexOf(":");
+      if (idx > 0) s = s.substring(0,idx);
+      return s;
+    }
+   
 }       // end of inner interface LidsLibrary
 
 

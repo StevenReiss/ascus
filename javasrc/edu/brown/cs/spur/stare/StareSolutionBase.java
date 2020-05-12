@@ -46,6 +46,7 @@ import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
 
 import edu.brown.cs.cose.cosecommon.CoseResult;
+import edu.brown.cs.ivy.exec.IvyExec;
 import edu.brown.cs.ivy.file.IvyFile;
 import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.spur.lids.LidsFinder;
@@ -122,9 +123,14 @@ StareSolutionBase(StareCandidateSolution sc)
       producePackageFiles(cu);
       producePomFile();
       // generate resource files
-      // genearte test files
-      // generate maven file
-      // run mvn to compile
+      // generate test files
+      
+      File dir = (File) map_context.get("DIRECTORY");
+      IvyExec ex = new IvyExec("mvn compile",dir,IvyExec.ERROR_OUTPUT);
+      int sts = ex.waitFor();
+      if (sts != 0) {
+         IvyLog.logI("Mavan failed");
+       }
       // run tests
     }
    catch (IOException e) {
@@ -218,7 +224,7 @@ private void setup(CompilationUnit cu)
 
 private void producePackageFiles(CompilationUnit cu)
 {
-   String dir = (String) map_context.get("SRCDIR");
+   File dir = (File) map_context.get("SRCDIR");
    
    for (Object o : cu.types()) {
       AbstractTypeDeclaration td = (AbstractTypeDeclaration) o;

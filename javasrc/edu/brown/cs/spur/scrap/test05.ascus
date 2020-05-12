@@ -1,0 +1,121 @@
+@Ascus(source="GITREPO:https://github.com/d3adspace/mantikor/blob/1f3d549e21ce7491a0b7ca4385c7609f0e6ed27c/file-server/src/main/java/de/d3adspace/mantikor/server/file/MantikorFileServerApp.java")
+@Ascus(library="com.github.elibracha:openapi-diff-models:1.0.1")
+@Ascus(library="io.netty:netty-all:5.0.0.Alpha2")
+@Ascus(search="PACKAGE,PACKAGE_USED,500,GITREPO")
+@Ascus(keywords={"@embedded","@web","server"})
+@Ascus(keyterms={"server","request","ftp","@web","uri","url","routing","application","port","response","@embedded","property","http","callback","https"})
+package edu.brown.cs.SAMPLE;
+
+import edu.brown.cs.sump.annot.Ascus;
+import edu.brown.cs.sump.annot.AscusPackage;
+import edu.brown.cs.sump.annot.AscusClass;
+import java.util.Map;
+
+@AscusPackage
+public interface MantikorFileServerApp {
+
+
+/**
+ * Wrapper around HTTP headers.
+ */
+@AscusClass(uses={Builder.class})
+class HttpHeaders {
+   private Map<String,String> headers;
+}
+
+@AscusClass
+class HttpRequestLine {
+   private HttpMethod method;
+   private HttpVersion version;
+}
+
+@AscusClass
+abstract class HttpResponseComposer {
+   public abstract String compose(HttpResponse response);
+}
+
+@AscusClass(uses={HttpHeaders.class})
+abstract class Builder {
+   public abstract HttpResponse build();
+   public abstract Builder withStatus(HttpStatus status);
+   public abstract Builder withVersion(HttpVersion version);
+}
+
+@AscusClass
+class HttpBody {
+   private char[] content;
+}
+
+@AscusClass
+interface HttpRequestProcessor {
+   HttpResponse processRequest(HttpRequest request);
+}
+
+@AscusClass
+class HttpStatusLine {
+   private HttpStatus status;
+   private HttpVersion version;
+}
+
+@AscusClass(uses={HttpResponseComposer.class})
+class HttpResponseEncoder {
+}
+
+@AscusClass(uses={HttpRequestLine.class})
+abstract class HttpRequestMessageFactory {
+   public abstract HttpRequest parse(String rawHttpRequest);
+}
+
+@AscusClass(uses={HttpRequestMessageFactory.class})
+class HttpRequestDecoder {
+}
+
+/**
+ * Initializer for all connections.
+ * @author Felix 'SasukeKawaii' Klauke
+ */
+@AscusClass(uses={HttpRequestProcessor.class})
+class MantikorServerChannelInitializer {
+}
+
+@AscusClass
+abstract class MantikorConfig {
+   public abstract String getServerHost();
+   public abstract int getServerPort();
+}
+
+@AscusClass(uses={HttpRequestProcessor.class})
+class MantikorConnection {
+}
+
+@AscusClass(uses={HttpHeaders.class,HttpBody.class})
+abstract class HttpMessage {
+   public HttpMessage(HttpHeaders headers,HttpBody body) { }
+   public abstract HttpBody getBody();
+}
+
+/**
+ * Basic interface for server actions.
+ * @author Felix 'SasukeKawaii' Klauke
+ */
+@AscusClass
+interface Mantikor {
+/**
+ * Basic interface for server actions.
+ * @author Felix 'SasukeKawaii' Klauke
+ */
+   boolean isRunning();
+/**
+ * Basic interface for server actions.
+ * @author Felix 'SasukeKawaii' Klauke
+ */
+   void stop();
+/**
+ * Basic interface for server actions.
+ * @author Felix 'SasukeKawaii' Klauke
+ */
+   void start();
+}
+
+}
+

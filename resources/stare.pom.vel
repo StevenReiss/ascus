@@ -12,7 +12,7 @@
    <version>1.0-TRIAL</version>
    <packaging>jar</packaging>
 
-   <properties> 			
+   <properties> 		
       <maven.compiler.source>${JAVAVERSION}</maven.compiler.source>
       <maven.compiler.target>${JAVAVERSION}</maven.compiler.target>
    </properties>
@@ -20,8 +20,8 @@
    <dependencies>
 #foreach ( $lib in $LIBRARIES )
       <dependency>
-	 <groupId>$lib.id</groupId>
-	 <artifcatId>$lib.name</artifactId>
+	 <groupId>$lib.group</groupId>
+	 <artifactId>$lib.name</artifactId>
 	 <version>RELEASE</version>
 <!--	 <version>$lib.version</version>	-->
       </dependency>
