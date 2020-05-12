@@ -168,6 +168,45 @@ public Collection<String> getMissiingImports()
 }
 
 
+/********************************************************************************/
+/*                                                                              */
+/*      Create a library from a string                                          */
+/*                                                                              */
+/********************************************************************************/
+
+public static LidsLibrary createLibrary(String fid)
+{
+   return new StringLibrary(fid);
+}
+
+
+
+private static class StringLibrary implements LidsLibrary {
+
+   private String lib_id;
+   private String lib_name;
+   private String lib_version;
+   
+   StringLibrary(String id) {
+      String [] split = id.split(":");
+      lib_id = split[0] + ":" + split[1];
+      lib_name = split[1];
+      lib_version = split[2];
+    }
+   
+   @Override public String getName()            { return lib_name; }
+   @Override public String getVersion()         { return lib_version; }
+   @Override public String getId()              { return lib_id; }
+   @Override public String getFullId()          { return lib_id + ":" + lib_version; }
+   
+   @Override public String toString() {
+      return lib_id + "@" + lib_name + "@" + lib_version;
+    }
+
+}       // end of inner class StringLibrary
+
+
+
 
 }       // end of class LidsFinder
 

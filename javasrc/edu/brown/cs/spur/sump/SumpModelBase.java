@@ -50,6 +50,7 @@ import edu.brown.cs.ivy.jcomp.JcompProject;
 import edu.brown.cs.ivy.jcomp.JcompSymbol;
 import edu.brown.cs.ivy.jcomp.JcompType;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
+import edu.brown.cs.spur.lids.LidsConstants.LidsLibrary;
 import edu.brown.cs.spur.sump.SumpConstants.SumpModel;
 
 public class SumpModelBase implements SumpConstants, SumpModel
@@ -516,8 +517,8 @@ private List<String> getStringValues(Expression exp,List<String> rslt)
    for (String src : model_data.getSources()) {
       xw.textElement("SOURCE",src);
     }
-   for (String lib : model_data.getLibraries()) {
-      xw.textElement("LIBRARY",lib);
+   for (LidsLibrary lib : model_data.getLibraries()) {
+      xw.textElement("LIBRARY",lib.getFullId());
     }
    CoseRequest cr = model_data.getCoseRequest();
    if (cr != null) {
@@ -558,8 +559,8 @@ private List<String> getStringValues(Expression exp,List<String> rslt)
    for (String src : model_data.getSources()) {
       pw.println("@Ascus(source=\"" + src + "\")");
     }
-   for (String lib : model_data.getLibraries()) {
-      pw.println("@Ascus(library=\"" + lib + "\")");
+   for (LidsLibrary lib : model_data.getLibraries()) {
+      pw.println("@Ascus(library=\"" + lib.getFullId() + "\")");
     }   
    CoseRequest cr = model_data.getCoseRequest();
    if (cr != null) {

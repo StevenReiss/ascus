@@ -44,6 +44,8 @@ import java.util.TreeSet;
 import edu.brown.cs.cose.cosecommon.CoseRequest;
 import edu.brown.cs.cose.cosecommon.CoseResult;
 import edu.brown.cs.cose.cosecommon.CoseSource;
+import edu.brown.cs.spur.lids.LidsFinder;
+import edu.brown.cs.spur.lids.LidsConstants.LidsLibrary;
 
 public class SumpData implements SumpConstants
 {
@@ -56,7 +58,7 @@ public class SumpData implements SumpConstants
 /********************************************************************************/
 
 private String          model_name;
-private Set<String>     library_set;
+private Set<LidsLibrary> library_set;
 private Set<String>     source_set;
 private Set<String>     import_set;
 private Stack<String>   cur_class;
@@ -103,9 +105,17 @@ public SumpData(CoseRequest req,CoseResult rslt)
 /*                                                                              */
 /********************************************************************************/
 
+public void addLibrary(LidsLibrary lib)
+{
+   if (lib == null) return;
+   
+   library_set.add(lib);
+}
+
+
 public void addLibrary(String lib)
 {
-   library_set.add(lib);
+   addLibrary(LidsFinder.createLibrary(lib));
 }
 
 
@@ -133,7 +143,7 @@ public void setName(String name)
 /*                                                                              */
 /********************************************************************************/
 
-public Collection<String> getLibraries()        { return library_set; }
+public Collection<LidsLibrary> getLibraries()   { return library_set; }
 
 public Collection<String> getSources()          { return source_set; }
 

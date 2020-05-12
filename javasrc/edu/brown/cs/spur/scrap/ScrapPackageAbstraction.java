@@ -392,7 +392,7 @@ private boolean isClassIgnorable(PackageClass pc)
       CompilationUnit cu = (CompilationUnit) cr.getStructure();
       SumpData sd = new SumpData(scrap_abstractor.getRequest(),cr);
       for (LidsLibrary ll : getReferencedLibraries()) {
-         sd.addLibrary(ll.getId());
+         sd.addLibrary(ll);
        }
       SumpModel mdl = SumpFactory.createModel(sd);
       SumpPackage spe = mdl.setPackage("Default");

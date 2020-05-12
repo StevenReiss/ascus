@@ -142,6 +142,7 @@ private List<LidsLibrary> doMavenSearch(String path)
             if (type == null || !type.equals("jar")) continue;
             String art = doc.getString("a");
             String grp = doc.getString("g");
+            // String ver = doc.getString("v");
             if (CoseConstants.isRelatedPackage(grp,path)) related.add(grp);
             Set<String> al = artifacts.get(grp);
             if (al == null) {
@@ -258,6 +259,7 @@ private static class MavenLibrary implements LidsLibrary {
    @Override public String getName()            { return lib_name; }
    @Override public String getVersion()         { return lib_version; }
    @Override public String getId()              { return lib_id; }
+   @Override public String getFullId()          { return lib_id + ":" + lib_version; }
 
    @Override public String toString() {
       return lib_id + "@" + lib_name + "@" + lib_timestamp + "@" + lib_version;

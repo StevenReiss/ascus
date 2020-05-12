@@ -45,6 +45,7 @@ interface LidsLibrary {
    String getName();
    String getVersion();
    String getId();
+   String getFullId();
 }       // end of inner interface LidsLibrary
 
 
