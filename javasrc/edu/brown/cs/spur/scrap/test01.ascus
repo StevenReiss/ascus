@@ -1,5 +1,5 @@
 @Ascus(source="/github.com/d3adspace/mantikor/blob/1f3d549e21ce7491a0b7ca4385c7609f0e6ed27c/server/src/main/java/de/d3adspace/mantikor/server/connection/MantikorConnection.java@0:0")
-@Ascus(library="io.netty:netty-all")
+@Ascus(library="io.netty:netty-all:5.0.0.Alpha2")
 @Ascus(keywords={"@embedded","@web","server"})
 @Ascus(keyterms={"server","request","ftp","@web","uri","url","routing","application","port","response","@embedded","property","http","callback","https"})
 package edu.brown.cs.SAMPLE;
