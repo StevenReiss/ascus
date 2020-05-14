@@ -240,9 +240,10 @@ void processAbstractor()
 void processBuildCandidates(SumpModel mdl)
 {
    List<CoseResult> rslts = getSearchResults();
+   rslts = removeOverlaps(rslts);
   
    List<ScrapCandidate> cands = null;
-   ScrapCandidateBuilder scb = new ScrapCandidateBuilder(rslts);
+   ScrapCandidateBuilder scb = new ScrapCandidateBuilder(search_request,rslts);
    try {
       cands = scb.buildCandidates(mdl);
     }

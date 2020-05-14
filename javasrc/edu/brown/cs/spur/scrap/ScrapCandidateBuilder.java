@@ -44,7 +44,13 @@ import java.util.TreeSet;
 
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
+import edu.brown.cs.cose.cosecommon.CoseMaster;
+import edu.brown.cs.cose.cosecommon.CoseRequest;
 import edu.brown.cs.cose.cosecommon.CoseResult;
+import edu.brown.cs.cose.cosecommon.CoseConstants.CoseScopeType;
+import edu.brown.cs.cose.cosecommon.CoseConstants.CoseSearchEngine;
+import edu.brown.cs.cose.cosecommon.CoseConstants.CoseSearchType;
+import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompControl;
 import edu.brown.cs.ivy.jcomp.JcompProject;
@@ -65,6 +71,7 @@ class ScrapCandidateBuilder implements ScrapConstants
 
 private List<CoseResult>        all_results;
 private JcompControl            jcomp_control;
+private CoseRequest             original_request;
 
 
 
@@ -74,8 +81,9 @@ private JcompControl            jcomp_control;
 /*                                                                              */
 /********************************************************************************/
 
-ScrapCandidateBuilder(List<CoseResult> ar)
+ScrapCandidateBuilder(CoseRequest req,List<CoseResult> ar)
 {
+   original_request = req;
    all_results = ar;
    jcomp_control = new JcompControl();
 }
@@ -92,6 +100,10 @@ List<ScrapCandidate> buildCandidates(SumpModel model)
    List<CandidateMatch> match = findInitialMatches(model);
    
    System.err.println("FOUND " + match.size() + " MATCHES");
+   
+   for (CandidateMatch cm : match) {
+      addTestCases(cm);
+    }
    
    EtchFactory etcher = new EtchFactory(model);
    
@@ -140,6 +152,57 @@ private List<CandidateMatch> findInitialMatches(SumpModel model)
    
    return new ArrayList<>(match);
 }
+
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Find associated test cases                                                       */
+/*                                                                              */
+/********************************************************************************/
+
+private void addTestCases(CandidateMatch cm)
+{
+   CoseResult cr = cm.getCoseResult();
+   ScrapRequest req = new ScrapRequest();
+   for (CoseSearchEngine seng : original_request.getEngines()) {
+      if (seng == CoseSearchEngine.GITREPO) seng = CoseSearchEngine.GITHUB;
+      req.setSearchEngine(seng);
+    }
+   req.setCoseSearchType(CoseSearchType.TESTCLASS);
+   req.setCoseScopeType(CoseScopeType.FILE);
+   String pkg = cr.getBasePackage();
+   for (String s : cr.getPackages()) {
+      if (s.startsWith(pkg)) continue;
+      int len = 0;
+      for ( ; len < pkg.length() && len < s.length(); ++len) {
+         if (pkg.charAt(len) != s.charAt(len)) break;
+       }
+      int idx = pkg.lastIndexOf(".");
+      pkg = pkg.substring(0,idx);
+    }
+   req.addKeyword(pkg);
+   req.addKeyword("junit");
+   req.addKeyword("test");
+   req.setDoDebug(true);
+   CoseMaster master = CoseMaster.createMaster(req);
+   ScrapResultSet tests = new ScrapResultSet();
+   try {
+      master.computeSearchResults(tests);
+    }
+   catch (Throwable t) {
+      IvyLog.logE("PROBLEM GETTING TEST RESULTS: " + t,t);
+    }
+   for (CoseResult test : tests.getResults()) {
+      System.err.println("MERGE IN TEST " + test + "\n" + test.getEditText());
+      // ensure that all classes referenced are in the model code
+      // otherwise, prune the model code to only include known classes
+      // ensure that this test class is not in the model code
+      // then add the class to the model code
+    }
+}
+
 
 
 
