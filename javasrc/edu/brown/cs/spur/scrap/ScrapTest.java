@@ -188,7 +188,7 @@ public void loadTest01()
 public void candidateTest01()
 {
    try {
-      File f = new File("/research/people/spr/spur/scrap/src/test03.ascus");
+      File f = new File("/research/people/spr/spur/scrap/src/test04.ascus");
       SumpModel mdl = SumpFactory.loadModel(f);
       SumpData sd = mdl.getModelData();
       CoseDefaultRequest cdr = (CoseDefaultRequest) sd.getCoseRequest();
@@ -197,7 +197,45 @@ public void candidateTest01()
       cdr.setSearchEngine(CoseSearchEngine.GITREPO);
       cdr.setNumberOfResults(500);
       cdr.setNumberOfThreads(8);
-      // cdr.setNumberOfThreads(1);
+      
+      ScrapDriver driver = new ScrapDriver(sd);
+      driver.processBuildCandidates(mdl);
+    }
+   catch (Throwable t) {
+      t.printStackTrace();
+      System.err.println("Problem running candidate test: " + t);
+    }
+   
+   try {
+      File f = new File("/research/people/spr/spur/scrap/src/test05.ascus");
+      SumpModel mdl = SumpFactory.loadModel(f);
+      SumpData sd = mdl.getModelData();
+      CoseDefaultRequest cdr = (CoseDefaultRequest) sd.getCoseRequest();
+      cdr.setCoseScopeType(CoseScopeType.PACKAGE_USED);
+      cdr.setCoseSearchType(CoseSearchType.PACKAGE);
+      cdr.setSearchEngine(CoseSearchEngine.GITREPO);
+      cdr.setNumberOfResults(500);
+      cdr.setNumberOfThreads(8);
+      
+      ScrapDriver driver = new ScrapDriver(sd);
+      driver.processBuildCandidates(mdl);
+    }
+   catch (Throwable t) {
+      t.printStackTrace();
+      System.err.println("Problem running candidate test: " + t);
+    }
+   
+   try {
+      File f = new File("/research/people/spr/spur/scrap/src/test06.ascus");
+      SumpModel mdl = SumpFactory.loadModel(f);
+      SumpData sd = mdl.getModelData();
+      CoseDefaultRequest cdr = (CoseDefaultRequest) sd.getCoseRequest();
+      cdr.setCoseScopeType(CoseScopeType.PACKAGE_USED);
+      cdr.setCoseSearchType(CoseSearchType.PACKAGE);
+      cdr.setSearchEngine(CoseSearchEngine.GITREPO);
+      cdr.setNumberOfResults(500);
+      cdr.setNumberOfThreads(8);
+      
       ScrapDriver driver = new ScrapDriver(sd);
       driver.processBuildCandidates(mdl);
     }

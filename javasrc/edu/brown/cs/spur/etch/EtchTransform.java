@@ -291,12 +291,13 @@ protected MethodDeclaration createDummyMethod(AST ast,SumpOperation op)
    SumpDataType sdt = op.getReturnType();
    
    MethodDeclaration md = ast.newMethodDeclaration();
+   md.setBody(ast.newBlock());
    if (op.getName().equals("<init>")) {
       md.setConstructor(true);
       String fnm = op.getFullName();
       int idx = fnm.lastIndexOf(".");
       String cnm = fnm.substring(0,idx);
-      int idx1 = fnm.lastIndexOf(".");
+      int idx1 = cnm.lastIndexOf(".");
       md.setName(JcompAst.getSimpleName(ast,cnm.substring(idx1+1)));
       sdt = null;
     }

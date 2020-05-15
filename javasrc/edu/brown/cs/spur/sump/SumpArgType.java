@@ -174,7 +174,7 @@ public static SumpArgType computeArgType(JcompTyper typer,JcompType jt,ASTNode n
    
    if (jt.isBinaryType()) {
       if (jt.getName().startsWith("java.")) return JAVA;
-      if (jt.getName().startsWith("org.w3c.")) return JAVA;
+      if (jt.getName().startsWith("org.w3c.dom.")) return JAVA;
       if (jt.getName().startsWith("javax.")) return JAVA;
       if (jt.getName().startsWith("javafx.")) return JAVA;
       if (jt.getName().startsWith("android.")) return ANDROID;
