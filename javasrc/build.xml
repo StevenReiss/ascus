@@ -8,6 +8,7 @@
       <ant antfile="build.xml" dir="edu/brown/cs/spur/swift" />
       <ant antfile="build.xml" dir="edu/brown/cs/spur/sump" />
       <ant antfile="build.xml" dir="edu/brown/cs/spur/etch" />
+      <ant antfile="build.xml" dir="edu/brown/cs/spur/stare" />
       <ant antfile="build.xml" dir="edu/brown/cs/spur/scrap" />
    </target>
 
