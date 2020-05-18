@@ -487,6 +487,9 @@ List<LidsLibrary> getReferencedLibraries()
       Writer w = new StringWriter();
       mdl.outputJava(w);
       System.err.print(w.toString());
+      IvyXmlWriter uxfw = new IvyXmlWriter();
+      mdl.generateUXF(uxfw);
+      System.err.println(uxfw.toString());
       break;            // only output one model for now
     }
    

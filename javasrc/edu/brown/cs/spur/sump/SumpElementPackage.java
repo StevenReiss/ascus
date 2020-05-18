@@ -236,6 +236,18 @@ private void addDependenciesFor(JcompType jt,JcompType ourtyp,Map<String,SumpCla
 }
 
 
+void generateUXF(IvyXmlWriter xw,SumpLayout sl)
+{
+   for (SumpElementClass sc : class_map.values()) {
+      sc.generateUXF(xw,sl);
+    }
+   for (SumpElementDependency ed : class_depends) {
+      ed.generateUXF(xw,sl);
+    }
+}
+
+
+
 }       // end of class SumpPackageElement
 
 

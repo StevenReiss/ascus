@@ -631,9 +631,30 @@ private List<String> getStringValues(Expression exp,List<String> rslt)
 }
 
 
-@Override public void generateUXF(File f)
+@Override public void generateUXF(IvyXmlWriter xw)
 {
-   throw new Error("Not implemented yet");
+   xw.begin("diagram");
+   xw.field("program","umlet");
+   xw.field("version","13.3");
+   xw.textElement("zoom_level",10);
+   model_package.generateUXF(xw,model_layout);
+   xw.end("diagram");
+   xw.close();
+   xw.begin("element");
+   xw.textElement("id","UMLNote");
+   StringBuffer buf = new StringBuffer();
+   buf.append("NAME: " + model_data.getName() + ";\n");
+   for (String s : model_data.getImports()) {
+      buf.append("IMPORT: " + s + ":\n");
+    }
+   for (LidsLibrary s : model_data.getLibraries()) {
+      buf.append("LIBRARY: " + s.getFullId() + ";\n");
+    }
+   for (String s : model_data.getSources()) {
+      buf.append("SOURCE: " + s + ";\n");
+    }
+   xw.textElement("panel_attributes",buf.toString());
+   xw.end("element");
 }
 
 

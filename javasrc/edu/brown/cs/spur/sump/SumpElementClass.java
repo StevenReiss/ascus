@@ -319,6 +319,70 @@ private void initialize(AbstractTypeDeclaration atd)
     }
 }
 
+
+void generateUXF(IvyXmlWriter xw,SumpLayout layout)
+{
+   xw.begin("element");
+   xw.textElement("id","UMLClass");
+   xw.begin("coordinates");
+   Rectangle r = layout.getBounds(this);
+   xw.textElement("x",r.x);
+   xw.textElement("y",r.y);
+   xw.textElement("w",r.width);
+   xw.textElement("h",r.height);
+   xw.end("coordinates");
+   StringBuffer buf = new StringBuffer();
+   buf.append(getName() + "\n-\n");
+   for (SumpElementAttribute at : attribute_list) {
+      switch (at.getAccess()) {
+         case PRIVATE : 
+            buf.append("#");
+            break;
+         case PUBLIC :
+            buf.append("+");
+            break;
+         default  :
+            break;
+       }
+      buf.append(at.getName());
+      buf.append(": ");
+      buf.append(at.getDataType().getName());
+      buf.append("\n");
+    }
+   buf.append("-\n");
+   for (SumpElementOperation op : operation_list) {
+      switch (op.getAccess()) {
+         case PRIVATE : 
+            buf.append("#");
+            break;
+         case PUBLIC :
+            buf.append("+");
+            break;
+         default :
+            break;
+       }
+      buf.append(op.getName());
+      buf.append("(");
+      int ct = 0;
+      for (SumpParameter ep : op.getParameters()) {
+         if (ct++ > 0) buf.append(", ");
+         buf.append(ep.getName());
+         buf.append(": ");
+         buf.append(ep.getDataType().getName());
+       }
+      buf.append(")");
+      if (op.getReturnType() != null) {
+         buf.append(": ");
+         buf.append(op.getReturnType().getName());
+       }
+      buf.append("\n");
+    }
+   xw.textElement("panel_attributes",buf.toString());
+   xw.end("element");
+}
+
+
+
 }       // end of class SumpElementClass
 
 

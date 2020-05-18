@@ -37,6 +37,7 @@ package edu.brown.cs.spur.sump;
 
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Point;
 import java.awt.Rectangle;
 import java.util.HashMap;
 import java.util.Map;
@@ -45,6 +46,7 @@ import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JSeparator;
 
+import edu.brown.cs.ivy.petal.PetalArc;
 import edu.brown.cs.ivy.petal.PetalArcDefault;
 import edu.brown.cs.ivy.petal.PetalEditor;
 import edu.brown.cs.ivy.petal.PetalLayoutMethod;
@@ -66,6 +68,7 @@ class SumpLayout implements SumpConstants
 
 private SumpPackage for_package;
 private Map<SumpClass,PetalNode> class_components;
+private Map<SumpDependency,PetalArc> arc_components;
 
 
 
@@ -80,6 +83,7 @@ SumpLayout(SumpPackage pkg)
 {
    for_package = pkg;
    class_components = new HashMap<>();
+   arc_components = new HashMap<>();
 }
 
 
@@ -96,6 +100,13 @@ Rectangle getBounds(SumpClass cls)
    if (pn == null) return null;
    Component c = pn.getComponent();
    return c.getBounds();
+}
+
+
+Point [] getPoints(SumpDependency dep)
+{
+   PetalArc pa = arc_components.get(dep);
+   return pa.getPoints();
 }
 
 
@@ -123,6 +134,7 @@ void process()
       PetalArcDefault pa = new PetalArcDefault(class_components.get(sc1),
             class_components.get(sc2));
       mdl.addArc(pa);
+      arc_components.put(sd,pa);
     }
    
    PetalEditor pe = new PetalEditor(mdl);
