@@ -197,7 +197,8 @@ public void candidateTest01()
       cdr.setSearchEngine(CoseSearchEngine.GITREPO);
       cdr.setNumberOfResults(500);
       cdr.setNumberOfThreads(8);
-
+      // cdr.setNumberOfThreads(1);
+      
       ScrapDriver driver = new ScrapDriver(sd);
       driver.processBuildCandidates(mdl);
     }
@@ -269,7 +270,7 @@ public void candidateTest01()
 @Test
 public void candidateTest02()
 {
-   File f = new File("/research/people/spr/spur/scrap/src/test03.ascus");
+   File f = new File("/research/people/spr/spur/scrap/src/test07.ascus");
    SumpModel mdl = SumpFactory.loadModel(f);
    SumpData sd = mdl.getModelData();
    CoseDefaultRequest cdr = (CoseDefaultRequest) sd.getCoseRequest();

@@ -2,7 +2,7 @@
 @Ascus(search="PACKAGE,PACKAGE_USED,500,GITREPO")
 @Ascus(keywords={"@embedded","@web","server"})
 @Ascus(keyterms={"server","request","ftp","@web","uri","url","routing","application","port","response","@embedded","property","http","callback","https"})
-package edu.brown.cs.SAMPLE;
+package edu.brown.cs.sample;
 
 import edu.brown.cs.sump.annot.Ascus;
 import edu.brown.cs.sump.annot.AscusPackage;
@@ -23,7 +23,6 @@ public interface Test {
 
 @AscusClass(uses={Stat.class,HTTPHandler.class})
 abstract class Pico {
-   private PicoServer picoServer;
    public abstract Pico setHandler(HTTPHandler handler);
    public abstract void start(int port);
 }

@@ -122,9 +122,16 @@ List<ScrapCandidate> buildCandidates(SumpModel model)
 
 private List<CandidateMatch> findInitialMatches(SumpModel model)
 {
+   CoseResult checker = null;
+   
    Map<CoseResult,SumpModel> mmap = new HashMap<>();
    for (CoseResult orig : all_results) {
       CompilationUnit cu = (CompilationUnit) orig.getStructure();
+      if (cu.toString().contains("kasra_sh.picohttpd")) {
+         System.err.println("CHECK HERE: " + cu);
+         cu = (CompilationUnit) orig.getStructure();
+         checker = orig;
+       }
       JcompProject proj = null;
       if (!JcompAst.isResolved(cu)) {
          proj = JcompAst.getResolvedAst(jcomp_control,cu);
@@ -143,6 +150,8 @@ private List<CandidateMatch> findInitialMatches(SumpModel model)
    Set<CandidateMatch> match = new TreeSet<>(); 
    for (Map.Entry<CoseResult,SumpModel> ent : mmap.entrySet()) {
       Map<String,String> rmap = new HashMap<>();
+      if (ent.getKey() == checker) 
+         System.err.println("CHECK HERE");
       double sv = ent.getValue().matchScore(model,rmap);
       if (sv != 0) {
          CandidateMatch cm = new CandidateMatch(model,ent.getKey(),sv,rmap);
@@ -180,7 +189,8 @@ private void addTestCases(CandidateMatch cm)
          if (pkg.charAt(len) != s.charAt(len)) break;
        }
       int idx = pkg.lastIndexOf(".");
-      pkg = pkg.substring(0,idx);
+      if (idx > 0) 
+         pkg = pkg.substring(0,idx);
     }
    req.addKeyword(pkg);
    req.addKeyword("junit");

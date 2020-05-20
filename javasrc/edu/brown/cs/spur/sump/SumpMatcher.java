@@ -111,7 +111,10 @@ double matchScore(SumpModel base,SumpModel pat,Map<String,String> nmap)
    if (rscore < SCORE_CUTOFF) rscore = 0;
    
    if (nmap !=  null) {
-      nmap.put(getPrefixName(base),getPrefixName(pat));
+      String n1 = getPrefixName(base);
+      String n2 = getPrefixName(pat);
+      System.err.println("PACKAGE MAP " + n1 + " => " + n2);
+      nmap.put(n1,n2);
     }
    
    return rscore;
@@ -207,6 +210,7 @@ private double matchClasses(SumpModel base,SumpModel pat,
    Map<String,String> bestmap = null;
    double bestscore = 0;
    SumpClass bestcls = null;
+   SumpClass fromcls = ms.getFromClass();
    
    int ct = 4;
    if (max > 4) ct = 3;
@@ -215,12 +219,12 @@ private double matchClasses(SumpModel base,SumpModel pat,
  
    for (ScoredClass sccls : ms.getToClasses(ct)) {
       SumpClass sc = sccls.getSumpClass();
-      // System.err.println("MAP " + ms.getFromClass() + " ->  " + sc);
+      // System.err.println("MAP " + fromcls + " ->  " + sc);
 
       Map<SumpClass,SumpClass> nmap = new HashMap<>(cmap);
       nmap.put(ms.getFromClass(),sc);
       SortedSet<MatchSet> nsets = new TreeSet<>();
-      Collection<SumpClass> d1 = pat.getDependentClasses(ms.getFromClass());
+      Collection<SumpClass> d1 = pat.getDependentClasses(fromcls);
       Collection<SumpClass> d2 = base.getDependentClasses(sc); 
       for (MatchSet s : sets) {
          if (ms.getFromClass() == s.getFromClass()) continue;
@@ -247,7 +251,7 @@ private double matchClasses(SumpModel base,SumpModel pat,
    
    if (rsltmap != null) {
       rsltmap.putAll(bestmap);
-      rsltmap.put(bestcls.getFullName(),ms.getFromClass().getFullName());
+      rsltmap.put(bestcls.getFullName(),fromcls.getFullName());
     }
    
    return bestscore;
@@ -413,32 +417,10 @@ static double computeClassMatchScore(SumpClass base,SumpClass pat,Map<String,Str
    double atot = pat.getAttributes().size();
    double afnd = map.size();
    
-   // double atot = 0;
-   // double afnd = 0;
-   // for (SumpAttribute att : pat.getAttributes()) {
-      // atot += 1;
-      // double v = -1;
-      // SumpAttribute best = null;
-      // for (SumpAttribute batt : base.getAttributes()) {
-         // if (done.contains(batt)) continue;
-         // if (matchAttribute(batt,att)) {
-            // double v1 = IvyStringDiff.normalizedStringDiff(batt.getName(),att.getName());
-            // if (best == null || v1 > v) {
-               // v = v1;
-               // best = batt;
-             // }
-          // }
-       // }
-      // if (best != null) {
-         // afnd += 1;
-         // done.add(best);
-         // if (namemap != null) {
-            // namemap.put(best.getFullName(),att.getFullName());
-          // }
-       // }
-    // }
-   
-   if (atot > 0 && afnd / atot < ATTR_CUTOFF) return 0;
+   if (atot == 2  && afnd == 0) return 0;
+   else if (atot == 3 && afnd <= 1) return 0;
+   else if (atot == 4 && afnd <= 2) return 0;
+   else if (atot > 4 && afnd / atot < ATTR_CUTOFF) return 0;
    
    RowelMatcher<SumpOperation> orm = new RowelMatcher<>(pat.getOperations(),base.getOperations());
    Map<SumpOperation,SumpOperation> omap = orm.bestMatch(MatchType.MATCH_EXACT);
@@ -479,10 +461,16 @@ static double computeClassMatchScore(SumpClass base,SumpClass pat,Map<String,Str
        // }
     // }
    
-   if (mtot > 0 && mfnd / mtot < METHOD_CUTOFF) return 0; 
+   if (mtot == 1 && mfnd == 0) return 0;
+   else if (mtot == 2  && mfnd == 0) return 0;
+   else if (mtot == 3 && mfnd <= 1) return 0;
+   else if (mtot == 4 && mfnd <= 2) return 0;
+   else if (mtot > 4 && mfnd / mtot < METHOD_CUTOFF) return 0;
    
    double score = 1;
-   if (atot != 0 && mtot != 0) score = (afnd/atot + mfnd/mtot)/2.0;
+   if (atot != 0 && mtot != 0) {
+      score = (afnd + mfnd) / (atot + mtot);
+    }
    else if (mtot != 0) score = mfnd/mtot;
    else if (atot != 0) score = afnd/atot;
    

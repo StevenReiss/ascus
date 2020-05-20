@@ -87,6 +87,7 @@ public LidsFinder()
 
 public boolean addImportPath(String path)
 {
+   if (path == null) return false;
    if (done_imports.contains(path) || missing_imports.contains(path)) return false;
    if (JcompTyper.isSystemType(path)) return false;
    
