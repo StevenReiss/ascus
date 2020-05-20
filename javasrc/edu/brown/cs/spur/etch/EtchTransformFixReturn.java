@@ -130,7 +130,7 @@ private class ReturnFinder extends ASTVisitor {
       JcompType mrt = typer.findType(mdt.getName());
       JcompType rt = js.getType().getBaseType();
       if (rt == mrt) return false;
-      return_mapper.addReturn(js,mrt);
+      return_mapper.addReturn(js,mdt);
       return true;
     }
    
@@ -147,20 +147,22 @@ private class ReturnFinder extends ASTVisitor {
 
 private class FixReturnMapper extends EtchMapper {
 
-   private Map<JcompSymbol,JcompType> fix_returns;
+   private Map<JcompSymbol,SumpDataType> fix_returns;
    private JcompType orig_type;
-   private JcompType return_type;
-   private Stack<JcompType> return_stack;
+   private SumpDataType return_type;
+   private Stack<SumpDataType> return_stack;
+   private Stack<JcompType> orig_stack;
    
    FixReturnMapper() {
       super(EtchTransformFixReturn.this);
       fix_returns = new HashMap<>();
       return_type = null;
       orig_type = null;
-      return_stack =  new Stack<>();
+      return_stack = new Stack<>();
+      orig_stack = new Stack<>();
     }
    
-   void addReturn(JcompSymbol js,JcompType rt) {
+   void addReturn(JcompSymbol js,SumpDataType rt) {
       fix_returns.put(js,rt);
     }
    
@@ -171,7 +173,7 @@ private class FixReturnMapper extends EtchMapper {
          MethodDeclaration md = (MethodDeclaration) orig;
          JcompSymbol ms = JcompAst.getDefinition(md);
          return_stack.push(return_type);
-         return_stack.push(orig_type);
+         orig_stack.push(orig_type);
          return_type = fix_returns.get(ms);
          orig_type = ms.getType().getBaseType();
        }
@@ -193,33 +195,33 @@ private class FixReturnMapper extends EtchMapper {
                    }
                   if (needreturn) {
                      ReturnStatement r = rw.getAST().newReturnStatement();
-                     Expression ex = return_type.createDefaultValue(rw.getAST());
+                     Expression ex = return_type.getBaseType().createDefaultValue(rw.getAST());
                      if (ex != null) r.setExpression(ex);
                      ListRewrite lrw = rw.getListRewrite(b,Block.STATEMENTS_PROPERTY);
                      lrw.insertLast(r,null);
                    }
                 }
              }
-            Type t = return_type.createAstNode(rw.getAST());
+            Type t =  createTypeNode(return_type,rw.getAST());
             rw.set(md,MethodDeclaration.RETURN_TYPE2_PROPERTY,t,null);
           }
-         orig_type = return_stack.pop();
+         orig_type = orig_stack.pop();
          return_type = return_stack.pop();
        }
       else if (orig instanceof ReturnStatement && return_type != null) {
          ReturnStatement rst = (ReturnStatement) orig;
          if (orig_type.isVoidType()) {
-            Expression ex = return_type.createDefaultValue(rw.getAST());
+            Expression ex = return_type.getBaseType().createDefaultValue(rw.getAST());
             rw.set(orig,ReturnStatement.EXPRESSION_PROPERTY,ex,null);
           }
-         else if (return_type.isVoidType()) {
+         else if (return_type.getBaseType().isVoidType()) {
             rw.set(orig,ReturnStatement.EXPRESSION_PROPERTY,null,null);
           }
          else {
             Expression old = (Expression) rw.createCopyTarget(rst.getExpression());
             CastExpression cst = rw.getAST().newCastExpression();
             cst.setExpression(old);
-            Type st = return_type.createAstNode(rw.getAST());
+            Type st = createTypeNode(return_type,rw.getAST());
             cst.setType(st);
             rw.set(rst,ReturnStatement.EXPRESSION_PROPERTY,cst,null);
           }

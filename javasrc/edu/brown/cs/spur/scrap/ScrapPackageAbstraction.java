@@ -45,6 +45,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.BodyDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -305,7 +307,9 @@ private void findComponents()
       
       use.add(pc);
     }
-
+   
+   addUsedEnums(use);
+   
    for (int i = 0; i < use.size(); ++i) {
       PackageClass pc1 = use.get(i);
       for (int j = i+1; j < use.size(); ++j) {
@@ -340,7 +344,9 @@ private boolean isClassIgnorable(PackageClass pc)
       if (td.isInterface()) iface = true;
       else if (Modifier.isAbstract(atd.getModifiers())) abst = true;
     }
-   else if (atd instanceof EnumDeclaration) return true;
+   else if (atd instanceof EnumDeclaration) {
+      return true;
+    }  
    else return true;
    
    int methods = 0; 
@@ -367,6 +373,51 @@ private boolean isClassIgnorable(PackageClass pc)
    return false;
 }
 
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Add enumeration types that are used by used classes                     */
+/*                                                                              */
+/********************************************************************************/
+
+private void addUsedEnums(List<PackageClass> use)
+{
+   FindEnums finder = new FindEnums();
+   
+   for (PackageClass pc : use) {
+      pc.getAstNode().accept(finder);
+    }
+   
+   for (PackageClass pc : all_classes) {
+      if (pc.getAstNode() instanceof EnumDeclaration) {
+         JcompType jt = JcompAst.getJavaType(pc.getAstNode());
+         if (finder.isUsed(jt))
+            use.add(pc);
+       }
+    }
+}
+
+
+
+private static class FindEnums extends ASTVisitor {
+
+   private Set<JcompType> enum_types;
+   
+   FindEnums() {
+      enum_types = new HashSet<>();
+    }
+   
+   boolean isUsed(JcompType jt)                 { return enum_types.contains(jt); }
+   
+   @Override public void postVisit(ASTNode n) {
+      JcompType jt = JcompAst.getJavaType(n);
+      if (jt != null && jt.isEnumType()) enum_types.add(jt);
+      jt = JcompAst.getExprType(n);
+      if (jt != null && jt.isEnumType()) enum_types.add(jt);
+    }
+   
+}       // end of inner class FindEnums
 
 
 /********************************************************************************/

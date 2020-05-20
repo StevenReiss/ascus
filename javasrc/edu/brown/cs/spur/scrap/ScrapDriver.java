@@ -44,6 +44,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
@@ -91,11 +93,16 @@ public static void main(String [] args)
 private CoseDefaultRequest      search_request;
 private ScrapResultSet          search_result;
 
+private static final Pattern    assert_pattern;
+
+
 static {
    IvyLog.setupLogging("SCRAP",true);
    IvyLog.useStdErr(false);
    IvyLog.setLogFile("/ws/volfred/spr/scrap.log");
    IvyLog.setLogLevel(IvyLog.LogLevel.DEBUG);
+   
+   assert_pattern = Pattern.compile("(void|boolean|\\.)\\s+(assert)\\s*(\\(|\\=|\\;)");
 }
 
 /********************************************************************************/
@@ -223,6 +230,8 @@ void processAbstractor()
 {
    List<CoseResult> rslts = getSearchResults();
    rslts = removeOverlaps(rslts);
+   rslts = handleJavaChanges(rslts);
+   
    List<CoseResult> trslts = getFilteredResults(rslts);
    AbstractionType at = getAbstractionType();
    
@@ -241,6 +250,7 @@ void processBuildCandidates(SumpModel mdl)
 {
    List<CoseResult> rslts = getSearchResults();
    rslts = removeOverlaps(rslts);
+   rslts = handleJavaChanges(rslts);
   
    List<ScrapCandidate> cands = null;
    ScrapCandidateBuilder scb = new ScrapCandidateBuilder(search_request,rslts);
@@ -499,6 +509,42 @@ private List<CoseResult> removeOverlaps(List<CoseResult> results)
    
    List<CoseResult> rslt = new ArrayList<>(results);
    rslt.removeAll(remove);
+   return rslt;
+}
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Handle Java inconsistencies                                             */
+/*                                                                              */
+/********************************************************************************/
+
+private List<CoseResult> handleJavaChanges(List<CoseResult> rslts)
+{
+   List<CoseResult> rslt = new ArrayList<>();
+   boolean upd = false;
+   for (CoseResult cr : rslts) {
+      String txt = cr.getEditText();
+      Matcher m = assert_pattern.matcher(txt);
+      boolean chng = false;
+      while (m.find()) {
+         int idx = m.start(2);
+         int eidx = m.end(2);
+         String ntxt = txt.substring(0,idx) + "assrtt" + txt.substring(eidx);
+         txt = ntxt;
+         chng = true;
+       }
+      if (chng) {
+         CoseResult cr1 = cr.cloneResult(txt,null);
+         rslt.add(cr1);
+         upd = true;
+       }
+      else rslt.add(cr);
+    }
+   
+   if (!upd) return rslts;
+   
    return rslt;
 }
 

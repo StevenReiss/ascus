@@ -49,6 +49,7 @@ import org.eclipse.jdt.core.dom.ExpressionStatement;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.StructuralPropertyDescriptor;
@@ -303,15 +304,14 @@ protected MethodDeclaration createDummyMethod(AST ast,SumpOperation op)
     }
    else {
       md.setName(JcompAst.getSimpleName(ast,op.getName()));
-      Type t = sdt.getBaseType().createAstNode(ast);
+      Type t = createTypeNode(sdt,ast);
       md.setReturnType2(t);
     }
    
    for (SumpParameter sp : op.getParameters()) {
       SingleVariableDeclaration svd = ast.newSingleVariableDeclaration();
       svd.setName(JcompAst.getSimpleName(ast,sp.getName()));
-      JcompType jt = sp.getDataType().getBaseType();
-      Type t = jt.createAstNode(ast);
+      Type t = createTypeNode(sp.getDataType(),ast);
       svd.setType(t);
       md.parameters().add(svd);
     }
@@ -342,6 +342,19 @@ protected MethodDeclaration createDummyMethod(AST ast,SumpOperation op)
    return md;
 }
 
+
+
+protected Type createTypeNode(SumpDataType sdt,AST ast)
+{
+   JcompType jt = sdt.getBaseType();
+   if (jt.isCompiledType()) {
+      String s = sdt.getName();
+      SimpleName sn = JcompAst.getSimpleName(ast,s);
+      SimpleType st = ast.newSimpleType(sn);
+      return st;
+    }
+   return jt.createAstNode(ast);
+}
 
 
 
