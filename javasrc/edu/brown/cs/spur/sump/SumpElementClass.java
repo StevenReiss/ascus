@@ -39,11 +39,14 @@ import java.awt.Rectangle;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
+import org.eclipse.jdt.core.dom.EnumConstantDeclaration;
+import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
@@ -68,6 +71,7 @@ class SumpElementClass extends SumpElementBase implements SumpClass
 
 private List<SumpElementAttribute> attribute_list;
 private List<SumpElementOperation> operation_list;
+private Set<String>         enum_constants;
 private String              super_name;
 private List<String>        iface_names;
 private boolean             is_interface;
@@ -87,6 +91,7 @@ SumpElementClass(SumpModelBase mdl,AbstractTypeDeclaration atd)
    super_name = null;
    iface_names = new ArrayList<>();
    is_interface = false;
+   enum_constants = null;
    
    initialize(atd);
 }
@@ -140,6 +145,12 @@ SumpElementClass(SumpModelBase mdl,AbstractTypeDeclaration atd)
 }
 
 
+@Override public Collection<String> getEnumConstants()
+{
+   return enum_constants;
+}
+
+
 /********************************************************************************/
 /*                                                                              */
 /*      Matching methods                                                        */
@@ -181,6 +192,14 @@ SumpElementClass(SumpModelBase mdl,AbstractTypeDeclaration atd)
 }
 
 
+@Override public void addEnumConstant(JcompSymbol js,ASTNode n)
+{
+   if (enum_constants == null) enum_constants = new LinkedHashSet<>();
+   String s = js.getName();
+   if (!enum_constants.contains(s)) enum_constants.add(s);
+}
+
+
 
 /********************************************************************************/
 /*                                                                              */
@@ -190,23 +209,34 @@ SumpElementClass(SumpModelBase mdl,AbstractTypeDeclaration atd)
 
 private void initialize(AbstractTypeDeclaration atd)
 {
-   TypeDeclaration td = (TypeDeclaration) atd;
-   String nm = td.getName().getIdentifier();
+   String nm = atd.getName().getIdentifier();
    setName(nm);
-   setFullName(JcompAst.getJavaType(td).getName());
+   setFullName(JcompAst.getJavaType(atd).getName());
    
-   if (td.isInterface()) is_interface = true;
-   Type t = td.getSuperclassType();
-   if (t != null) {
-      JcompType jt = JcompAst.getJavaType(t);
-      if (!jt.isUndefined()) super_name = jt.getName();
+   if (atd instanceof TypeDeclaration) {
+      TypeDeclaration td = (TypeDeclaration) atd;
+      if (td.isInterface()) is_interface = true;
+      Type t = td.getSuperclassType();
+      if (t != null) {
+         JcompType jt = JcompAst.getJavaType(t);
+         if (!jt.isUndefined()) super_name = jt.getName();
+       }
+      for (Object o : td.superInterfaceTypes()) {
+         Type t1 = (Type) o;
+         JcompType jt = JcompAst.getJavaType(t1);
+         if (!jt.isUndefined()) {
+            String inm = jt.getName();
+            iface_names.add(inm);
+          }
+       }
     }
-   for (Object o : td.superInterfaceTypes()) {
-      Type t1 = (Type) o;
-      JcompType jt = JcompAst.getJavaType(t1);
-      if (!jt.isUndefined()) {
-         String inm = jt.getName();
-         iface_names.add(inm);
+   else if (atd instanceof EnumDeclaration) {
+      EnumDeclaration ed = (EnumDeclaration) atd;
+      enum_constants = new LinkedHashSet<>();
+      for (Object o : ed.enumConstants()) {
+         EnumConstantDeclaration ecd = (EnumConstantDeclaration) o;
+         String s = ecd.getName().getIdentifier();
+         enum_constants.add(s);
        }
     }
    
@@ -223,7 +253,10 @@ private void initialize(AbstractTypeDeclaration atd)
 
 @Override void outputXml(IvyXmlWriter xw)
 {
-   String what = (is_interface ? "INTERFACE" : "CLASS");
+   String what = "CLASS";
+   if (is_interface) what = "INTERFACE";
+   else if (enum_constants != null) what = "ENUM";
+   
    xw.begin(what);
    basicXml(xw);
    Rectangle bnds = sump_model.getBounds(this);
@@ -253,6 +286,11 @@ private void initialize(AbstractTypeDeclaration atd)
    for (SumpElementOperation op : operation_list) {
       op.outputXml(xw);
     }
+   if (enum_constants != null) {
+      for (String s : enum_constants) {
+         xw.textElement("VALUE",s);
+       }
+    }
    xw.end(what);
 }
 
@@ -278,10 +316,10 @@ private void initialize(AbstractTypeDeclaration atd)
     }
    String pfx = null;
    if (is_interface) pfx = "interface";
-   else {
-      if (operation_list.size() == 0) pfx = "class";
-      else pfx = "abstract class";
-    }
+   else if (enum_constants != null) pfx = "enum";
+   else if (operation_list.size() == 0) pfx = "class";
+   else pfx = "abstract class";
+
    pw.print(pfx + " " + getName());
    if (super_name != null) pw.print(" extends " + super_name);
    if (iface_names != null && !iface_names.isEmpty()) {
@@ -294,6 +332,21 @@ private void initialize(AbstractTypeDeclaration atd)
        }
     }
    pw.println(" {");
+   if (enum_constants != null) {
+      int ct = 0;
+      for (String s : enum_constants) {
+         if (ct > 0) {
+            pw.print(", ");
+            if (ct%5 == 0) pw.println();
+          }
+         ++ct;
+         pw.print(s);
+       }
+      if (!attribute_list.isEmpty() || !operation_list.isEmpty()) {
+         pw.println(";");
+       }
+      else pw.println();
+    }
    
    for (SumpElementAttribute att : attribute_list) {
       att.outputJava(pw);
@@ -332,50 +385,62 @@ void generateUXF(IvyXmlWriter xw,SumpLayout layout)
    xw.textElement("h",r.height);
    xw.end("coordinates");
    StringBuffer buf = new StringBuffer();
+   if (enum_constants != null) buf.append("<<enumeration>>");
    buf.append(getName() + "\n-\n");
+   if (enum_constants != null) {
+      for (String s : enum_constants) {
+         buf.append(s + "\n");
+       }
+    }
    for (SumpElementAttribute at : attribute_list) {
-      switch (at.getAccess()) {
-         case PRIVATE : 
-            buf.append("#");
-            break;
-         case PUBLIC :
-            buf.append("+");
-            break;
-         default  :
-            break;
+      if (at.getAccess() != null) {
+         switch (at.getAccess()) {
+            case PRIVATE : 
+               buf.append("#");
+               break;
+            case PUBLIC :
+               buf.append("+");
+               break;
+            default  :
+               break;
+          }
        }
       buf.append(at.getName());
       buf.append(": ");
       buf.append(at.getDataType().getName());
       buf.append("\n");
     }
-   buf.append("-\n");
-   for (SumpElementOperation op : operation_list) {
-      switch (op.getAccess()) {
-         case PRIVATE : 
-            buf.append("#");
-            break;
-         case PUBLIC :
-            buf.append("+");
-            break;
-         default :
-            break;
+   if (!operation_list.isEmpty()) {
+      buf.append("-\n");
+      for (SumpElementOperation op : operation_list) {
+         if (op.getAccess() != null) {
+            switch (op.getAccess()) {
+               case PRIVATE : 
+                  buf.append("#");
+                  break;
+               case PUBLIC :
+                  buf.append("+");
+                  break;
+               default :
+                  break;
+             }
+          }
+         buf.append(op.getName());
+         buf.append("(");
+         int ct = 0;
+         for (SumpParameter ep : op.getParameters()) {
+            if (ct++ > 0) buf.append(", ");
+            buf.append(ep.getName());
+            buf.append(": ");
+            buf.append(ep.getDataType().getName());
+          }
+         buf.append(")");
+         if (op.getReturnType() != null) {
+            buf.append(": ");
+            buf.append(op.getReturnType().getName());
+          }
+         buf.append("\n");
        }
-      buf.append(op.getName());
-      buf.append("(");
-      int ct = 0;
-      for (SumpParameter ep : op.getParameters()) {
-         if (ct++ > 0) buf.append(", ");
-         buf.append(ep.getName());
-         buf.append(": ");
-         buf.append(ep.getDataType().getName());
-       }
-      buf.append(")");
-      if (op.getReturnType() != null) {
-         buf.append(": ");
-         buf.append(op.getReturnType().getName());
-       }
-      buf.append("\n");
     }
    xw.textElement("panel_attributes",buf.toString());
    xw.end("element");

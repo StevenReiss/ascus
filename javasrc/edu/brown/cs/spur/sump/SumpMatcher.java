@@ -113,7 +113,6 @@ double matchScore(SumpModel base,SumpModel pat,Map<String,String> nmap)
    if (nmap !=  null) {
       String n1 = getPrefixName(base);
       String n2 = getPrefixName(pat);
-      System.err.println("PACKAGE MAP " + n1 + " => " + n2);
       nmap.put(n1,n2);
     }
    
@@ -426,8 +425,12 @@ static double computeClassMatchScore(SumpClass base,SumpClass pat,Map<String,Str
    Map<SumpOperation,SumpOperation> omap = orm.bestMatch(MatchType.MATCH_EXACT);
    for (Map.Entry<SumpOperation,SumpOperation> ent : omap.entrySet()) {
       Map<String,String> pnamemap = matchOperation(ent.getValue(),ent.getKey());
-      namemap.put(ent.getValue().getFullName(),ent.getKey().getFullName());
-      namemap.putAll(pnamemap);
+      String mapname = ent.getValue().getMapName();
+      namemap.put(mapname,ent.getKey().getFullName());
+      for (Map.Entry<String,String> pent : pnamemap.entrySet()) {
+         String key = mapname + "." + pent.getKey();
+         namemap.put(key,pent.getValue());
+       }
     }  
    double mtot = pat.getOperations().size();
    double mfnd = omap.size();
@@ -474,6 +477,22 @@ static double computeClassMatchScore(SumpClass base,SumpClass pat,Map<String,Str
    else if (mtot != 0) score = mfnd/mtot;
    else if (atot != 0) score = afnd/atot;
    
+   Collection<String> pecs = pat.getEnumConstants();
+   Collection<String> becs = base.getEnumConstants();
+   if (pecs != null || becs != null) {
+      if (pecs == null || becs == null) return 0;
+      double eptot = pecs.size();
+      double ebtot = becs.size();
+      double ecnt = 0;
+      for (String s : pecs) {
+         if (becs.contains(s)) ++ecnt;
+       }
+      double emax = Math.max(eptot,ebtot);
+      double escore = 1;
+      if (emax > 0) escore = ecnt/emax;
+      score = escore * 0.75 + score * 0.25;
+    }
+   
    return score;
 }
 
@@ -519,7 +538,7 @@ private static Map<String,String> matchOperation(SumpOperation base,SumpOperatio
    RowelMatcher<SumpParameter> rm = new RowelMatcher<>(bsps,psps);
    Map<SumpParameter,SumpParameter> map = rm.bestMatch(null);
    for (Map.Entry<SumpParameter,SumpParameter> ent : map.entrySet()) {
-      namemap.put(ent.getKey().getFullName(),ent.getValue().getFullName());
+      namemap.put(ent.getKey().getName(),ent.getValue().getFullName());
     }
  
    // Set<SumpParameter> done = new HashSet<>();

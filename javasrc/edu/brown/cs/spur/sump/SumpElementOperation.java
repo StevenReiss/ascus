@@ -133,6 +133,23 @@ SumpElementOperation(SumpModelBase mdl,JcompSymbol js,ASTNode n)
 }
 
 
+@Override public String getMapName()
+{
+   StringBuffer buf = new StringBuffer();
+   buf.append(getFullName());
+   buf.append("(");
+   int ct = 0;
+   for (SumpElementParameter ep : param_values) {
+      String s = ep.getDataType().getName();
+      if (ct++ > 0) buf.append(",");
+      buf.append(s);
+    }
+   buf.append(")");
+   
+   return buf.toString();
+}
+
+
 
 /********************************************************************************/
 /*                                                                              */

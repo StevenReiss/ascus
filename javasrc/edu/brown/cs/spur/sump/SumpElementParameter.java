@@ -97,7 +97,6 @@ SumpElementParameter(SumpModelBase mdl,JcompSymbol js,SingleVariableDeclaration 
    return param_type;
 }
 
-
 /********************************************************************************/
 /*                                                                              */
 /*      Match methods                                                           */

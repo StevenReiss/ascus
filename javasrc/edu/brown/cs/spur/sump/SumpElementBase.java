@@ -76,7 +76,9 @@ abstract public ElementType getElementType();
 
 public String getName() 			{ return element_name; }
 
-public String getFullName()                     { return full_name; }
+@Override public String getFullName()           { return full_name; }
+
+@Override public String getMapName()            { return getFullName(); }
 
 
 public ElementAccess getAccess()		{ return element_access; }

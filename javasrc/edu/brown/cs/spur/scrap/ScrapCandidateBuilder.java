@@ -37,6 +37,7 @@ package edu.brown.cs.spur.scrap;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -50,6 +51,7 @@ import edu.brown.cs.cose.cosecommon.CoseResult;
 import edu.brown.cs.cose.cosecommon.CoseConstants.CoseScopeType;
 import edu.brown.cs.cose.cosecommon.CoseConstants.CoseSearchEngine;
 import edu.brown.cs.cose.cosecommon.CoseConstants.CoseSearchType;
+import edu.brown.cs.ivy.file.IvyFile;
 import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompControl;
@@ -122,16 +124,16 @@ List<ScrapCandidate> buildCandidates(SumpModel model)
 
 private List<CandidateMatch> findInitialMatches(SumpModel model)
 {
-   CoseResult checker = null;
+   // CoseResult checker = null;
    
    Map<CoseResult,SumpModel> mmap = new HashMap<>();
    for (CoseResult orig : all_results) {
       CompilationUnit cu = (CompilationUnit) orig.getStructure();
-      if (cu.toString().contains("kasra_sh.picohttpd")) {
-         System.err.println("CHECK HERE: " + cu);
-         cu = (CompilationUnit) orig.getStructure();
-         checker = orig;
-       }
+      // if (cu.toString().contains("kasra_sh.picohttpd")) {
+         // System.err.println("CHECK HERE: " + cu);
+         // cu = (CompilationUnit) orig.getStructure();
+         // checker = orig;
+       // }
       JcompProject proj = null;
       if (!JcompAst.isResolved(cu)) {
          proj = JcompAst.getResolvedAst(jcomp_control,cu);
@@ -150,8 +152,8 @@ private List<CandidateMatch> findInitialMatches(SumpModel model)
    Set<CandidateMatch> match = new TreeSet<>(); 
    for (Map.Entry<CoseResult,SumpModel> ent : mmap.entrySet()) {
       Map<String,String> rmap = new HashMap<>();
-      if (ent.getKey() == checker) 
-         System.err.println("CHECK HERE");
+      // if (ent.getKey() == checker) 
+         // System.err.println("CHECK HERE");
       double sv = ent.getValue().matchScore(model,rmap);
       if (sv != 0) {
          CandidateMatch cm = new CandidateMatch(model,ent.getKey(),sv,rmap);
@@ -192,7 +194,8 @@ private void addTestCases(CandidateMatch cm)
       if (idx > 0) 
          pkg = pkg.substring(0,idx);
     }
-   req.addKeyword(pkg);
+   System.err.println("LOOK FOR TESTS FOR " + pkg);
+   req.addKeyword("package " + pkg);
    req.addKeyword("junit");
    req.addKeyword("test");
    req.setDoDebug(true);
@@ -204,7 +207,10 @@ private void addTestCases(CandidateMatch cm)
    catch (Throwable t) {
       IvyLog.logE("PROBLEM GETTING TEST RESULTS: " + t,t);
     }
+   Set<String> done = new HashSet<>();
    for (CoseResult test : tests.getResults()) {
+      String enc = IvyFile.digestString(test.getKeyText());
+      if (!done.add(enc)) continue;
       System.err.println("MERGE IN TEST " + test + "\n" + test.getEditText());
       // ensure that all classes referenced are in the model code
       // otherwise, prune the model code to only include known classes

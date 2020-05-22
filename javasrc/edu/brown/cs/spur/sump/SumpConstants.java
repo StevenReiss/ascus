@@ -82,6 +82,7 @@ interface SumpElement {
    ElementType getElementType();
    String getName();
    String getFullName();
+   String getMapName();
 }       // end of inner interface SumpElement
 
 
@@ -105,10 +106,11 @@ interface SumpClass extends SumpElement, RowelMatch {
    Collection<SumpClass> getInterfaces();
    Collection<SumpAttribute> getAttributes();
    Collection<SumpOperation> getOperations();
+   Collection<String> getEnumConstants();
    
    void addAttribute(JcompSymbol js,ASTNode n);
    void addOperation(JcompSymbol js,ASTNode n);
-   
+   void addEnumConstant(JcompSymbol js,ASTNode n);
 
 }       // end of inner interface SumpClassElement
 

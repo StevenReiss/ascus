@@ -51,11 +51,13 @@ import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.BodyDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
 import edu.brown.cs.cose.cosecommon.CoseConstants;
 import edu.brown.cs.cose.cosecommon.CoseResult;
@@ -265,6 +267,7 @@ private void addClass(CoseResult cr,AbstractTypeDeclaration atd)
 {
    PackageClass pc = new PackageClass(scrap_abstractor,cr,atd);
    if (pc.getAbstraction() == null) {
+      all_classes.add(pc);
       // enums come here
       return;
     }
@@ -292,6 +295,7 @@ private void findComponents()
    List<PackageClass> use = new ArrayList<>();
 
    for (PackageClass pc : all_classes) {
+      if (pc.getAbstraction() == null) continue;
       switch (pc.getAbstraction().getArgType()) {
 	 case USERTYPE :
 	 case THISTYPE :
@@ -308,7 +312,7 @@ private void findComponents()
       use.add(pc);
     }
    
-   addUsedEnums(use);
+   addUsedTypes(use);
    
    for (int i = 0; i < use.size(); ++i) {
       PackageClass pc1 = use.get(i);
@@ -381,40 +385,63 @@ private boolean isClassIgnorable(PackageClass pc)
 /*                                                                              */
 /********************************************************************************/
 
-private void addUsedEnums(List<PackageClass> use)
+private void addUsedTypes(List<PackageClass> use)
 {
-   FindEnums finder = new FindEnums();
+   FindUsedTypes finder = new FindUsedTypes();
    
    for (PackageClass pc : use) {
+      finder.setClass(pc.getAbstraction());
       pc.getAstNode().accept(finder);
     }
    
    for (PackageClass pc : all_classes) {
-      if (pc.getAstNode() instanceof EnumDeclaration) {
-         JcompType jt = JcompAst.getJavaType(pc.getAstNode());
-         if (finder.isUsed(jt))
-            use.add(pc);
-       }
+      if (use.contains(pc)) continue;
+      JcompType jt = JcompAst.getJavaType(pc.getAstNode());
+      if (finder.isUsed(jt))
+         use.add(pc);
     }
 }
 
 
 
-private static class FindEnums extends ASTVisitor {
+private static class FindUsedTypes extends ASTVisitor {
 
-   private Set<JcompType> enum_types;
+   private Set<JcompType> used_types;
+   private ScrapClassAbstraction for_class;
    
-   FindEnums() {
-      enum_types = new HashSet<>();
+   FindUsedTypes() {
+      used_types = new HashSet<>();
+      for_class = null;
     }
    
-   boolean isUsed(JcompType jt)                 { return enum_types.contains(jt); }
+   boolean isUsed(JcompType jt)                 { return used_types.contains(jt); }
+   
+   void setClass(ScrapClassAbstraction sc)      { for_class = sc; }
+   
+   @Override public boolean visit(MethodDeclaration md) {
+      if (for_class.isMethodUsed(md)) {
+         md.getReturnType2().accept(this);
+         for (Object o : md.parameters()) {
+            ASTNode n = (ASTNode) o;
+            n.accept(this);
+          }
+       }
+         
+      return false;
+    }
+   
+   @Override public boolean visit(FieldDeclaration fd) {
+      for (Object o : fd.fragments()) {
+         VariableDeclarationFragment vdf = (VariableDeclarationFragment) o;
+         if (for_class.isFieldUsed(vdf)) return true;
+       }
+      return false;
+    }
    
    @Override public void postVisit(ASTNode n) {
       JcompType jt = JcompAst.getJavaType(n);
-      if (jt != null && jt.isEnumType()) enum_types.add(jt);
-      jt = JcompAst.getExprType(n);
-      if (jt != null && jt.isEnumType()) enum_types.add(jt);
+      if (jt != null && !jt.isPrimitiveType() && !jt.isBinaryType()) 
+         used_types.add(jt);
     }
    
 }       // end of inner class FindEnums
@@ -615,7 +642,9 @@ private static class PackageClass extends ScrapComponent {
       for (AbstractTypeDeclaration atd : type_decls) {
          if (atd.getAST() == cu.getAST()) {
             SumpClass sc = pkg.addClass(atd);
-            class_abstraction.addToUmlClass(sc,atd);
+            if (class_abstraction != null) {
+               class_abstraction.addToUmlClass(sc,atd);
+             }
             String nm = atd.getName().getIdentifier();
             cmap.put(nm,sc);
           }

@@ -208,6 +208,7 @@ private ScrapAbstraction  createAbstraction(CoseResult cr,ASTNode n)
    
    switch (n.getNodeType()) {
       case ASTNode.TYPE_DECLARATION :
+      case ASTNode.ENUM_DECLARATION :
          rslt = new ScrapClassAbstraction(this,cr,(AbstractTypeDeclaration) n); 
          break;
       case ASTNode.METHOD_DECLARATION :

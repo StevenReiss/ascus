@@ -1,34 +1,34 @@
 /********************************************************************************/
-/*                                                                              */
-/*              ScrapClassAbstraction.java                                      */
-/*                                                                              */
-/*      description of class                                                    */
-/*                                                                              */
+/*										*/
+/*		ScrapClassAbstraction.java					*/
+/*										*/
+/*	description of class							*/
+/*										*/
 /********************************************************************************/
-/*      Copyright 2013 Brown University -- Steven P. Reiss                    */
+/*	Copyright 2013 Brown University -- Steven P. Reiss		      */
 /*********************************************************************************
- *  Copyright 2013, Brown University, Providence, RI.                            *
- *                                                                               *
- *                        All Rights Reserved                                    *
- *                                                                               *
- *  Permission to use, copy, modify, and distribute this software and its        *
- *  documentation for any purpose other than its incorporation into a            *
- *  commercial product is hereby granted without fee, provided that the          *
- *  above copyright notice appear in all copies and that both that               *
- *  copyright notice and this permission notice appear in supporting             *
- *  documentation, and that the name of Brown University not be used in          *
- *  advertising or publicity pertaining to distribution of the software          *
- *  without specific, written prior permission.                                  *
- *                                                                               *
- *  BROWN UNIVERSITY DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS                *
- *  SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND            *
- *  FITNESS FOR ANY PARTICULAR PURPOSE.  IN NO EVENT SHALL BROWN UNIVERSITY      *
- *  BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY          *
- *  DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,              *
- *  WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS               *
- *  ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE          *
- *  OF THIS SOFTWARE.                                                            *
- *                                                                               *
+ *  Copyright 2013, Brown University, Providence, RI.				 *
+ *										 *
+ *			  All Rights Reserved					 *
+ *										 *
+ *  Permission to use, copy, modify, and distribute this software and its	 *
+ *  documentation for any purpose other than its incorporation into a		 *
+ *  commercial product is hereby granted without fee, provided that the 	 *
+ *  above copyright notice appear in all copies and that both that		 *
+ *  copyright notice and this permission notice appear in supporting		 *
+ *  documentation, and that the name of Brown University not be used in 	 *
+ *  advertising or publicity pertaining to distribution of the software 	 *
+ *  without specific, written prior permission. 				 *
+ *										 *
+ *  BROWN UNIVERSITY DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS		 *
+ *  SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND		 *
+ *  FITNESS FOR ANY PARTICULAR PURPOSE.  IN NO EVENT SHALL BROWN UNIVERSITY	 *
+ *  BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY 	 *
+ *  DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,		 *
+ *  WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS		 *
+ *  ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 	 *
+ *  OF THIS SOFTWARE.								 *
+ *										 *
  ********************************************************************************/
 
 
@@ -47,6 +47,8 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.Block;
+import org.eclipse.jdt.core.dom.EnumConstantDeclaration;
+import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.ExpressionStatement;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -73,22 +75,23 @@ class ScrapClassAbstraction extends ScrapAbstraction
 
 
 /********************************************************************************/
-/*                                                                              */
-/*      Private Storage                                                         */
-/*                                                                              */
+/*										*/
+/*	Private Storage 							*/
+/*										*/
 /********************************************************************************/
 
 enum ComponentType { FIELD, METHOD };
 
-private List<ClassMethod>       all_methods;
-private List<ClassField>        all_fields;
-private List<ClassField>        use_fields;
-private List<ClassMethod>       use_constructors;
-private List<ClassMethod>       use_methods;
-private ScrapTypeAbstraction    void_type;
-private SumpArgType             arg_type;
+private List<ClassMethod>	all_methods;
+private List<ClassField>	all_fields;
+private List<ClassField>	use_fields;
+private List<ClassMethod>	use_constructors;
+private List<ClassMethod>	use_methods;
+private List<String>		enum_constants;
+private ScrapTypeAbstraction	void_type;
+private SumpArgType		arg_type;
 
-private static Set<String>      standard_names;
+private static Set<String>	standard_names;
 
 static {
    standard_names = new HashSet<>();
@@ -100,9 +103,9 @@ static {
 
 
 /********************************************************************************/
-/*                                                                              */
-/*      Constructors                                                            */
-/*                                                                              */
+/*										*/
+/*	Constructors								*/
+/*										*/
 /********************************************************************************/
 
 ScrapClassAbstraction(ScrapAbstractor abs,CoseResult cr,AbstractTypeDeclaration atd)
@@ -110,15 +113,16 @@ ScrapClassAbstraction(ScrapAbstractor abs,CoseResult cr,AbstractTypeDeclaration 
    super(abs,cr,atd);
    all_methods = null;
    all_fields = null;
+   enum_constants = null;
    initialize(cr,atd);
 }
 
 
 
 /********************************************************************************/
-/*                                                                              */
-/*      Access methods                                                          */
-/*                                                                              */
+/*										*/
+/*	Access methods								*/
+/*										*/
 /********************************************************************************/
 
 @Override AbstractionType getAbstractionType()
@@ -127,14 +131,14 @@ ScrapClassAbstraction(ScrapAbstractor abs,CoseResult cr,AbstractTypeDeclaration 
 }
 
 
-SumpArgType getArgType()               { return arg_type; }
+SumpArgType getArgType()	       { return arg_type; }
 
 
 
 /********************************************************************************/
-/*                                                                              */
-/*      Update methods                                                          */
-/*                                                                              */
+/*										*/
+/*	Update methods								*/
+/*										*/
 /********************************************************************************/
 
 void addUsedField(ClassField cf)
@@ -154,13 +158,28 @@ void addUsedMethod(ClassMethod cm)
 }
 
 
+boolean isMethodUsed(MethodDeclaration md)
+{
+   for (ClassMethod cm : use_methods) {
+      if (cm.includesDefinition(md)) return true;
+    }
+   return false;
+}
 
+
+boolean isFieldUsed(VariableDeclarationFragment vdf)
+{
+   for (ClassField cf : use_fields) {
+      if (cf.includesDefinition(vdf)) return true;
+    }
+   return false;
+}
 
 
 /********************************************************************************/
-/*                                                                              */
-/*      Merge methods                                                           */
-/*                                                                              */
+/*										*/
+/*	Merge methods								*/
+/*										*/
 /********************************************************************************/
 
 @Override public boolean mergeWith(ScrapAbstraction abs)
@@ -168,22 +187,22 @@ void addUsedMethod(ClassMethod cm)
    if (!(abs instanceof ScrapClassAbstraction)) return false;
    ScrapClassAbstraction sca = (ScrapClassAbstraction) abs;
    if (arg_type != sca.arg_type) return false;
-   
+
    ScrapMergeData md = new ScrapMergeData();
-   
+
    matchFields(md,sca);
    matchConstructors(md,sca);
    matchMethods(md,sca);
-   
+
    eliminateFields(md,sca);
    eliminateConstructors(md,sca);
    eliminateMethods(md,sca);
-   
+
    otherFields(md,sca);
    otherMethods(md,sca);
-   
+
    if (!checkForMatch(md,sca)) return false;
-   
+
    if (!actualMergeWith(md,sca)) return false;
 
    return true;
@@ -192,13 +211,13 @@ void addUsedMethod(ClassMethod cm)
 
 
 /********************************************************************************/
-/*                                                                              */
-/*      Field merge methods                                                     */
-/*                                                                              */
+/*										*/
+/*	Field merge methods							*/
+/*										*/
 /********************************************************************************/
 
 private void matchFields(ScrapMergeData md,ScrapClassAbstraction sca)
-{  
+{
    RowelMatcher<ClassField> rm = new RowelMatcher<>(use_fields,sca.use_fields);
    Map<ClassField,ClassField> map = rm.bestMatch(MatchType.MATCH_EXACT);
    for (Map.Entry<ClassField,ClassField> ent : map.entrySet()) {
@@ -215,26 +234,26 @@ private void eliminateFields(ScrapMergeData md,ScrapClassAbstraction sca)
       ClassField bestf = null;
       double bestv = -1;
       for (ClassField nf : sca.all_fields) {
-         if (md.isUsed(nf)) continue;
-         if (!cf.isCompatibleWith(nf)) continue;
-         double v = cf.getNameMatch(nf);
-         if (v > bestv) {
-            bestv = v;
-            bestf = nf;
-          }
+	 if (md.isUsed(nf)) continue;
+	 if (!cf.isCompatibleWith(nf)) continue;
+	 double v = cf.getNameMatch(nf);
+	 if (v > bestv) {
+	    bestv = v;
+	    bestf = nf;
+	  }
        }
       if (bestf == null) continue;
       md.addAssociation(cf,bestf);
     }
-   
+
    for (ClassField cf : use_fields) {
       if (md.isUsed(cf)) continue;
       for (ClassMethod cm : sca.use_methods) {
-         if (md.isUsed(cm)) continue;
-         if (cm.canBeAccessMethod(cf) || cm.canBeSetterMethod(cf)) {
-            md.addAssociation(cm,cf);
-            break;
-          }
+	 if (md.isUsed(cm)) continue;
+	 if (cm.canBeAccessMethod(cf) || cm.canBeSetterMethod(cf)) {
+	    md.addAssociation(cm,cf);
+	    break;
+	  }
        }
     }
 }
@@ -248,16 +267,16 @@ private void otherFields(ScrapMergeData md,ScrapClassAbstraction sca)
       ClassField bestf = null;
       double bestv = -1;
       for (ClassField nf : all_fields) {
-         if (md.isUsed(nf)) continue;
-         if (!cf.isCompatibleWith(nf)) continue;
-         double v = cf.getNameMatch(nf);
-         if (v > bestv) {
-            bestv = v;
-            bestf = nf;
-          }
+	 if (md.isUsed(nf)) continue;
+	 if (!cf.isCompatibleWith(nf)) continue;
+	 double v = cf.getNameMatch(nf);
+	 if (v > bestv) {
+	    bestv = v;
+	    bestf = nf;
+	  }
        }
-      if (bestf != null) { 
-         md.addMapping(cf,bestf);
+      if (bestf != null) {
+	 md.addMapping(cf,bestf);
        }
     }
 }
@@ -265,9 +284,9 @@ private void otherFields(ScrapMergeData md,ScrapClassAbstraction sca)
 
 
  /********************************************************************************/
-/*                                                                              */
-/*      Constructor Merge methods                                               */
-/*                                                                              */
+/*										*/
+/*	Constructor Merge methods						*/
+/*										*/
 /********************************************************************************/
 
 private void matchConstructors(ScrapMergeData md,ScrapClassAbstraction sca)
@@ -277,14 +296,14 @@ private void matchConstructors(ScrapMergeData md,ScrapClassAbstraction sca)
    for (Map.Entry<ClassMethod,ClassMethod> ent : map.entrySet()) {
       md.addMapping(ent.getKey(),ent.getValue());
     }
-   
+
    // for (ClassMethod cm : use_constructors) {
       // if (md.isUsed(cm)) continue;
       // for (ClassMethod nm : sca.use_constructors) {
-         // if (md.isUsed(nm)) continue;
-         // if (!cm.isCompatibleWith(nm)) continue;
-         // md.addMapping(cm,nm);
-         // break;
+	 // if (md.isUsed(nm)) continue;
+	 // if (!cm.isCompatibleWith(nm)) continue;
+	 // md.addMapping(cm,nm);
+	 // break;
        // }
     // }
 }
@@ -297,28 +316,28 @@ private void eliminateConstructors(ScrapMergeData md,ScrapClassAbstraction sca)
       int nconst = 0;
       boolean havedflt = false;
       for (ClassMethod nm : sca.all_methods) {
-         if (!nm.isConstructor()) continue;
-         ++nconst;
-         if (nm.getAbstraction().getParameterTypes().isEmpty()) havedflt = true;
+	 if (!nm.isConstructor()) continue;
+	 ++nconst;
+	 if (nm.getAbstraction().getParameterTypes().isEmpty()) havedflt = true;
        }
       if (nconst == 0) {
-         havedflt = true;
-         Set<ScrapTypeAbstraction> args = new HashSet<>();
-         ScrapMethodAbstraction dflt = scrap_abstractor.addToAbstraction(getCoseResult(),void_type,args);
-         if (cm.isCompatibleWith(dflt)) {
-            md.addAssociation(cm,null);
-            continue;
-          }
+	 havedflt = true;
+	 Set<ScrapTypeAbstraction> args = new HashSet<>();
+	 ScrapMethodAbstraction dflt = scrap_abstractor.addToAbstraction(getCoseResult(),void_type,args);
+	 if (cm.isCompatibleWith(dflt)) {
+	    md.addAssociation(cm,null);
+	    continue;
+	  }
        }
       if (havedflt) {
-         for (ClassMethod nm : sca.use_methods) {
-            if (md.isUsed(nm)) continue;
-            if (nm.canBeInitializeMethod(cm)) {
-               md.addAssociation(cm,null);
-               md.addAssociation(nm,null);
-               break;
-             }
-          }
+	 for (ClassMethod nm : sca.use_methods) {
+	    if (md.isUsed(nm)) continue;
+	    if (nm.canBeInitializeMethod(cm)) {
+	       md.addAssociation(cm,null);
+	       md.addAssociation(nm,null);
+	       break;
+	     }
+	  }
        }
     }
 }
@@ -326,9 +345,9 @@ private void eliminateConstructors(ScrapMergeData md,ScrapClassAbstraction sca)
 
 
 /********************************************************************************/
-/*                                                                              */
-/*      Method merge methods                                                    */
-/*                                                                              */
+/*										*/
+/*	Method merge methods							*/
+/*										*/
 /********************************************************************************/
 
 private void matchMethods(ScrapMergeData md,ScrapClassAbstraction sca)
@@ -348,13 +367,13 @@ private void eliminateMethods(ScrapMergeData md,ScrapClassAbstraction sca)
       ClassMethod bestm = null;
       double bestv = -1;
       for (ClassMethod nm: sca.use_methods) {
-         if (md.isUsed(nm)) continue;
-         if (!cm.isCompatibleWith(nm)) continue;
-         double v = cm.getNameMatch(nm);
-         if (v > bestv) {
-            bestv = v;
-            bestm = nm;
-          }
+	 if (md.isUsed(nm)) continue;
+	 if (!cm.isCompatibleWith(nm)) continue;
+	 double v = cm.getNameMatch(nm);
+	 if (v > bestv) {
+	    bestv = v;
+	    bestm = nm;
+	  }
        }
       if (bestm == null) continue;
       md.addAssociation(cm,bestm);
@@ -370,27 +389,27 @@ private void otherMethods(ScrapMergeData md,ScrapClassAbstraction sca)
       ClassMethod bestm = null;
       double bestv = -1;
       for (ClassMethod nm : all_methods) {
-         if (md.isUsed(nm)) continue;
-         if (cm.isConstructor() != nm.isConstructor()) continue;
-         if (!cm.isCompatibleWith(nm)) continue;
-         double v = cm.getNameMatch(nm);
-         if (v > bestv) {
-            bestv = v;
-            bestm = nm;
-          }
+	 if (md.isUsed(nm)) continue;
+	 if (cm.isConstructor() != nm.isConstructor()) continue;
+	 if (!cm.isCompatibleWith(nm)) continue;
+	 double v = cm.getNameMatch(nm);
+	 if (v > bestv) {
+	    bestv = v;
+	    bestm = nm;
+	  }
        }
       if (bestm != null) {
-         md.addMapping(cm,bestm);
-         continue;
+	 md.addMapping(cm,bestm);
+	 continue;
        }
       if (cm.containsName("clone") || cm.containsName("equals") ||
-            cm.containsName("hashCode") || cm.containsName("toString") ||
-            cm.containsName("compareTo") || cm.containsName("compare") ||
-            cm.containsName("finalize")) {
-         md.addAssociation(cm,null);
+	    cm.containsName("hashCode") || cm.containsName("toString") ||
+	    cm.containsName("compareTo") || cm.containsName("compare") ||
+	    cm.containsName("finalize")) {
+	 md.addAssociation(cm,null);
        }
     }
-   
+
    matchItems(use_methods,sca.use_methods,md,false,true);
 }
 
@@ -398,9 +417,9 @@ private void otherMethods(ScrapMergeData md,ScrapClassAbstraction sca)
 
 
 /********************************************************************************/
-/*                                                                              */
-/*      Merge checking methods                                                  */
-/*                                                                              */
+/*										*/
+/*	Merge checking methods							*/
+/*										*/
 /********************************************************************************/
 
 private boolean checkForMatch(ScrapMergeData md,ScrapClassAbstraction sca)
@@ -411,20 +430,35 @@ private boolean checkForMatch(ScrapMergeData md,ScrapClassAbstraction sca)
    double f4 = 0.25;
    double f5 = 0.25;
    double f6 = 0.50;
-   
+
    switch (scrap_abstractor.getRequest().getCoseSearchType()) {
       case PACKAGE :
-         f5 = 0.5;
-         f6 = 0.75;
-         break;
+	 f5 = 0.5;
+	 f6 = 0.75;
+	 break;
       default :
-         break;
+	 break;
     }
-   
-   if (!checkMatch(md,use_fields,sca.use_fields,f1,f2,0.0)) return false;   
+
+   if (!checkMatch(md,use_fields,sca.use_fields,f1,f2,0.0)) return false;
    if (!checkMatch(md,use_constructors,sca.use_constructors,f3,f4,0.0)) return false;
    if (!checkMatch(md,use_methods,sca.use_methods,f5,f6,0.0)) return false;
+
+   if (enum_constants != null || sca.enum_constants != null) {
+      if (enum_constants == null || sca.enum_constants == null) return false;
+      double e0 = enum_constants.size();
+      double e1 = sca.enum_constants.size();
+      double e2 = Math.min(e0,e1);
+      if (Math.abs(e0-e1) > 2) return false;
+      double ecnt = 0;
+      for (String s : enum_constants) {
+	 if (sca.enum_constants.contains(s)) ++ecnt;
+       }
+      if (ecnt < e2 * 0.75) return false;
+    }
+
    // System.err.println("MATCH SUCCESSFUL");
+
    return true;
 }
 
@@ -435,9 +469,9 @@ private boolean checkForMatch(ScrapMergeData md,ScrapClassAbstraction sca)
 
 
 /********************************************************************************/
-/*                                                                              */
-/*      Actual merging methods                                                  */
-/*                                                                              */
+/*										*/
+/*	Actual merging methods							*/
+/*										*/
 /********************************************************************************/
 
 private boolean actualMergeWith(ScrapMergeData md,ScrapClassAbstraction sca)
@@ -446,38 +480,46 @@ private boolean actualMergeWith(ScrapMergeData md,ScrapClassAbstraction sca)
        ClassField nf = (ClassField) md.getMapping(cf);
        if (nf != null) nf.mergeWith(cf);
        else if (md.isAdded(cf)) {
-          addUsedField(cf);
-        }
+	  addUsedField(cf);
+	}
     }
-   
+
    for (ClassMethod cm : sca.use_constructors) {
       ClassMethod nm = (ClassMethod) md.getMapping(cm);
       if (nm != null) nm.mergeWith(cm);
       else if (md.isAdded(cm)) {
-         addUsedMethod(cm);
+	 addUsedMethod(cm);
        }
     }
-   
+
    for (ClassMethod cm : sca.use_methods) {
       ClassMethod nm = (ClassMethod) md.getMapping(cm);
       if (nm != null) nm.mergeWith(cm);
       else if (md.isAdded(cm)) {
-         addUsedMethod(cm);
+	 addUsedMethod(cm);
        }
     }
-   
+
+
+   if (enum_constants != null && sca.enum_constants != null) {
+      for (String s : sca.enum_constants) {
+	 if (!enum_constants.contains(s)) enum_constants.add(s);
+       }
+    }
+
    // should also add to all_fields and all_methods
+
    superMergeWith(sca);
-   
+
    return true;
 }
 
 
 
 /********************************************************************************/
-/*                                                                              */
-/*      Setup methods                                                           */
-/*                                                                              */
+/*										*/
+/*	Setup methods								*/
+/*										*/
 /********************************************************************************/
 
 private void initialize(CoseResult cr,ASTNode an)
@@ -490,30 +532,30 @@ private void initialize(CoseResult cr,ASTNode an)
       JcompAst.setProject(an,proj);
       if (proj == null) return;
     }
-   
+
    try {
       JcompType vtyp = proj.getResolveTyper().findSystemType("void");
       void_type = new ScrapTypeAbstraction(proj,vtyp,null);
-      AbstractTypeDeclaration atd = (AbstractTypeDeclaration) an; 
+      AbstractTypeDeclaration atd = (AbstractTypeDeclaration) an;
       JcompType typ = JcompAst.getJavaType(atd);
       name_set.add(typ.getName());
       arg_type = SumpArgType.computeArgType(typ,atd);
       findAllElements(cr,atd);
       findComponents(atd);
-   
+
       if (typ.getOuterType() != null) {
-         ScrapTypeAbstraction outer = new ScrapTypeAbstraction(proj,typ.getOuterType(),null);
-         ClassField cf = new ClassField(scrap_abstractor,cr,"<OUTER>",outer);
-         all_fields.add(cf);
+	 ScrapTypeAbstraction outer = new ScrapTypeAbstraction(proj,typ.getOuterType(),null);
+	 ClassField cf = new ClassField(scrap_abstractor,cr,"<OUTER>",outer);
+	 all_fields.add(cf);
        }
-      
+
       for (ClassField cf : all_fields) cf.clearData();
       for (ClassMethod cm : all_methods) cm.clearData();
     }
    finally {
       if (oproj == null) {
-         jcomp_main.freeProject(proj);
-         JcompAst.setProject(an,null);
+	 jcomp_main.freeProject(proj);
+	 JcompAst.setProject(an,null);
        }
     }
 }
@@ -523,22 +565,32 @@ private void findAllElements(CoseResult cr,AbstractTypeDeclaration atd)
 {
    all_methods = new ArrayList<>();
    all_fields = new ArrayList<>();
-   
+
    for (Object o : atd.bodyDeclarations()) {
       if (o instanceof MethodDeclaration) {
-         MethodDeclaration md = (MethodDeclaration) o;
-         if (!isRelevant(md)) continue;
-         ClassMethod cm = new ClassMethod(scrap_abstractor,cr,md);
-         all_methods.add(cm);
+	 MethodDeclaration md = (MethodDeclaration) o;
+	 if (!isRelevant(md)) continue;
+	 ClassMethod cm = new ClassMethod(scrap_abstractor,cr,md);
+	 all_methods.add(cm);
        }
       else if (o instanceof FieldDeclaration) {
-         FieldDeclaration fd = (FieldDeclaration) o;
-         if (!isRelevant(fd)) continue;
-         for (Object o1 : fd.fragments()) {
-            VariableDeclarationFragment vdf = (VariableDeclarationFragment) o1;
-            ClassField cf = new ClassField(scrap_abstractor,cr,vdf);
-            all_fields.add(cf);
-          }
+	 FieldDeclaration fd = (FieldDeclaration) o;
+	 if (!isRelevant(fd)) continue;
+	 for (Object o1 : fd.fragments()) {
+	    VariableDeclarationFragment vdf = (VariableDeclarationFragment) o1;
+	    ClassField cf = new ClassField(scrap_abstractor,cr,vdf);
+	    all_fields.add(cf);
+	  }
+       }
+    }
+
+   if (atd instanceof EnumDeclaration) {
+      enum_constants = new ArrayList<>();
+      EnumDeclaration ed = (EnumDeclaration) atd;
+      for (Object o : ed.enumConstants()) {
+	 EnumConstantDeclaration ecd = (EnumConstantDeclaration) o;
+	 String s = ecd.getName().getIdentifier();
+	 enum_constants.add(s);
        }
     }
 }
@@ -549,15 +601,15 @@ private boolean isRelevant(MethodDeclaration md)
 {
    switch (scrap_abstractor.getRequest().getCoseSearchType()) {
       case CLASS :
-         if (Modifier.isAbstract(md.getModifiers())) return false;
-         break;
+	 if (Modifier.isAbstract(md.getModifiers())) return false;
+	 break;
       case PACKAGE :
-         if (Modifier.isPrivate(md.getModifiers())) return false;
-         break;
+	 if (Modifier.isPrivate(md.getModifiers())) return false;
+	 break;
       default :
-         break;
+	 break;
     }
-   
+
    return true;
 }
 
@@ -566,16 +618,16 @@ private boolean isRelevant(FieldDeclaration fd)
 {
    if (Modifier.isStatic(fd.getModifiers())) return false;
    if (Modifier.isFinal(fd.getModifiers())) return false;
-   
+
    return true;
 }
 
 
 
 /********************************************************************************/
-/*                                                                              */
-/*      Find important fields and methods                                       */
-/*                                                                              */
+/*										*/
+/*	Find important fields and methods					*/
+/*										*/
 /********************************************************************************/
 
 private void findComponents(AbstractTypeDeclaration atd)
@@ -586,7 +638,7 @@ private void findComponents(AbstractTypeDeclaration atd)
    Set<ClassField> fields = new HashSet<>();
    for (ClassField cf : all_fields) {
       if (cf.isAccessible() && !cf.isStatic()) {
-         fields.add(cf);
+	 fields.add(cf);
        }
     }
    for (ClassMethod cm : all_methods) {
@@ -594,42 +646,42 @@ private void findComponents(AbstractTypeDeclaration atd)
       if (cm.isStatic()) continue;
       JcompSymbol acc = cm.getAccessField();
       if (acc != null) {
-         if (cm.isPublic()) {
-            boolean fnd = false;
-            for (ClassField cf : all_fields) {
-               if (cf.getDefinition() == acc) {
-                  fields.add(cf);
-                  fnd = true;
-                  break;
-                }
-             }
-            if (fnd) continue;
-          }
+	 if (cm.isPublic()) {
+	    boolean fnd = false;
+	    for (ClassField cf : all_fields) {
+	       if (cf.getDefinition() == acc) {
+		  fields.add(cf);
+		  fnd = true;
+		  break;
+		}
+	     }
+	    if (fnd) continue;
+	  }
        }
       if (cm.isConstructor() && cm.getStructure().parameters().size() == 0 &&
-            cm.isPublic()) {
-         consts.add(cm);
-         continue;
+	    cm.isPublic()) {
+	 consts.add(cm);
+	 continue;
        }
-      
+
       JcompSymbol js = cm.getDefinition();
       if (!symbols.contains(js)) continue;
       else if (cm.isConstructor()) consts.add(cm);
       else relevant.add(cm);
     }
-   
+
    use_fields = new ArrayList<>(fields);
    use_constructors = new ArrayList<>(consts);
    use_methods = new ArrayList<>(relevant);
-   
+
 }
 
 
 
 /********************************************************************************/
-/*                                                                              */
-/*      Check for (recursive) use of symbols                                    */
-/*                                                                              */
+/*										*/
+/*	Check for (recursive) use of symbols					*/
+/*										*/
 /********************************************************************************/
 
 private Set<JcompSymbol> findSymbols(AbstractTypeDeclaration atd)
@@ -642,11 +694,11 @@ private Set<JcompSymbol> findSymbols(AbstractTypeDeclaration atd)
    for (ClassMethod cm : all_methods) {
       CoseScores cs = cm.getScores();
       switch (scrap_abstractor.getRequest().getCoseSearchType()) {
-         case CLASS:
-            if (cs.getBoolean("TRIVIAL")) continue;
-            break;
-         default :
-            break;
+	 case CLASS:
+	    if (cs.getBoolean("TRIVIAL")) continue;
+	    break;
+	 default :
+	    break;
        }
       if (cs.getBoolean("TESTCASE")) continue;
       double v = cs.getDouble("TERMMATCH");
@@ -658,37 +710,37 @@ private Set<JcompSymbol> findSymbols(AbstractTypeDeclaration atd)
    avg = avg * 1.00;
    if (avg > 0.5) avg = 0.5;
    avg -= 0.01;
-   
+
    for (ClassMethod cm : chkmthds) {
       CoseScores cs = cm.getScores();
       JcompSymbol js = cm.getDefinition();
       switch (scrap_abstractor.getRequest().getCoseSearchType()) {
-         case CLASS :
-            break;
-         case PACKAGE :
-            break;
-         default :
-            break;
+	 case CLASS :
+	    break;
+	 case PACKAGE :
+	    break;
+	 default :
+	    break;
        }
-      
+
       if (classtyp.isInterfaceType()) {
-         symbols.add(js);
-       }    
+	 symbols.add(js);
+       }
       else if (cs.getDouble("TERMMATCH") >= avg || cs.getInt("TERMTITLEMATCH") >= 1) {
-         if (js != null) symbols.add(js);
+	 if (js != null) symbols.add(js);
        }
       else if (cm.isConstructor() && cm.isAccessible()) {
-         symbols.add(js);
-       }   
+	 symbols.add(js);
+       }
     }
-    
+
    for (ClassField cf : all_fields) {
       CoseScores cs = cf.getScores();
       if (cs.getDouble("TERMMATCH") > 0) {
-         JcompSymbol js = cf.getDefinition();
-         if (js != null) {
-            symbols.add(js);
-          }
+	 JcompSymbol js = cf.getDefinition();
+	 if (js != null) {
+	    symbols.add(js);
+	  }
        }
     }
    computeSymbols(symbols);
@@ -703,14 +755,14 @@ private void computeSymbols(Set<JcompSymbol> syms)
    while (chng) {
       chng = false;
       for (ClassMethod cm : all_methods) {
-         JcompSymbol js = cm.getDefinition();
-         if (js == null || syms.contains(js)) continue;
-         UseChecker uc = new UseChecker(syms);
-         cm.getStructure().accept(uc);
-         if (uc.useFound()) {
-            syms.add(js);
-            chng = true;
-          }
+	 JcompSymbol js = cm.getDefinition();
+	 if (js == null || syms.contains(js)) continue;
+	 UseChecker uc = new UseChecker(syms);
+	 cm.getStructure().accept(uc);
+	 if (uc.useFound()) {
+	    syms.add(js);
+	    chng = true;
+	  }
        }
     }
 }
@@ -721,49 +773,49 @@ private static class UseChecker extends ASTVisitor {
 
    private Set<JcompSymbol> base_symbols;
    private boolean use_found;
-   
+
    UseChecker(Set<JcompSymbol> syms) {
       base_symbols = syms;
       use_found = false;
     }
-   
-   boolean useFound()                           { return use_found; }
-   
+
+   boolean useFound()				{ return use_found; }
+
    @Override public void postVisit(ASTNode n) {
       if (use_found) return;
       JcompSymbol js = JcompAst.getReference(n);
       if (js != null) {
-         if (base_symbols.contains(js)) use_found = true;
-         if (js.getName().equals("start")) { 
-            String pfx = null;
-            String ttl = js.getFullName();
-            int idx = ttl.lastIndexOf(".");
-            if (idx > 0) {
-               ttl = ttl.substring(0,idx);
-               if (!ttl.equals("java.lang.Thread")) pfx = ttl;
-             }
-            for (JcompSymbol jsx : base_symbols) {
-               if (jsx.isMethodSymbol() && jsx.getName().equals("run")) {
-                   if (pfx == null) use_found = true;
-                   else if (jsx.getFullName().equals(pfx + ".run")) use_found = true;
-                }
-             }
-          }
+	 if (base_symbols.contains(js)) use_found = true;
+	 if (js.getName().equals("start")) {
+	    String pfx = null;
+	    String ttl = js.getFullName();
+	    int idx = ttl.lastIndexOf(".");
+	    if (idx > 0) {
+	       ttl = ttl.substring(0,idx);
+	       if (!ttl.equals("java.lang.Thread")) pfx = ttl;
+	     }
+	    for (JcompSymbol jsx : base_symbols) {
+	       if (jsx.isMethodSymbol() && jsx.getName().equals("run")) {
+		   if (pfx == null) use_found = true;
+		   else if (jsx.getFullName().equals(pfx + ".run")) use_found = true;
+		}
+	     }
+	  }
        }
     }
-   
+
    @Override public boolean preVisit2(ASTNode n) {
       if (use_found) return false;
       return true;
     }
-   
+
 }
 
 
 /********************************************************************************/
-/*                                                                              */
-/*      Output methods                                                          */
-/*                                                                              */
+/*										*/
+/*	Output methods								*/
+/*										*/
 /********************************************************************************/
 
 @Override void outputAbstraction()
@@ -799,7 +851,7 @@ private static class UseChecker extends ASTVisitor {
     }
    for (ClassMethod cm : use_methods) {
       cm.outputShortMethod();
-    }  
+    }
 }
 
 
@@ -814,14 +866,21 @@ void addToUmlClass(SumpClass scls,AbstractTypeDeclaration atd)
    for (ClassMethod cm : use_methods) {
       cm.addToUmlClass(scls,atd);
     }
+   if (enum_constants != null) {
+      for (Object o : ((EnumDeclaration) atd).enumConstants()) {
+         EnumConstantDeclaration ecd = (EnumConstantDeclaration) o;
+         JcompSymbol js = JcompAst.getDefinition(ecd);
+         scls.addEnumConstant(js,ecd);
+       }
+    }
 }
 
 
 
 /********************************************************************************/
-/*                                                                              */
-/*      Analysis methods                                                        */
-/*                                                                              */
+/*										*/
+/*	Analysis methods							*/
+/*										*/
 /********************************************************************************/
 
 private static JcompSymbol getAccessField(MethodDeclaration md)
@@ -832,8 +891,8 @@ private static JcompSymbol getAccessField(MethodDeclaration md)
       Type t = md.getReturnType2();
       if (t == null) return null;
       if (t.isPrimitiveType()) {
-         PrimitiveType pt = (PrimitiveType) t;
-         if (pt.getPrimitiveTypeCode() == PrimitiveType.VOID) return null;
+	 PrimitiveType pt = (PrimitiveType) t;
+	 if (pt.getPrimitiveTypeCode() == PrimitiveType.VOID) return null;
        }
       return checkGetMethod(md);
     }
@@ -890,26 +949,26 @@ private static JcompSymbol checkSetMethod(MethodDeclaration md)
 private static class RefFinder extends ASTVisitor {
 
    private Set<JcompSymbol> all_refs;
-   
+
    RefFinder() {
       all_refs = new HashSet<>();
     }
-   
-   Set<JcompSymbol> getReferences()             { return all_refs; }
-   
+
+   Set<JcompSymbol> getReferences()		{ return all_refs; }
+
    @Override public void postVisit(ASTNode n) {
       JcompSymbol js = JcompAst.getReference(n);
       if (js != null) all_refs.add(js);
     }
-   
-}       // end of inner class RefFinder
+
+}	// end of inner class RefFinder
 
 
 
 /********************************************************************************/
-/*                                                                              */
-/*      Method information                                                      */
-/*                                                                              */
+/*										*/
+/*	Method information							*/
+/*										*/
 /********************************************************************************/
 
 private static class ClassMethod extends ScrapComponent implements RowelMatch {
@@ -917,7 +976,7 @@ private static class ClassMethod extends ScrapComponent implements RowelMatch {
    private ScrapMethodAbstraction method_abstraction;
    private List<MethodDeclaration> method_decls;
    private boolean is_constructor;
-   
+
    ClassMethod(ScrapAbstractor abs,CoseResult cr,MethodDeclaration md) {
       method_abstraction = (ScrapMethodAbstraction) abs.addToAbstractor(cr,md);
       method_decls = new ArrayList<>();
@@ -928,9 +987,9 @@ private static class ClassMethod extends ScrapComponent implements RowelMatch {
       else addName(md.getName().getIdentifier());
       is_constructor = md.isConstructor();
     }
-   
-   @Override ComponentType getComponentType()   { return ComponentType.METHOD; }    
-   
+
+   @Override ComponentType getComponentType()	{ return ComponentType.METHOD; }
+
    boolean isAccessible() {
       if (Modifier.isAbstract(component_modifiers)) return false;
       if (Modifier.isPublic(component_modifiers)) return true;
@@ -939,128 +998,131 @@ private static class ClassMethod extends ScrapComponent implements RowelMatch {
       // package protected
       return true;
     }
-   
+
    boolean isConstructor() {
       return is_constructor;
     }
-   
-   ScrapMethodAbstraction getAbstraction()      { return method_abstraction; }
-   
+
+   ScrapMethodAbstraction getAbstraction()	{ return method_abstraction; }
+
    JcompSymbol getDefinition() {
       if (method_decls.isEmpty()) return null;
       return JcompAst.getDefinition(method_decls.get(0));
     }
-   
-   MethodDeclaration getStructure() { 
+
+   boolean includesDefinition(MethodDeclaration md) {
+      return method_decls.contains(md);
+    }
+   MethodDeclaration getStructure() {
       if (method_decls.isEmpty()) return null;
       return method_decls.get(0);
     }
-   
+
    JcompSymbol getAccessField() {
       return ScrapClassAbstraction.getAccessField(method_decls.get(0));
     }
-   
+
    void clearData() {
       // method_decls.clear();
       super.clearData();
     }
-   
+
    @Override boolean isCompatibleWith(ScrapComponent sc) {
       if (sc instanceof ClassMethod) {
-         ClassMethod cm = (ClassMethod) sc;
-         if (isCompatibleWith(cm.method_abstraction)) return true;
+	 ClassMethod cm = (ClassMethod) sc;
+	 if (isCompatibleWith(cm.method_abstraction)) return true;
        }
       return false;
     }
-   
+
    @Override  boolean isComparableTo(ScrapComponent sc) {
       if (sc instanceof ClassMethod) {
-         ClassMethod cm = (ClassMethod) sc;
-         return method_abstraction.isComparable(cm.method_abstraction);
+	 ClassMethod cm = (ClassMethod) sc;
+	 return method_abstraction.isComparable(cm.method_abstraction);
        }
       return false;
    }
-   
-   
+
+
    boolean isCompatibleWith(ScrapMethodAbstraction sma)  {
       if (method_abstraction != sma) return false;
       return true;
    }
-   
+
    boolean canBeAccessMethod(ClassField cf) {
       if (isConstructor()) return false;
       ScrapTypeAbstraction ftyp = cf.getFieldType();
       if (method_abstraction.getReturnType() != ftyp) return false;
       if (method_abstraction.getParameterTypes().size() > 1) return false;
-      
+
       Set<String> words = getNameWords(getNames());
       for (String s : component_names.keySet()) {
-         Set<String> cwords = getNameWords(s);
-         boolean havepfx = false;
-         for (Iterator<String> it = cwords.iterator(); it.hasNext(); ) {
-            String swd = it.next();
-            if (swd.equals("get") || swd.equals("is")) {
-               it.remove();
-               havepfx = true;
-             }
-          }
-         int count = 0;
-         for (String s1 : words) {
-            if (cwords.contains(s1)) ++count;
-          }
-         if (count == words.size()) return true;
-         if (havepfx && count > words.size() / 2) return true;
+	 Set<String> cwords = getNameWords(s);
+	 boolean havepfx = false;
+	 for (Iterator<String> it = cwords.iterator(); it.hasNext(); ) {
+	    String swd = it.next();
+	    if (swd.equals("get") || swd.equals("is")) {
+	       it.remove();
+	       havepfx = true;
+	     }
+	  }
+	 int count = 0;
+	 for (String s1 : words) {
+	    if (cwords.contains(s1)) ++count;
+	  }
+	 if (count == words.size()) return true;
+	 if (havepfx && count > words.size() / 2) return true;
        }
       return false;
     }
-   
+
    boolean canBeSetterMethod(ClassField cf) {
       if (isConstructor()) return false;
       ScrapTypeAbstraction ftyp = cf.getFieldType();
       if (method_abstraction.getReturnType().getArgType() != SumpArgType.VOID) return false;
       if (method_abstraction.getParameterTypes().size() != 1) return false;
       for (ScrapTypeAbstraction sta : method_abstraction.getParameterTypes()) {
-         if (sta != ftyp) return false;
+	 if (sta != ftyp) return false;
        }
-      
+
       Set<String> words = getNameWords(getNames());
       for (String s : component_names.keySet()) {
-         Set<String> cwords = getNameWords(s);
-         boolean havepfx = false;
-         for (Iterator<String> it = cwords.iterator(); it.hasNext(); ) {
-            String swd = it.next();
-            if (swd.equals("set")) {
-               it.remove();
-               havepfx = true;
-             }
-          }
-         int count = 0;
-         for (String s1 : words) {
-            if (cwords.contains(s1)) ++count;
-          }
-         if (count == words.size()) return true;
-         if (havepfx && count > words.size() / 2) return true;
+	 Set<String> cwords = getNameWords(s);
+	 boolean havepfx = false;
+	 for (Iterator<String> it = cwords.iterator(); it.hasNext(); ) {
+	    String swd = it.next();
+	    if (swd.equals("set")) {
+	       it.remove();
+	       havepfx = true;
+	     }
+	  }
+	 int count = 0;
+	 for (String s1 : words) {
+	    if (cwords.contains(s1)) ++count;
+	  }
+	 if (count == words.size()) return true;
+	 if (havepfx && count > words.size() / 2) return true;
        }
       return false;
    }
-   
+
    boolean canBeInitializeMethod(ClassMethod cm)
    {
       if (isConstructor()) return false;
       if (!isCompatibleWith(cm)) return false;
       for (String s : component_names.keySet()) {
-         Set<String> cwords = getNameWords(s);
-         if (cwords.contains("initialize") || cwords.contains("init")) return true;
-         if (cwords.contains("set")) return true;
+	 Set<String> cwords = getNameWords(s);
+	 if (cwords.contains("initialize") || cwords.contains("init")) return true;
+	 if (cwords.contains("set")) return true;
        }
       return false;
    }
-   
+
    void mergeWith(ClassMethod cm) {
       method_decls.addAll(cm.method_decls);
       super.mergeWith(cm);
     }
-   
+
    void outputMethod() {
       System.err.println("MTHD----" + getNames());
       ScrapTypeAbstraction rtyp = method_abstraction.getReturnType();
@@ -1068,17 +1130,17 @@ private static class ClassMethod extends ScrapComponent implements RowelMatch {
       rtyp.outputArg("\t");
       System.err.println("    ARGS:");
       for (ScrapTypeAbstraction ma : method_abstraction.getParameterTypes()) {
-         ma.outputArg("\t");
-       } 
+	 ma.outputArg("\t");
+       }
     }
-   
-   
+
+
    void outputShortMethod() {
       System.err.print("\t(");
       int ct = 0;
       for (ScrapTypeAbstraction ma : method_abstraction.getParameterTypes()) {
-         if (ct++ > 0) System.err.print(",");
-         System.err.print(ma.getArgType());
+	 if (ct++ > 0) System.err.print(",");
+	 System.err.print(ma.getArgType());
        }
       System.err.print(")");
       System.err.print(method_abstraction.getReturnType().getArgType());
@@ -1086,18 +1148,18 @@ private static class ClassMethod extends ScrapComponent implements RowelMatch {
       if (isConstructor()) System.err.println("<INIT>");
       else System.err.println(getNames());
    }
-   
+
    void addToUmlClass(SumpClass scls,AbstractTypeDeclaration atd) {
       for (MethodDeclaration md : method_decls) {
-         if (isChild(atd,md)) {
-            JcompSymbol msym = JcompAst.getDefinition(md);
-            if (msym != null) scls.addOperation(msym,atd);
-          }
+	 if (isChild(atd,md)) {
+	    JcompSymbol msym = JcompAst.getDefinition(md);
+	    if (msym != null) scls.addOperation(msym,atd);
+	  }
        }
     }
-   
-   
-   
+
+
+
    @Override public String toString() {
       StringBuffer buf = new StringBuffer();
       buf.append("METHOD ");
@@ -1107,28 +1169,28 @@ private static class ClassMethod extends ScrapComponent implements RowelMatch {
       buf.append("(");
       int i = 0;
       for (ScrapTypeAbstraction pa : method_abstraction.getParameterTypes()) {
-         if (i++ > 0) buf.append(",");
-         buf.append(pa.toString());
+	 if (i++ > 0) buf.append(",");
+	 buf.append(pa.toString());
        }
       buf.append(")");
       return buf.toString();
     }
-   
-}       // end of inner class ClassMethod
+
+}	// end of inner class ClassMethod
 
 
 
 /********************************************************************************/
-/*                                                                              */
-/*      Field information                                                       */
-/*                                                                              */
+/*										*/
+/*	Field information							*/
+/*										*/
 /********************************************************************************/
 
 private static class ClassField extends ScrapComponent {
 
    private ScrapFieldAbstraction field_abstraction;
    private List<VariableDeclarationFragment> field_asts;
-   
+
    ClassField(ScrapAbstractor abs,CoseResult cr,VariableDeclarationFragment vdf) {
       field_abstraction = (ScrapFieldAbstraction) abs.addToAbstractor(cr,vdf);
       addName(vdf.getName().getIdentifier());
@@ -1138,7 +1200,7 @@ private static class ClassField extends ScrapComponent {
       field_asts = new ArrayList<>();
       field_asts.add(vdf);
     }
-   
+
    ClassField(ScrapAbstractor abs,CoseResult cr,String name,ScrapTypeAbstraction outer) {
        addName(name);
        component_modifiers = 0;
@@ -1146,55 +1208,59 @@ private static class ClassField extends ScrapComponent {
        field_asts = new ArrayList<>();
        field_abstraction = abs.addToAbstractor(cr,name,outer);
     }
-   
-   ComponentType getComponentType()             { return ComponentType.FIELD; }
-   
+
+   ComponentType getComponentType()		{ return ComponentType.FIELD; }
+
    boolean isAccessible() {
       if (Modifier.isPublic(component_modifiers)) return true;
       return false;
     }
-   
+
    JcompSymbol getDefinition() {
       if (field_asts.isEmpty()) return null;
       return JcompAst.getDefinition(field_asts.get(0).getName());
     }
-   
+
    ScrapTypeAbstraction getFieldType() {
       return field_abstraction.getFieldType();
     }
-   
+
    void clearData() {
      // field_asts.clear();
       component_scores = null;
    }
-   
+
    @Override boolean isCompatibleWith(ScrapComponent sc) {
       if (sc instanceof ClassField) {
-         ClassField cf = (ClassField) sc;
-         if (field_abstraction != cf.field_abstraction) {
-            return false;
-          }
-         return true;
+	 ClassField cf = (ClassField) sc;
+	 if (field_abstraction != cf.field_abstraction) {
+	    return false;
+	  }
+	 return true;
        }
       return false;
     }
-   
+
+   boolean includesDefinition(VariableDeclarationFragment vdf) {
+      return field_asts.contains(vdf);
+    }
+
    void mergeWith(ClassField cf) {
       field_asts.addAll(cf.field_asts);
       super.mergeWith(cf);
     }
-   
+
    private void outputField() {
       System.err.println("FLD-----" + getNames());
       ScrapTypeAbstraction typ = getFieldType();
       typ.outputArg("\t");
     }
-   
+
    private void outputShortField() {
       ScrapTypeAbstraction typ = getFieldType();
       System.err.println("\t" + typ.getArgType() + " : " + getNames());
    }
-   
+
    void addToUmlClass(SumpClass scls,AbstractTypeDeclaration atd) {
       for (VariableDeclarationFragment vdf : field_asts) {
          if (isChild(atd,vdf)) {
@@ -1204,17 +1270,17 @@ private static class ClassField extends ScrapComponent {
           }
        }
     }
-   
+
    @Override public String toString() {
       return "FIELD " + getNames() + " : " + getFieldType().toString();
     }
-   
-}       // end of inner class ClassField
+
+}	// end of inner class ClassField
 
 
 
 
-}       // end of class ScrapClassAbstraction
+}	// end of class ScrapClassAbstraction
 
 
 

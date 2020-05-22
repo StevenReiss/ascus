@@ -79,7 +79,9 @@ EtchTransformRename(Map<String,String> namemap)
    for (Iterator<String> it = name_map.keySet().iterator(); it.hasNext(); ) {
       String k = it.next();
       String v = name_map.get(k);
+      int idx = k.indexOf("(");
       if (k.equals(v)) it.remove();
+      else if (idx > 0 && k.substring(0,idx).equals(v)) it.remove(); 
     }
 }
 
@@ -130,7 +132,7 @@ private class FindNameVisitor extends ASTVisitor {
    @Override public void postVisit(ASTNode n) {
       JcompSymbol js = JcompAst.getDefinition(n);
       if (js != null) {
-         String jnm = js.getFullName();
+         String jnm = getMapName(js);
          String rnm = name_map.get(jnm);
          if (rnm != null) {
             String jsnm = jnm;
@@ -138,6 +140,8 @@ private class FindNameVisitor extends ASTVisitor {
             if (jnm.startsWith(fpkg)) {
                jsnm = jsnm.substring(fpkg.length()+1);
              }
+            int idx = jsnm.indexOf("(");
+            if (idx > 0) jsnm = jsnm.substring(0,idx);
             String rsnm = rnm;
             String tpkg = name_handler.getToPrefix();
             if (rnm.startsWith(tpkg)) {

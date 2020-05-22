@@ -60,6 +60,7 @@ import edu.brown.cs.cose.cosecommon.CoseResult;
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompControl;
 import edu.brown.cs.ivy.jcomp.JcompProject;
+import edu.brown.cs.ivy.jcomp.JcompSymbol;
 import edu.brown.cs.ivy.jcomp.JcompType;
 import edu.brown.cs.spur.sump.SumpDataType;
 import edu.brown.cs.spur.sump.SumpConstants.SumpClass;
@@ -378,6 +379,34 @@ protected static SumpOperation findOperation(String nm,SumpModel target)
    
    return null;
 }
+
+
+protected static String getMapName(JcompSymbol js)
+{
+   if (js.isMethodSymbol()) {
+      StringBuffer buf = new StringBuffer();
+      buf.append(js.getFullName());
+      buf.append("(");
+      JcompType jt = js.getType();
+      int ct = 0;
+      for (JcompType ptyp : jt.getComponents()) {
+         if (ct++ > 0) buf.append(",");
+         String s = ptyp.getName();
+         int idx1 = s.indexOf("<");
+         if (idx1 > 0) s = s.substring(0,idx1);
+         int idx2 = s.lastIndexOf(".");
+         if (idx2 > 0) s = s.substring(idx2+1);
+         buf.append(s);
+       }
+      buf.append(")");
+      return buf.toString();
+    }
+   
+   return js.getFullName();
+}
+
+
+
 
 }       // end of class EtchTransform
 

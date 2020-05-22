@@ -156,19 +156,20 @@ private class ParamVisitor extends ASTVisitor {
    
    @Override public boolean visit(MethodDeclaration md) {
       JcompSymbol jm = JcompAst.getDefinition(md);
+      String mnm = getMapName(jm);
       ParamFix pf = null;
       int ct = 0;
       for (Object o : md.parameters()) {
          SingleVariableDeclaration svd = (SingleVariableDeclaration) o;
          JcompSymbol pm = JcompAst.getDefinition(svd.getName());
-         String pnm = pm.getFullName();
+         String pnm = mnm + "." + pm.getName();
          String match = name_map.get(pnm);
          if (match != null) {
-            SumpOperation op = findOperation(pnm,target_model);
+            SumpOperation op = findOperation(match,target_model);
             int pct = 0;
             SumpParameter usesp = null;
             for (SumpParameter sp : op.getParameters()) {
-               if (sp.getFullName().equals(pnm)) {
+               if (sp.getFullName().equals(match)) {
                   usesp = sp;
                   break;
                 }
@@ -177,7 +178,9 @@ private class ParamVisitor extends ASTVisitor {
             if (usesp != null) {
                boolean samenm = pm.getName().equals(usesp.getName());
                String ptypnm = usesp.getDataType().getBaseType().getName();
-               boolean samety = pm.getType().getName().equals(ptypnm);
+               String btypnm = name_map.get(pm.getType().getName());
+               if (btypnm == null) btypnm = pm.getType().getName();
+               boolean samety = ptypnm.equals(btypnm);
                boolean sameord = ct == pct;
                if (!samenm || !samety || !sameord) {
                   if (pf == null) {
@@ -190,6 +193,7 @@ private class ParamVisitor extends ASTVisitor {
                 }
              }
           }
+         ++ct;
        }
       
       return false;

@@ -24,9 +24,12 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.ArrayInitializer;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.EnumConstantDeclaration;
+import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.MemberValuePair;
@@ -201,27 +204,27 @@ private void createModel(CompilationUnit cu)
     }
    
    Map<String,SumpClass> cmap = new HashMap<>();
-   Map<String,TypeDeclaration> tmap = new HashMap<>();
+   Map<String,AbstractTypeDeclaration> tmap = new HashMap<>();
    for (Object o : cu.types()) {
-      if (o instanceof TypeDeclaration) {
-         TypeDeclaration td = (TypeDeclaration) o;
+      if (o instanceof AbstractTypeDeclaration) {
+         AbstractTypeDeclaration td = (AbstractTypeDeclaration) o;
          addTypes(td,pkg,cmap,tmap);
        }
     }
    for (Object o : cu.types()) {
-      if (o instanceof TypeDeclaration) {
-         TypeDeclaration td = (TypeDeclaration) o;
+      if (o instanceof AbstractTypeDeclaration) {
+         AbstractTypeDeclaration td = (AbstractTypeDeclaration) o;
          addAnnotDepends(td,cmap);
        }
     }
    
    for (String s : cmap.keySet()) {
       SumpClass cls = cmap.get(s);
-      TypeDeclaration td = tmap.get(s);
+      AbstractTypeDeclaration td = tmap.get(s);
       addClassData(cls,td);
     }
    
-   for (TypeDeclaration td : tmap.values()) {
+   for (AbstractTypeDeclaration td : tmap.values()) {
       pkg.addDependencies(td,cmap);
     }
 }
@@ -229,8 +232,8 @@ private void createModel(CompilationUnit cu)
 
 
 
-private void addTypes(TypeDeclaration td,SumpPackage pkg,Map<String,SumpClass> cmap,
-        Map<String,TypeDeclaration> tmap)
+private void addTypes(AbstractTypeDeclaration td,SumpPackage pkg,Map<String,SumpClass> cmap,
+        Map<String,AbstractTypeDeclaration> tmap)
 {
    String nm = td.getName().getIdentifier();
    
@@ -257,8 +260,8 @@ private void addTypes(TypeDeclaration td,SumpPackage pkg,Map<String,SumpClass> c
     }
    
    for (Object o : td.bodyDeclarations()) {
-      if (o instanceof TypeDeclaration) {
-         TypeDeclaration inner = (TypeDeclaration) o;
+      if (o instanceof AbstractTypeDeclaration) {
+         AbstractTypeDeclaration inner = (AbstractTypeDeclaration) o;
          addTypes(inner,pkg,cmap,tmap);
        }
     }
@@ -266,7 +269,7 @@ private void addTypes(TypeDeclaration td,SumpPackage pkg,Map<String,SumpClass> c
 
 
 
-private void addAnnotDepends(TypeDeclaration td,Map<String,SumpClass> cmap)
+private void addAnnotDepends(AbstractTypeDeclaration td,Map<String,SumpClass> cmap)
 {
    String nm = td.getName().getIdentifier();
    
@@ -348,9 +351,9 @@ private void addDepends(SumpClass c1,SumpClass c2)
 
 
 
-private void addClassData(SumpClass cls,TypeDeclaration td)
+private void addClassData(SumpClass cls,AbstractTypeDeclaration atd)
 {
-   for (Object o : td.bodyDeclarations()) {
+   for (Object o : atd.bodyDeclarations()) {
       if (o instanceof FieldDeclaration) {
          FieldDeclaration fd = (FieldDeclaration) o;
          for (Object o1 : fd.fragments()) {
@@ -363,6 +366,13 @@ private void addClassData(SumpClass cls,TypeDeclaration td)
          MethodDeclaration md = (MethodDeclaration) o;
          JcompSymbol ms = JcompAst.getDefinition(md);
          cls.addOperation(ms,md);
+       }
+    }
+   if (atd instanceof EnumDeclaration) {
+      for (Object o : ((EnumDeclaration) atd).enumConstants()) {
+         EnumConstantDeclaration ecd = (EnumConstantDeclaration) o;
+         JcompSymbol js = JcompAst.getDefinition(ecd);
+         cls.addEnumConstant(js,ecd);
        }
     }
 }
