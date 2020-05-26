@@ -12,9 +12,13 @@
    <version>1.0-TRIAL</version>
    <packaging>jar</packaging>
 
-   <properties> 	
+   <properties>
       <maven.compiler.source>${JAVAVERSION}</maven.compiler.source>
       <maven.compiler.target>${JAVAVERSION}</maven.compiler.target>
+      <project.build.sourceEncoding>${ENCODING}</project.build.sourceEncoding>
+      <project.reporting.outputEncoding>${ENCODING}</project.reporting.outputEncoding>
+      <project.resources.sourceEncoding>${ENCODING}</project.resources.sourceEncoding>
+      <archetype.encoding>${ENCODING}</archetype.encoding>
    </properties>
 
    <dependencies>
@@ -23,7 +27,7 @@
 	 <groupId>$lib.group</groupId>
 	 <artifactId>$lib.name</artifactId>
 <!--	 <version>RELEASE</version>		-->
-	 <version>$lib.version</version>	
+	 <version>$lib.version</version>
       </dependency>
 #end
    </dependencies>

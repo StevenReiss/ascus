@@ -181,9 +181,9 @@ private class FindInnerClassVisitor extends ASTVisitor {
 /*                                                                              */
 /********************************************************************************/
 
-private TypeDeclaration createCopy(AST ast,AbstractTypeDeclaration td,Map<Object,String> names)
+private AbstractTypeDeclaration createCopy(AST ast,AbstractTypeDeclaration td,Map<Object,String> names)
 {
-   TypeDeclaration ntd = (TypeDeclaration) ASTNode.copySubtree(ast,td);
+   AbstractTypeDeclaration ntd = (AbstractTypeDeclaration) ASTNode.copySubtree(ast,td);
    for (Iterator<?> it = ntd.modifiers().iterator(); it.hasNext(); ) {
       IExtendedModifier iem = (IExtendedModifier) it.next();
       if (iem.isAnnotation()) it.remove();

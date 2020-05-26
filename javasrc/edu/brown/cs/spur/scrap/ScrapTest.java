@@ -270,7 +270,7 @@ public void candidateTest01()
 @Test
 public void candidateTest02()
 {
-   File f = new File("/research/people/spr/spur/scrap/src/test07.ascus");
+   File f = new File("/research/people/spr/spur/scrap/src/test06.ascus");
    SumpModel mdl = SumpFactory.loadModel(f);
    SumpData sd = mdl.getModelData();
    CoseDefaultRequest cdr = (CoseDefaultRequest) sd.getCoseRequest();

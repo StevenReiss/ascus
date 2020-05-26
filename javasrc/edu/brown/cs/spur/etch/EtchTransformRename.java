@@ -95,7 +95,7 @@ EtchTransformRename(Map<String,String> namemap)
 
 @Override protected EtchMemo applyTransform(ASTNode n,SumpModel target)
 {
-   NameMapper mapper =  findMappings(n,target);
+   NameMapper mapper = findMappings(n,target);
    if (mapper == null) return null;
    
    EtchMemo memo =  mapper.getMapMemo(n);
@@ -115,7 +115,7 @@ private NameMapper findMappings(ASTNode cu,SumpModel target)
    NameMapper mapper = new NameMapper(target);
    FindNameVisitor fnv = new FindNameVisitor(mapper);
    cu.accept(fnv);
-   if (mapper.isEmpty()) return null;
+   // if (mapper.isEmpty()) return null;        // package name needs to be considered
    return mapper;
 }
 

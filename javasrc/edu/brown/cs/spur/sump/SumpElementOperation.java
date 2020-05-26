@@ -141,12 +141,27 @@ SumpElementOperation(SumpModelBase mdl,JcompSymbol js,ASTNode n)
    int ct = 0;
    for (SumpElementParameter ep : param_values) {
       String s = ep.getDataType().getName();
+      s = getMappedType(s);
       if (ct++ > 0) buf.append(",");
       buf.append(s);
     }
    buf.append(")");
    
    return buf.toString();
+}
+
+
+
+private String getMappedType(String tnm)
+{
+   tnm = tnm.replace("<","_lt_");
+   tnm = tnm.replace(">","_gt_");
+   tnm = tnm.replace(",","_cm_");
+   tnm = tnm.replace("[]","_ARR_");
+   tnm = tnm.replace("[","_lb_");
+   tnm = tnm.replace("]","_rb_");
+   tnm = tnm.replace(" ","");
+   return tnm;
 }
 
 

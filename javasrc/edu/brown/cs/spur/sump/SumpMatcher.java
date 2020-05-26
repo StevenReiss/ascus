@@ -60,10 +60,10 @@ class SumpMatcher implements SumpConstants
 /********************************************************************************/
 
 static final double     CLASS_CUTOFF = 0.5;
-static final double     ATTR_CUTOFF = 0.75;
-static final double     METHOD_CUTOFF = 0.75;
-static final double     DEPEND_CUTOFF = 0.5;
-static final double     SCORE_CUTOFF = 0.75;
+static final double     ATTR_CUTOFF = 0.5;
+static final double     METHOD_CUTOFF = 0.5;
+static final double     DEPEND_CUTOFF = 0.33;
+static final double     SCORE_CUTOFF = 0.50;
 
 
 

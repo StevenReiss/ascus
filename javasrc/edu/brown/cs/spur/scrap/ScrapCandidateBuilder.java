@@ -103,11 +103,11 @@ List<ScrapCandidate> buildCandidates(SumpModel model)
    
    System.err.println("FOUND " + match.size() + " MATCHES");
    
-   for (CandidateMatch cm : match) {
-      addTestCases(cm);
-    }
-   
    EtchFactory etcher = new EtchFactory(model);
+   
+   for (CandidateMatch cm : match) {
+      addTestCases(cm,etcher);
+    }
    
    for (CandidateMatch cm : match) {
       Map<String,String> namemap = cm.getNameMap();
@@ -173,7 +173,7 @@ private List<CandidateMatch> findInitialMatches(SumpModel model)
 /*                                                                              */
 /********************************************************************************/
 
-private void addTestCases(CandidateMatch cm)
+private void addTestCases(CandidateMatch cm,EtchFactory etcher)
 {
    CoseResult cr = cm.getCoseResult();
    ScrapRequest req = new ScrapRequest();
@@ -208,10 +208,13 @@ private void addTestCases(CandidateMatch cm)
       IvyLog.logE("PROBLEM GETTING TEST RESULTS: " + t,t);
     }
    Set<String> done = new HashSet<>();
+   Map<String,String> namemap = cm.getNameMap();
    for (CoseResult test : tests.getResults()) {
       String enc = IvyFile.digestString(test.getKeyText());
       if (!done.add(enc)) continue;
-      System.err.println("MERGE IN TEST " + test + "\n" + test.getEditText());
+      CoseResult test1 = etcher.fixNames(test,namemap);
+      System.err.println("MERGE IN TEST " + test + "\n" + test1.getEditText());
+      
       // ensure that all classes referenced are in the model code
       // otherwise, prune the model code to only include known classes
       // ensure that this test class is not in the model code

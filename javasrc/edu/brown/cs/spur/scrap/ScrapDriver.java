@@ -253,6 +253,8 @@ void processBuildCandidates(SumpModel mdl)
       t.printStackTrace();
     }
    
+   if (cands == null) return;
+   
    StareDriver stare = new StareDriver();
    stare.addInitialSolutions(cands);
    stare.process();
