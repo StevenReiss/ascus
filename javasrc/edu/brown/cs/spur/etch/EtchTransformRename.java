@@ -41,14 +41,17 @@ import java.util.Map;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
+import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompSymbol;
+import edu.brown.cs.ivy.jcomp.JcompType;
 import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.spur.sump.SumpConstants.SumpModel;
 
@@ -131,25 +134,40 @@ private class FindNameVisitor extends ASTVisitor {
 
    @Override public void postVisit(ASTNode n) {
       JcompSymbol js = JcompAst.getDefinition(n);
+      JcompType jt = JcompAst.getJavaType(n);
       if (js != null) {
          String jnm = getMapName(js);
          String rnm = name_map.get(jnm);
          if (rnm != null) {
             String jsnm = jnm;
             String fpkg = name_handler.getFromPrefix();
-            if (jnm.startsWith(fpkg)) {
+            if (fpkg != null && jnm.startsWith(fpkg)) {
                jsnm = jsnm.substring(fpkg.length()+1);
              }
             int idx = jsnm.indexOf("(");
             if (idx > 0) jsnm = jsnm.substring(0,idx);
             String rsnm = rnm;
             String tpkg = name_handler.getToPrefix();
-            if (rnm.startsWith(tpkg)) {
+            if (tpkg != null && rnm.startsWith(tpkg)) {
                rsnm = rsnm.substring(tpkg.length()+1);
              }
             if (!rsnm.equals(jsnm)) {   
                name_handler.addMapping(js,rnm);
              }  
+          }
+       }
+      else if (jt != null) {
+         String tnm = jt.getName();
+         String rnm = name_map.get(tnm);
+         if (rnm != null) {
+            String pfx = name_handler.getToPrefix();
+            if (rnm.startsWith(pfx + ".")) {
+               int ln = pfx.length();
+               int idx = pfx.lastIndexOf(".");
+               String npfx = pfx.substring(0,idx);
+               rnm = npfx + rnm.substring(ln);
+             }
+            name_handler.addMapping(jt,rnm);
           }
        }
     }
@@ -173,6 +191,7 @@ private class NameMapper extends EtchMapper {
  
    private SumpModel target_model;
    private Map<JcompSymbol,String> sym_mapping;
+   private Map<JcompType,String> type_mapping;
    private String from_prefix;
    private String to_prefix;
    
@@ -180,6 +199,7 @@ private class NameMapper extends EtchMapper {
       super(EtchTransformRename.this);
       target_model = tgt;
       sym_mapping = new HashMap<>();
+      type_mapping = new HashMap<>();
       from_prefix = null;
       to_prefix = null;
     }
@@ -188,21 +208,25 @@ private class NameMapper extends EtchMapper {
       sym_mapping.put(js,to);
     }
    
+   void addMapping(JcompType jt,String to) {
+      type_mapping.put(jt,to);
+    }
+   
    void setPrefixMap(String frm,String to) {
       from_prefix = frm;
       to_prefix = to;
     }
    
-   boolean isEmpty()                    { return sym_mapping.isEmpty(); }
-   
    String getFromPrefix()              { return from_prefix; }
    String getToPrefix()                { return to_prefix; }
    
    @Override void rewriteTree(ASTNode orig,ASTRewrite rw) {
-      JcompSymbol js = JcompAst.getDefinition(orig);
-      if (js != null) {
-         String newname = sym_mapping.get(js);
-         if (newname == null && js.getName().equals("<init>")) {
+      JcompSymbol jsd = JcompAst.getDefinition(orig);
+      JcompSymbol jsr = JcompAst.getReference(orig);
+      JcompType jt = JcompAst.getJavaType(orig);
+      if (jsd != null) {
+         String newname = sym_mapping.get(jsd);
+         if (newname == null && jsd.getName().equals("<init>")) {
             for (ASTNode p = orig; p != null; p = p.getParent()) {
                if (p instanceof TypeDeclaration) {
                   JcompSymbol tjs = JcompAst.getDefinition(p);
@@ -215,19 +239,74 @@ private class NameMapper extends EtchMapper {
             rewriteName(orig,rw,newname);
           }
        }
-      js = JcompAst.getReference(orig);
-      if (js != null) {
-         String newname = sym_mapping.get(js);
+      else if (jsr != null) {
+         String newname = sym_mapping.get(jsr);
          if (newname != null) {
             rewriteName(orig,rw,newname);
           }
        }
+      else if (jt != null) {
+         String newname = type_mapping.get(jt);
+         if (newname != null) {
+            if (orig instanceof QualifiedName) {
+               Name nm = JcompAst.getQualifiedName(rw.getAST(),newname);
+               rw.replace(orig,nm,null);
+             }
+            else if (orig instanceof SimpleName) {
+               int idx = newname.lastIndexOf(".");
+               if (idx > 0) newname = newname.substring(idx+1);
+               SimpleName sn = JcompAst.getSimpleName(rw.getAST(),newname);
+               rw.replace(orig,sn,null);
+             }
+          }
+       }
+      
+      
       if (orig instanceof PackageDeclaration) {
          PackageDeclaration pd = (PackageDeclaration) orig;
          String rnm = target_model.getPackage().getFullName();
          if (rnm != null) {
             Name n = JcompAst.getQualifiedName(rw.getAST(),rnm);
             rw.set(pd,PackageDeclaration.NAME_PROPERTY,n,null);
+          }
+       }
+      else if (orig instanceof ImportDeclaration) {
+         ImportDeclaration id = (ImportDeclaration) orig;
+         String inm = id.getName().getFullyQualifiedName();
+         if (from_prefix != null && inm.startsWith(from_prefix)) {
+            String s = inm;
+            String tail = null;
+            String rep = null;
+            for ( ; ; ) {
+               rep = name_map.get(s);
+               if (rep != null) break;
+               int idx = s.lastIndexOf(".");
+               if (idx < 0) break;
+               if (tail == null) tail = s.substring(idx);
+               else tail = inm.substring(idx);
+               s = s.substring(0,idx);
+             }
+            if (rep != null) {
+               String rnm = rep;
+               if (tail != null) rnm += tail;
+               Name n = JcompAst.getQualifiedName(rw.getAST(),rnm);
+               rw.set(id,ImportDeclaration.NAME_PROPERTY,n,null);
+             }
+          }
+       }
+      else if (orig instanceof QualifiedName) {
+         ASTNode p = null;
+         for (p = orig; p != null; p = p.getParent()) {
+            if (!(p instanceof QualifiedName)) break;
+          }
+         if (p instanceof ImportDeclaration) ;
+         else {
+            QualifiedName qn = (QualifiedName) orig;
+            String qnm = qn.getFullyQualifiedName();
+            String rep = name_map.get(qnm);
+            if (rep != null) {
+               System.err.println("REPLACE " + qnm + " WITH " + rep);
+             }
           }
        }
    }

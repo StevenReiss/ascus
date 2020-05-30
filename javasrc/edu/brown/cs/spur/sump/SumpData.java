@@ -64,6 +64,7 @@ private Set<String>     import_set;
 private Stack<String>   cur_class;
 private Stack<Boolean>  is_interface;
 private CoseRequest     cose_request;
+private Set<String>     missing_imports;
 
 
 
@@ -78,6 +79,7 @@ public SumpData(CoseRequest req,CoseResult rslt)
    model_name = null;
    library_set = new HashSet<>();
    source_set = new HashSet<>();
+   missing_imports = new HashSet<>();
    import_set = new TreeSet<>();
    cur_class = new Stack<>();
    is_interface = new Stack<>();
@@ -130,6 +132,13 @@ public void addSource(String src)
    source_set.add(src);
 }
 
+
+public void addMissingImport(String imp)
+{
+   missing_imports.add(imp);
+}
+
+
 public void setName(String name)
 {
    model_name = name;
@@ -146,6 +155,8 @@ public void setName(String name)
 public Collection<LidsLibrary> getLibraries()   { return library_set; }
 
 public Collection<String> getSources()          { return source_set; }
+
+public Collection<String> getMissingImports()   { return missing_imports; }
 
 public CoseRequest getCoseRequest()             { return cose_request; }
 

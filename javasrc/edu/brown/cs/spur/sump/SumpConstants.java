@@ -74,6 +74,7 @@ interface SumpModel {
   void computeLayout();
   Rectangle getBounds(SumpClass cls);
   Collection<SumpClass> getDependentClasses(SumpClass sc);
+  Collection<SumpClass> getInheritedClasses(SumpClass sc);
 }
 
 
@@ -102,8 +103,8 @@ interface SumpPackage extends SumpElement {
 
 interface SumpClass extends SumpElement, RowelMatch {
    boolean isInterface();
-   SumpClass getSuperClass();
-   Collection<SumpClass> getInterfaces();
+   String getSuperClassName();
+   Collection<String> getInterfaceNames();
    Collection<SumpAttribute> getAttributes();
    Collection<SumpOperation> getOperations();
    Collection<String> getEnumConstants();

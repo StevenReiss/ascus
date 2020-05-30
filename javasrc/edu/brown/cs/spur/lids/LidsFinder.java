@@ -44,7 +44,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import edu.brown.cs.ivy.jcomp.JcompTyper;
+import edu.brown.cs.cose.cosecommon.CoseConstants;
 
 public class LidsFinder implements LidsConstants
 {
@@ -89,7 +89,8 @@ public boolean addImportPath(String path)
 {
    if (path == null) return false;
    if (done_imports.contains(path) || missing_imports.contains(path)) return false;
-   if (JcompTyper.isSystemType(path)) return false;
+   if (CoseConstants.isStandardJavaLibrary(path)) return false;
+   // if (JcompTyper.isSystemType(path)) return false;
    
    return check_imports.add(path);
 }
@@ -163,7 +164,7 @@ public List<LidsLibrary> findLibraries()
 
 
 
-public Collection<String> getMissiingImports()
+public Collection<String> getMissingImports()
 {
    return missing_imports;
 }

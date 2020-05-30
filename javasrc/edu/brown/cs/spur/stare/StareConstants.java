@@ -65,6 +65,7 @@ interface StareCandidateSolution {
    SumpModel getModel();
    CoseResult getCoseResult();
    Map<String,String> getNameMap();
+   CoseResult getTestResult();
 
 }       // end of inner interface StareSolution
 

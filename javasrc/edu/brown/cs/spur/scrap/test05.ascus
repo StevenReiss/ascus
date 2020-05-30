@@ -1,6 +1,6 @@
 @Ascus(source="GITREPO:https://github.com/d3adspace/mantikor/blob/1f3d549e21ce7491a0b7ca4385c7609f0e6ed27c/file-server/src/main/java/de/d3adspace/mantikor/server/file/MantikorFileServerApp.java")
-@Ascus(library="com.thinkbiganalytics.kylo.plugins:kylo-catalog-credential-vault:0.10.0")
-@Ascus(library="io.netty:netty-all:5.0.0.Alpha2")
+@Ascus(library="io.smartcat:cassandra-migration-tool:3.1.0.0")
+@Ascus(library="im.qingtui.business:mongo-sdk:1.0.3")
 @Ascus(search="PACKAGE,PACKAGE_USED,500,GITREPO")
 @Ascus(keywords={"@embedded","@web","server"})
 @Ascus(keyterms={"server","request","ftp","@web","uri","url","routing","application","port","response","@embedded","property","http","callback","https"})
@@ -9,11 +9,17 @@ package edu.brown.cs.SAMPLE;
 import edu.brown.cs.sump.annot.Ascus;
 import edu.brown.cs.sump.annot.AscusPackage;
 import edu.brown.cs.sump.annot.AscusClass;
+import java.net.URI;
 import java.util.Map;
 
 @AscusPackage
 public interface MantikorFileServerApp {
 
+
+@AscusClass(uses={HttpVersion.class,HttpRequestLine.class,HttpMethod.class})
+abstract class HttpRequest extends de.d3adspace.mantikor.server.file.HttpMessage {
+   public abstract URI getUri();
+}
 
 /**
  * Wrapper around HTTP headers.
@@ -25,8 +31,8 @@ class HttpHeaders {
 
 @AscusClass(uses={HttpVersion.class,HttpMethod.class})
 class HttpRequestLine {
-   private HttpVersion version;
    private HttpMethod method;
+   private HttpVersion version;
 }
 
 @AscusClass
@@ -40,7 +46,7 @@ OK, FORBIDDEN, NOT_FOUND, INTERNAL_SERVER_ERROR;
    public HttpStatus(int statusCode,String statusMessage) { }
 }
 
-@AscusClass(uses={HttpVersion.class,HttpStatus.class,HttpHeaders.class})
+@AscusClass(uses={HttpVersion.class,HttpResponse.class,HttpHeaders.class,HttpStatus.class})
 abstract class Builder {
    public abstract HttpResponse build();
    public abstract Builder withStatus(HttpStatus status);
@@ -52,22 +58,26 @@ class HttpBody {
    private char[] content;
 }
 
-@AscusClass
+@AscusClass(uses={HttpVersion.class,HttpStatusLine.class,Builder.class,HttpStatus.class})
+class HttpResponse extends de.d3adspace.mantikor.server.file.HttpMessage {
+}
+
+@AscusClass(uses={HttpResponse.class})
 interface HttpRequestProcessor {
    HttpResponse processRequest(HttpRequest request);
 }
 
 @AscusClass(uses={HttpVersion.class,HttpStatus.class})
 class HttpStatusLine {
-   private HttpVersion version;
    private HttpStatus status;
+   private HttpVersion version;
 }
 
 @AscusClass(uses={HttpResponseComposer.class})
 class HttpResponseEncoder {
 }
 
-@AscusClass(uses={HttpVersion.class,HttpRequestLine.class,HttpMethod.class})
+@AscusClass(uses={HttpVersion.class,HttpRequestLine.class,HttpRequest.class,HttpMethod.class})
 abstract class HttpRequestMessageFactory {
    public abstract HttpRequest parse(String rawHttpRequest);
 }
@@ -94,7 +104,7 @@ abstract class MantikorConfig {
 class MantikorConnection {
 }
 
-@AscusClass(uses={HttpHeaders.class,HttpBody.class})
+@AscusClass(uses={HttpBody.class,HttpHeaders.class})
 abstract class HttpMessage {
    public HttpMessage(HttpHeaders headers,HttpBody body) { }
    public abstract HttpBody getBody();

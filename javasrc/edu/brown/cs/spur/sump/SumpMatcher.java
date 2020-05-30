@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -64,6 +65,9 @@ static final double     ATTR_CUTOFF = 0.5;
 static final double     METHOD_CUTOFF = 0.5;
 static final double     DEPEND_CUTOFF = 0.33;
 static final double     SCORE_CUTOFF = 0.50;
+
+static final double     INTERFACE_FRACTION = 0.25;
+static final double     ENUM_FRACTION = 0.75;
 
 
 
@@ -218,19 +222,43 @@ private double matchClasses(SumpModel base,SumpModel pat,
  
    for (ScoredClass sccls : ms.getToClasses(ct)) {
       SumpClass sc = sccls.getSumpClass();
-      // System.err.println("MAP " + fromcls + " ->  " + sc);
-
       Map<SumpClass,SumpClass> nmap = new HashMap<>(cmap);
       nmap.put(ms.getFromClass(),sc);
-      SortedSet<MatchSet> nsets = new TreeSet<>();
+      double usescore = sccls.getScore();
+      // System.err.println("MAP " + fromcls + " ->  " + sc);
+      
+      Collection<SumpClass> i1 = pat.getInheritedClasses(fromcls);
+      if (!i1.isEmpty()) {
+         Collection<SumpClass> i2 = base.getInheritedClasses(sc);
+         for (SumpClass ifc : i1) {
+            SumpClass nfc = nmap.get(ifc);
+            if (nfc != null && !i2.contains(nfc)) usescore = 0;
+          }
+       }
+      Collection<SumpClass> i3 = getSubClasses(pat,fromcls);
+      if (!i3.isEmpty()) {
+         Collection<SumpClass> i4 = getSubClasses(base,sc);
+         for (SumpClass bas : i3) {
+            SumpClass nbas = nmap.get(bas);
+            if (nbas != null && !i4.contains(nbas)) usescore = 0;
+          }
+       }
+      
       Collection<SumpClass> d1 = pat.getDependentClasses(fromcls);
       Collection<SumpClass> d2 = base.getDependentClasses(sc); 
+      if (usescore == 0) {
+         nmap.remove(ms.getFromClass());
+         d1 = null;
+         d2 = null;
+       }
+      
+      SortedSet<MatchSet> nsets = new TreeSet<>();
       for (MatchSet s : sets) {
          if (ms.getFromClass() == s.getFromClass()) continue;
          MatchSet ns = new MatchSet(s,sc,d1,d2,pat);
          nsets.add(ns);
        }
-      double score = inscore + sccls.getScore();
+      double score = inscore + usescore;
       Map<String,String> rmap = null;
       if (rsltmap != null) rmap = new HashMap<>();
       double rscore = matchClasses(base,pat,nsets,nmap,score,max,maxtogo-1,rmap);
@@ -238,7 +266,7 @@ private double matchClasses(SumpModel base,SumpModel pat,
          if (rscore > bestscore) {
             if (rmap != null) {
                bestmap = new HashMap<>(rmap);
-               bestmap.putAll(sccls.getNameMap());
+               if (usescore != 0) bestmap.putAll(sccls.getNameMap());
              }           
             bestscore = rscore;
             bestcls = sc;
@@ -258,6 +286,20 @@ private double matchClasses(SumpModel base,SumpModel pat,
 
 
 
+private Collection<SumpClass> getSubClasses(SumpModel pat,SumpClass sc)
+{
+   Set<SumpClass> rslt = new HashSet<>();
+   
+   for (SumpClass cls : pat.getPackage().getClasses()) {
+      Collection<SumpClass> ifcs = pat.getInheritedClasses(cls);
+      if (ifcs.contains(sc)) rslt.add(cls);
+    }
+   
+   return rslt;
+}
+
+
+
 private static class MatchSet implements Comparable<MatchSet> {
 
    private SumpClass for_class;
@@ -270,12 +312,13 @@ private static class MatchSet implements Comparable<MatchSet> {
       matched_classes = new TreeSet<>();
     }
    
-   MatchSet(MatchSet orig,SumpClass remove,Collection<SumpClass> od,Collection<SumpClass> nd,SumpModel pat) {
+   MatchSet(MatchSet orig,SumpClass remove,Collection<SumpClass> od,Collection<SumpClass> nd,
+         SumpModel pat) {
       for_class = orig.for_class;
       match_comparer = orig.match_comparer;
       matched_classes = new TreeSet<>();
       for (ScoredClass sc : orig.matched_classes) {
-         if (sc.getSumpClass() != remove){
+         if (sc.getSumpClass() != remove) {
             double score = sc.getScore();
             SumpClass tocls = sc.getSumpClass();
             if (od != null && od.contains(for_class)) {
@@ -285,12 +328,11 @@ private static class MatchSet implements Comparable<MatchSet> {
                 }
              }
             addMatch(tocls,score,sc.getNameMap());
-   
           }   
        }
     }
    
-   void addMatch(SumpClass match,double score,Map<String,String> namemap) {
+    void addMatch(SumpClass match,double score,Map<String,String> namemap) {
       matched_classes.add(new ScoredClass(match,score,match_comparer,namemap));
     }
    
@@ -490,7 +532,7 @@ static double computeClassMatchScore(SumpClass base,SumpClass pat,Map<String,Str
       double emax = Math.max(eptot,ebtot);
       double escore = 1;
       if (emax > 0) escore = ecnt/emax;
-      score = escore * 0.75 + score * 0.25;
+      score = escore * ENUM_FRACTION + score * (1 - ENUM_FRACTION);
     }
    
    return score;

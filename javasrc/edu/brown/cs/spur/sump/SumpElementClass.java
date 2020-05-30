@@ -118,16 +118,15 @@ SumpElementClass(SumpModelBase mdl,AbstractTypeDeclaration atd)
 
 
 
-@Override public SumpClass getSuperClass()
+@Override public String getSuperClassName()
 {
-   return null;
+   return super_name;
 }
 
 
-@Override public Collection<SumpClass> getInterfaces()
+@Override public Collection<String> getInterfaceNames()
 {
-   if (iface_names.isEmpty()) return null;
-   return null;
+   return iface_names;
 }
 
 
@@ -444,6 +443,13 @@ void generateUXF(IvyXmlWriter xw,SumpLayout layout)
     }
    xw.textElement("panel_attributes",buf.toString());
    xw.end("element");
+}
+
+
+
+@Override public String toString()
+{
+   return "UML class " + getName();
 }
 
 

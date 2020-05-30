@@ -77,6 +77,10 @@ public CoseResult fixNames(CoseResult orig,Map<String,String> namemap)
 {
    CoseResult work = orig;
    
+   EtchTransformFixPackage fixpackage = new EtchTransformFixPackage(work,namemap);
+   
+   work = fixpackage.transform(work,target_model);
+   
    EtchTransformInnerClassStatic innerstatic = new EtchTransformInnerClassStatic(namemap);
    
    work = innerstatic.transform(work,target_model);
@@ -88,6 +92,7 @@ public CoseResult fixNames(CoseResult orig,Map<String,String> namemap)
    EtchTransformRename renamer = new EtchTransformRename(namemap);
    
    work = renamer.transform(work,target_model);
+   System.err.println("RESULT: " + work.getEditText());
    
    EtchTransformFixParameters paramfix = new EtchTransformFixParameters(namemap);
    

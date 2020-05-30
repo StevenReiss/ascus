@@ -71,6 +71,7 @@ class StareSolutionBase implements StareConstants, StareSolution
 
 private SumpModel       for_model;
 private CoseResult      cose_result;
+private CoseResult      test_result;
 private Map<String,String> name_map;
 private File            work_directory;
 private VelocityContext map_context;
@@ -89,6 +90,7 @@ StareSolutionBase(StareCandidateSolution sc)
 {
    for_model = sc.getModel();
    cose_result = sc.getCoseResult();
+   test_result = sc.getTestResult();
    name_map = sc.getNameMap();
    random_gen = new Random();
    work_directory = null;
@@ -105,6 +107,7 @@ StareSolutionBase(StareCandidateSolution sc)
 
 @Override public SumpModel getModel()                   { return for_model; }
 @Override public CoseResult getCoseResult()             { return cose_result; }
+@Override public CoseResult getTestResult()             { return test_result; }
 @Override public Map<String,String> getNameMap()        { return name_map; }
 
 
@@ -125,6 +128,7 @@ StareSolutionBase(StareCandidateSolution sc)
       CompilationUnit cu = (CompilationUnit) cose_result.getStructure();
       setup(cu);
       producePackageFiles(cu);
+      produceTestFiles();
       producePomFile();
       // generate resource files
       // generate test files
@@ -200,6 +204,10 @@ private void setup(CompilationUnit cu)
       Path p1 = link.toPath();
       Path p2 = srcdir.toPath();
       Files.createSymbolicLink(p1,p2);
+      File tlink = new File(dir,"totest");
+      Path p3 = tlink.toPath();
+      Path p4 = testdir.toPath();
+      Files.createSymbolicLink(p3,p4);
     }
    catch (IOException e) { }
    
@@ -231,7 +239,17 @@ private void setup(CompilationUnit cu)
       ImportDeclaration id = (ImportDeclaration) o;
       buf.append(id.toString());
     }
-   map_context.put("IMPORTS", buf.toString());
+   map_context.put("IMPORTS",buf.toString());
+   
+   if (test_result != null) {
+      CompilationUnit tcu = (CompilationUnit) test_result.getStructure();
+      StringBuffer tbuf = new StringBuffer();
+      for (Object o : tcu.imports()) {
+         ImportDeclaration id = (ImportDeclaration) o;
+         tbuf.append(id.toString());
+       }
+      map_context.put("TESTIMPORTS",tbuf.toString());
+    }
    
    generateReadme();
 }
@@ -252,6 +270,9 @@ private void generateReadme()
        }
       for (LidsLibrary lib : smd.getLibraries()) {
          pw.println("Library: " + lib.getFullId());
+       }
+      for (String s : smd.getMissingImports()) {
+         pw.println("Missing: " + s);
        }
       CoseRequest req = smd.getCoseRequest();
       pw.println("Search Type: " + req.getCoseSearchType());
@@ -293,6 +314,32 @@ private void producePackageFiles(CompilationUnit cu)
         pw.write(td.toString());
         pw.println();
         pw.println("// end of " + cnm + ".java");
+       }
+      catch (IOException e) {
+         IvyLog.logE("Problem writing " + cnm,e);
+       }
+    }
+}
+
+
+
+private void produceTestFiles()
+{
+   if (test_result == null) return;
+   
+   CompilationUnit cu = (CompilationUnit) test_result.getStructure();  File dir = (File) map_context.get("TESTDIR");
+   
+   for (Object o : cu.types()) {
+      AbstractTypeDeclaration td = (AbstractTypeDeclaration) o;
+      String cnm = td.getName().getIdentifier();
+      File f = new File(dir,cnm + ".java");
+      try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {
+         pw.println(map_context.get("PACKAGESTMT"));
+         pw.println(map_context.get("TESTIMPORTS"));
+         pw.println();
+         pw.write(td.toString());
+         pw.println();
+         pw.println("// end of " + cnm + ".java");
        }
       catch (IOException e) {
          IvyLog.logE("Problem writing " + cnm,e);

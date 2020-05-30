@@ -189,6 +189,9 @@ public void candidateTest01()
 {
    try {
       File f = new File("/research/people/spr/spur/scrap/src/test04.ascus");
+      System.err.println("==============================");
+      System.err.println("START WORK ON " + f);
+      System.err.println("==============================");
       SumpModel mdl = SumpFactory.loadModel(f);
       SumpData sd = mdl.getModelData();
       CoseDefaultRequest cdr = (CoseDefaultRequest) sd.getCoseRequest();
@@ -209,7 +212,9 @@ public void candidateTest01()
 
    try {
       File f = new File("/research/people/spr/spur/scrap/src/test05.ascus");
-      SumpModel mdl = SumpFactory.loadModel(f);
+      System.err.println("==============================");
+      System.err.println("START WORK ON " + f);
+      System.err.println("==============================");     SumpModel mdl = SumpFactory.loadModel(f);
       SumpData sd = mdl.getModelData();
       CoseDefaultRequest cdr = (CoseDefaultRequest) sd.getCoseRequest();
       cdr.setCoseScopeType(CoseScopeType.PACKAGE_USED);
@@ -228,7 +233,9 @@ public void candidateTest01()
 
    try {
       File f = new File("/research/people/spr/spur/scrap/src/test06.ascus");
-      SumpModel mdl = SumpFactory.loadModel(f);
+      System.err.println("==============================");
+      System.err.println("START WORK ON " + f);
+      System.err.println("==============================");     SumpModel mdl = SumpFactory.loadModel(f);
       SumpData sd = mdl.getModelData();
       CoseDefaultRequest cdr = (CoseDefaultRequest) sd.getCoseRequest();
       cdr.setCoseScopeType(CoseScopeType.PACKAGE_USED);
@@ -247,7 +254,9 @@ public void candidateTest01()
 
    try {
       File f = new File("/research/people/spr/spur/scrap/src/test07.ascus");
-      SumpModel mdl = SumpFactory.loadModel(f);
+      System.err.println("==============================");
+      System.err.println("START WORK ON " + f);
+      System.err.println("==============================");      SumpModel mdl = SumpFactory.loadModel(f);
       SumpData sd = mdl.getModelData();
       CoseDefaultRequest cdr = (CoseDefaultRequest) sd.getCoseRequest();
       cdr.setCoseScopeType(CoseScopeType.PACKAGE_USED);
@@ -271,6 +280,9 @@ public void candidateTest01()
 public void candidateTest02()
 {
    File f = new File("/research/people/spr/spur/scrap/src/test06.ascus");
+   System.err.println("==============================");
+   System.err.println("START WORK ON " + f);
+   System.err.println("==============================");    
    SumpModel mdl = SumpFactory.loadModel(f);
    SumpData sd = mdl.getModelData();
    CoseDefaultRequest cdr = (CoseDefaultRequest) sd.getCoseRequest();
@@ -281,8 +293,10 @@ public void candidateTest02()
    cdr.setNumberOfThreads(8);
 
    cdr.setNumberOfThreads(1);
-   cdr.addSpecificSource(sd.getSources());
-
+   // cdr.addSpecificSource(sd.getSources());
+   
+   cdr.addSpecificSource("GITREPO:https://github.com/couchbase/couchbase-lite-java-listener/blob/141080bbb97d51a05af5b54a84af3b78d1d5d62e/vendor/tjws/src/java/Acme/Serve/SelectorAcceptor.java");
+         
    ScrapDriver driver = new ScrapDriver(sd);
    driver.processBuildCandidates(mdl);
 }

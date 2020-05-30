@@ -313,10 +313,12 @@ private class ClassStaticMapper extends EtchMapper {
          SimpleName n3 = JcompAst.getSimpleName(rw.getAST(),outname);
          SimpleType t3 = rw.getAST().newSimpleType(n3);
          SingleVariableDeclaration svd = rw.getAST().newSingleVariableDeclaration();
+         SimpleName n4 = JcompAst.getSimpleName(rw.getAST(),OUTER_PARAM);
          svd.setType(t3);
-         svd.setName(n3);
+         svd.setName(n4);
          md.parameters().add(svd);
-         Block cnts = md.getBody();
+         Block cnts = rw.getAST().newBlock();
+         md.setBody(cnts);
          Statement st = getOuterAssignment(rw);
          cnts.statements().add(st);
        }

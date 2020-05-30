@@ -178,6 +178,27 @@ Set<SumpElementClass> findUsedClasses(SumpElementClass cls)
    return rslt;
 }
 
+
+@Override public Collection<SumpClass> getInheritedClasses(SumpClass sc)
+{
+   Set<SumpClass> rslt = new HashSet<>();
+   
+   Set<String> names = new HashSet<>();
+   String sup = sc.getSuperClassName();
+   if (sup != null) names.add(sup);
+   Collection<String> ifcs = sc.getInterfaceNames();
+   if (ifcs != null) names.addAll(ifcs);
+   for (SumpClass cls : model_package.getClasses()) {
+      if (names.contains(cls.getName()) || names.contains(cls.getFullName()))
+         rslt.add(cls);
+    }
+      
+   return rslt;   
+}
+
+
+
+
 /********************************************************************************/
 /*                                                                              */
 /*      Creation methods                                                        */
@@ -417,6 +438,9 @@ private void handleAscus(Annotation an)
                for (String s : l1) model_data.addLibrary(s);
              }
             break;
+         case "missing" :
+            model_data.addMissingImport(getStringValue(val));
+            break;
          case "keywords" :
             List<String> k1 = getStringValues(val,null);
             if (k1 != null && cdr != null) cdr.addKeywordSet(k1);
@@ -530,6 +554,9 @@ private List<String> getStringValues(Expression exp,List<String> rslt)
    for (LidsLibrary lib : model_data.getLibraries()) {
       xw.textElement("LIBRARY",lib.getFullId());
     }
+   for (String s : model_data.getMissingImports()) {
+      xw.textElement("MISSING",s);
+    }
    CoseRequest cr = model_data.getCoseRequest();
    if (cr != null) {
       xw.begin("SEARCH");
@@ -572,6 +599,9 @@ private List<String> getStringValues(Expression exp,List<String> rslt)
    for (LidsLibrary lib : model_data.getLibraries()) {
       pw.println("@Ascus(library=\"" + lib.getFullId() + "\")");
     }   
+   for (String imp : model_data.getMissingImports()) {
+      pw.println("@Ascus(missing=\"" + imp + "\")");
+    }  
    CoseRequest cr = model_data.getCoseRequest();
    if (cr != null) {
       StringBuffer buf = new StringBuffer();
@@ -659,6 +689,9 @@ private List<String> getStringValues(Expression exp,List<String> rslt)
     }
    for (LidsLibrary s : model_data.getLibraries()) {
       buf.append("LIBRARY: " + s.getFullId() + ";\n");
+    }
+   for (String imp : model_data.getMissingImports()) {
+      buf.append("MISSING: " + imp + ";\n");
     }
    for (String s : model_data.getSources()) {
       buf.append("SOURCE: " + s + ";\n");

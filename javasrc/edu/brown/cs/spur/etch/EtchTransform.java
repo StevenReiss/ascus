@@ -271,10 +271,10 @@ protected TypeDeclaration createDummyClass(AST ast,SumpClass sc)
    if (sc.isInterface()) td.setInterface(true);
    
    td.setName(JcompAst.getSimpleName(ast,sc.getName()));
-   if (sc.getSuperClass() != null) {
+   if (sc.getSuperClassName() != null) {
       // add super class
     }
-   Collection<SumpClass> ints = sc.getInterfaces();
+   Collection<String> ints = sc.getInterfaceNames();
    if (ints != null && !ints.isEmpty()) {
       // add interfaces
     }
@@ -389,14 +389,16 @@ protected static String getMapName(JcompSymbol js)
       buf.append("(");
       JcompType jt = js.getType();
       int ct = 0;
-      for (JcompType ptyp : jt.getComponents()) {
-         if (ct++ > 0) buf.append(",");
-         String s = ptyp.getName();
-         int idx1 = s.indexOf("<");
-         if (idx1 > 0) s = s.substring(0,idx1);
-         int idx2 = s.lastIndexOf(".");
-         if (idx2 > 0) s = s.substring(idx2+1);
-         buf.append(s);
+      if (jt != null) {
+         for (JcompType ptyp : jt.getComponents()) {
+            if (ct++ > 0) buf.append(",");
+            String s = ptyp.getName();
+            int idx1 = s.indexOf("<");
+            if (idx1 > 0) s = s.substring(0,idx1);
+            int idx2 = s.lastIndexOf(".");
+            if (idx2 > 0) s = s.substring(idx2+1);
+            buf.append(s);
+          }
        }
       buf.append(")");
       return buf.toString();

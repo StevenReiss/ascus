@@ -53,6 +53,7 @@ public @interface Ascus
 
    String library() default "";         // library name
    String source() default "";
+   String missing() default "";
    String [] libraries() default { };
    String [] sources() default { };
    String [] keywords() default { };

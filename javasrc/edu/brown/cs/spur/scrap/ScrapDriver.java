@@ -46,7 +46,10 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.ImportDeclaration;
+import org.eclipse.jdt.core.dom.PackageDeclaration;
 
+import edu.brown.cs.cose.cosecommon.CoseConstants;
 import edu.brown.cs.cose.cosecommon.CoseDefaultRequest;
 import edu.brown.cs.cose.cosecommon.CoseMaster;
 import edu.brown.cs.cose.cosecommon.CoseResult;
@@ -58,6 +61,7 @@ import edu.brown.cs.ivy.file.IvyFile;
 import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompProject;
+import edu.brown.cs.spur.lids.LidsFinder;
 import edu.brown.cs.spur.stare.StareDriver;
 import edu.brown.cs.spur.sump.SumpConstants;
 import edu.brown.cs.spur.sump.SumpData;
@@ -166,7 +170,7 @@ private void scanArgs(String [] args)
             search_request.setCoseSearchType(CoseSearchType.PACKAGE);
             search_request.setCoseScopeType(CoseScopeType.PACKAGE_IFACE);
           } 
-         else if (args[i].startsWith("-pu")) {                           // -package-interface
+         else if (args[i].startsWith("-pu")) {                           // -package-used
             search_request.setCoseSearchType(CoseSearchType.PACKAGE);
             search_request.setCoseScopeType(CoseScopeType.PACKAGE_USED);
           } 
@@ -259,6 +263,35 @@ void processBuildCandidates(SumpModel mdl)
    stare.addInitialSolutions(cands);
    stare.process();
 }
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Library processing                                                      */
+/*                                                                              */
+/********************************************************************************/
+
+static LidsFinder findLibraries(CompilationUnit cu)
+{
+   Set<String> imports = new HashSet<>();
+   PackageDeclaration pd = cu.getPackage();
+   String pnm = null;
+   if (pd != null) pnm = pd.getName().getFullyQualifiedName();
+   for (Object o : cu.imports()) {
+      ImportDeclaration id = (ImportDeclaration) o;
+      String idnm = id.getName().getFullyQualifiedName();
+      if (CoseConstants.isRelatedPackage(pnm,idnm)) continue;
+      if (CoseConstants.isStandardJavaLibrary(idnm)) continue; 
+      if (id.isOnDemand()) idnm += ".*";
+      imports.add(idnm);
+    }
+   
+   LidsFinder fndr = new LidsFinder();
+   for (String s : imports) fndr.addImportPath(s);
+   
+   return fndr;
+}
+
 
 
 

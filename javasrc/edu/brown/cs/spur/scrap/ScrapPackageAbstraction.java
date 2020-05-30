@@ -312,8 +312,6 @@ private void findComponents()
       use.add(pc);
     }
    
-   addUsedTypes(use);
-   
    for (int i = 0; i < use.size(); ++i) {
       PackageClass pc1 = use.get(i);
       for (int j = i+1; j < use.size(); ++j) {
@@ -326,9 +324,10 @@ private void findComponents()
 	  }
        }
     }
-
    use.removeAll(remove);
-
+   
+   addUsedTypes(use);
+   
    if (use.isEmpty())
       use = all_classes;
 
@@ -385,21 +384,37 @@ private boolean isClassIgnorable(PackageClass pc)
 /*                                                                              */
 /********************************************************************************/
 
-private void addUsedTypes(List<PackageClass> use)
+private Set<PackageClass> addUsedTypes(List<PackageClass> use)
 {
    FindUsedTypes finder = new FindUsedTypes();
    
    for (PackageClass pc : use) {
+      if (pc.getName().contains("HttpRequestMessageFactory"))
+         System.err.println("CHECK HERE");
       finder.setClass(pc.getAbstraction());
       pc.getAstNode().accept(finder);
     }
    
-   for (PackageClass pc : all_classes) {
-      if (use.contains(pc)) continue;
-      JcompType jt = JcompAst.getJavaType(pc.getAstNode());
-      if (finder.isUsed(jt))
+   Set<PackageClass> req = new HashSet<>();
+   
+   for ( ; ; ) {
+      List<PackageClass> added = new ArrayList<>();
+      for (PackageClass pc : all_classes) {
+         JcompType jt = JcompAst.getJavaType(pc.getAstNode());
+         if (finder.isUsed(jt)) {
+            if (use.contains(pc)) req.add(pc);
+            else added.add(pc);
+          }
+       }
+      if (added.isEmpty()) break;
+      for (PackageClass pc : added) {
          use.add(pc);
+         finder.setClass(pc.getAbstraction());
+         pc.getAstNode().accept(finder);
+       }
     }
+   
+   return req;
 }
 
 
@@ -472,6 +487,7 @@ private static class FindUsedTypes extends ASTVisitor {
       for (LidsLibrary ll : getReferencedLibraries()) {
          sd.addLibrary(ll);
        }
+      for (String s : missing_imports) sd.addMissingImport(s);
       SumpModel mdl = SumpFactory.createModel(sd);
       SumpPackage spe = mdl.setPackage("Default");
       for (PackageClass pc : use_classes) {
@@ -517,7 +533,7 @@ List<LidsLibrary> getReferencedLibraries()
       LidsFinder fndr = new LidsFinder();
       for (String s : imports) fndr.addImportPath(s);
       use_libraries = fndr.findLibraries();
-      missing_imports = fndr.getMissiingImports();
+      missing_imports = fndr.getMissingImports();
     }
    return use_libraries;
 }

@@ -36,6 +36,7 @@
 package edu.brown.cs.spur.scrap;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -43,20 +44,26 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.ImportDeclaration;
 
+import edu.brown.cs.cose.cosecommon.CoseConstants;
 import edu.brown.cs.cose.cosecommon.CoseMaster;
 import edu.brown.cs.cose.cosecommon.CoseRequest;
 import edu.brown.cs.cose.cosecommon.CoseResult;
 import edu.brown.cs.cose.cosecommon.CoseConstants.CoseScopeType;
 import edu.brown.cs.cose.cosecommon.CoseConstants.CoseSearchEngine;
 import edu.brown.cs.cose.cosecommon.CoseConstants.CoseSearchType;
+import edu.brown.cs.cose.result.ResultFactory;
 import edu.brown.cs.ivy.file.IvyFile;
 import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompControl;
 import edu.brown.cs.ivy.jcomp.JcompProject;
 import edu.brown.cs.spur.etch.EtchFactory;
+import edu.brown.cs.spur.lids.LidsFinder;
+import edu.brown.cs.spur.lids.LidsConstants.LidsLibrary;
 import edu.brown.cs.spur.sump.SumpConstants;
 import edu.brown.cs.spur.sump.SumpData;
 import edu.brown.cs.spur.sump.SumpConstants.SumpModel;
@@ -110,6 +117,7 @@ List<ScrapCandidate> buildCandidates(SumpModel model)
     }
    
    for (CandidateMatch cm : match) {
+      System.err.println("MATCH:\n" + cm.getCoseResult().getEditText());
       Map<String,String> namemap = cm.getNameMap();
       CoseResult cr = cm.getCoseResult();
       CoseResult cr1 = etcher.fixNames(cr,namemap);
@@ -124,39 +132,49 @@ List<ScrapCandidate> buildCandidates(SumpModel model)
 
 private List<CandidateMatch> findInitialMatches(SumpModel model)
 {
-   // CoseResult checker = null;
-   
    Map<CoseResult,SumpModel> mmap = new HashMap<>();
    for (CoseResult orig : all_results) {
       CompilationUnit cu = (CompilationUnit) orig.getStructure();
-      // if (cu.toString().contains("kasra_sh.picohttpd")) {
-         // System.err.println("CHECK HERE: " + cu);
-         // cu = (CompilationUnit) orig.getStructure();
-         // checker = orig;
-       // }
       JcompProject proj = null;
-      if (!JcompAst.isResolved(cu)) {
-         proj = JcompAst.getResolvedAst(jcomp_control,cu);
-         JcompAst.setProject(cu,proj);
-         if (proj == null) continue;
+      try { 
+         if (!JcompAst.isResolved(cu)) {
+            proj = JcompAst.getResolvedAst(jcomp_control,cu);
+            JcompAst.setProject(cu,proj);
+            if (proj == null) continue;
+          }
+         SumpData sdata = new SumpData(model.getModelData().getCoseRequest(),orig);
+         
+         LidsFinder lids = ScrapDriver.findLibraries(cu);
+         for (LidsLibrary ll : lids.findLibraries()) {
+            sdata.addLibrary(ll);
+          }
+         Collection<String> missing = lids.getMissingImports();
+         if (missing != null && !missing.isEmpty()) {
+            for (String s : missing) sdata.addMissingImport(s);
+            for (String s : missing) {
+               System.err.println("MISSING IMPORT " + s + " FROM " + orig.getSource());
+             }
+            // continue;
+          } 
+         
+         SumpModel mdl = SumpConstants.SumpFactory.createModel(sdata,cu);
+         mmap.put(orig,mdl);
        }
-      SumpData sdata = new SumpData(null,orig);
-      SumpModel mdl = SumpConstants.SumpFactory.createModel(sdata,cu);
-      mmap.put(orig,mdl);
-      if (proj != null) {
-         jcomp_control.freeProject(proj);
-         JcompAst.setProject(cu,null);
+      finally {   
+         if (proj != null) {
+            jcomp_control.freeProject(proj);
+            JcompAst.setProject(cu,null);
+          }
        }
     }
    
    Set<CandidateMatch> match = new TreeSet<>(); 
    for (Map.Entry<CoseResult,SumpModel> ent : mmap.entrySet()) {
+      SumpModel emdl = ent.getValue();
       Map<String,String> rmap = new HashMap<>();
-      // if (ent.getKey() == checker) 
-         // System.err.println("CHECK HERE");
-      double sv = ent.getValue().matchScore(model,rmap);
+      double sv = emdl.matchScore(model,rmap);
       if (sv != 0) {
-         CandidateMatch cm = new CandidateMatch(model,ent.getKey(),sv,rmap);
+         CandidateMatch cm = new CandidateMatch(emdl,ent.getKey(),sv,rmap);
          match.add(cm);
        }
     }
@@ -169,7 +187,7 @@ private List<CandidateMatch> findInitialMatches(SumpModel model)
 
 /********************************************************************************/
 /*                                                                              */
-/*      Find associated test cases                                                       */
+/*      Find associated test cases                                              */
 /*                                                                              */
 /********************************************************************************/
 
@@ -183,21 +201,10 @@ private void addTestCases(CandidateMatch cm,EtchFactory etcher)
     }
    req.setCoseSearchType(CoseSearchType.TESTCLASS);
    req.setCoseScopeType(CoseScopeType.FILE);
-   String pkg = cr.getBasePackage();
    for (String s : cr.getPackages()) {
-      if (s.startsWith(pkg)) continue;
-      int len = 0;
-      for ( ; len < pkg.length() && len < s.length(); ++len) {
-         if (pkg.charAt(len) != s.charAt(len)) break;
-       }
-      int idx = pkg.lastIndexOf(".");
-      if (idx > 0) 
-         pkg = pkg.substring(0,idx);
+      req.addKeywordSet("package " + s,"junit","test");
     }
-   System.err.println("LOOK FOR TESTS FOR " + pkg);
-   req.addKeyword("package " + pkg);
-   req.addKeyword("junit");
-   req.addKeyword("test");
+  
    req.setDoDebug(true);
    CoseMaster master = CoseMaster.createMaster(req);
    ScrapResultSet tests = new ScrapResultSet();
@@ -209,17 +216,70 @@ private void addTestCases(CandidateMatch cm,EtchFactory etcher)
     }
    Set<String> done = new HashSet<>();
    Map<String,String> namemap = cm.getNameMap();
+   CoseResult testresult = null;
    for (CoseResult test : tests.getResults()) {
       String enc = IvyFile.digestString(test.getKeyText());
       if (!done.add(enc)) continue;
-      CoseResult test1 = etcher.fixNames(test,namemap);
-      System.err.println("MERGE IN TEST " + test + "\n" + test1.getEditText());
-      
+      System.err.println("CONSIDER TEST CODE " + test.getSource().getDisplayName());
+      if (!isViableTestCase(test,cm)) continue;
+      if (testresult == null) {
+         ResultFactory rf = new ResultFactory(req);
+         testresult = rf.createPackageResult(test.getSource());
+         for (String s : cr.getPackages()) {
+            testresult.addPackage(s);
+          }
+       }
+      CoseResult ftest = test.getParent();
+      testresult.addInnerResult(ftest);
       // ensure that all classes referenced are in the model code
       // otherwise, prune the model code to only include known classes
       // ensure that this test class is not in the model code
       // then add the class to the model code
     }
+   if (testresult != null) {
+      String pkg = testresult.getBasePackage();
+      String origpkg = cr.getBasePackage();
+      if (!origpkg.equals(pkg)) {
+         String top = namemap.get(origpkg);
+         namemap.put(pkg,top);
+       }
+      CoseResult test1 = etcher.fixNames(testresult,namemap);
+      cm.updateTestResult(test1);
+      System.err.println("TEST CODE:\n" + test1.getEditText());
+    }
+}
+
+
+
+private boolean isViableTestCase(CoseResult cr,CandidateMatch cm)
+{
+   boolean allok = true;
+   
+   String pkg = cm.getCoseResult().getBasePackage();
+   Map<String,String> namemap = cm.getNameMap();
+   ASTNode td = (ASTNode) cr.getStructure();
+   CompilationUnit cu = (CompilationUnit) td.getRoot();
+   for (Object o : cu.imports()) {
+      ImportDeclaration id = (ImportDeclaration) o;
+      String nm = id.getName().getFullyQualifiedName();
+      if (namemap.containsKey(nm)) continue;
+      if (id.isOnDemand() && !id.isStatic()) continue;
+      if (id.isStatic()) {
+         int idx = nm.lastIndexOf(".");
+         if (idx > 0) nm = nm.substring(0,idx);
+         if (namemap.containsKey(nm)) continue;
+       }
+      if (nm.contains("junit")) continue;
+      if (nm.contains("org.hamcrest")) continue;
+      if (CoseConstants.isStandardJavaLibrary(nm)) continue;
+      int idx = nm.lastIndexOf(".");
+      String pnm = pkg + nm.substring(idx);
+      if (namemap.containsKey(pnm)) continue;
+      System.err.println("MISSING IMPORT: " + nm);
+      allok = false;
+    }
+   
+   return allok;
 }
 
 
@@ -237,19 +297,23 @@ private static class CandidateMatch implements Comparable<CandidateMatch>, Scrap
    private CoseResult for_result;
    private Map<String,String> name_map;
    private double match_value;
+   private CoseResult test_result;
    
    CandidateMatch(SumpModel mdl,CoseResult cr,double v,Map<String,String> nmap) {
       for_model = mdl;
       for_result = cr;
       match_value = v;
       name_map = new HashMap<>(nmap);
+      test_result = null;
     }
    
    @Override public SumpModel getModel()                        { return for_model; }
    @Override public CoseResult getCoseResult()                  { return for_result; }
    @Override public Map<String,String> getNameMap()             { return name_map; }
+   @Override public CoseResult getTestResult()                  { return test_result; }
    
    void updateResult(CoseResult cr)                             { for_result = cr; }
+   void updateTestResult(CoseResult cr)                         { test_result = cr; }
    
    @Override public int compareTo(CandidateMatch cm) {
       int v = Double.compare(cm.match_value,match_value);
