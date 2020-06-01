@@ -120,7 +120,7 @@ List<ScrapCandidate> buildCandidates(SumpModel model)
       System.err.println("MATCH:\n" + cm.getCoseResult().getEditText());
       Map<String,String> namemap = cm.getNameMap();
       CoseResult cr = cm.getCoseResult();
-      CoseResult cr1 = etcher.fixNames(cr,namemap);
+      CoseResult cr1 = etcher.fixCode(cr,namemap);
       cm.updateResult(cr1);
     }
    
@@ -243,7 +243,7 @@ private void addTestCases(CandidateMatch cm,EtchFactory etcher)
          String top = namemap.get(origpkg);
          namemap.put(pkg,top);
        }
-      CoseResult test1 = etcher.fixNames(testresult,namemap);
+      CoseResult test1 = etcher.fixTests(testresult,namemap);
       cm.updateTestResult(test1);
       System.err.println("TEST CODE:\n" + test1.getEditText());
     }

@@ -67,6 +67,7 @@ class SumpElementOperation extends SumpElementBase implements SumpOperation
 private SumpDataType return_type;
 private List<SumpElementParameter> param_values;
 private boolean is_constructor;
+private boolean is_static;
 
 
 /********************************************************************************/
@@ -84,6 +85,7 @@ SumpElementOperation(SumpModelBase mdl,JcompSymbol js,ASTNode n)
    return_type = new SumpDataType(js.getType().getBaseType(),n);
    param_values = null;
    is_constructor = js.isConstructorSymbol();
+   is_static = js.isStatic();
    MethodDeclaration md = (MethodDeclaration) js.getDefinitionNode();
    
    if (md != null) {
@@ -181,6 +183,7 @@ private String getMappedType(String tnm)
    if (rm instanceof SumpElementOperation) {
       SumpElementOperation op = (SumpElementOperation) rm;
       if (is_constructor != op.is_constructor) return 0;
+      if (is_static != op.is_static) return 0;
       // if either is override, then require same name???
       if (!matchOperation(op)) return 0;
       return 1 + IvyStringDiff.normalizedStringDiff(getName(),op.getName());

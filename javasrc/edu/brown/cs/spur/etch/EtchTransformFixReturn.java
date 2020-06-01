@@ -168,7 +168,7 @@ private class FixReturnMapper extends EtchMapper {
    
    boolean isEmpty()                    { return fix_returns.isEmpty(); }
    
-   @Override void preVisit(ASTNode orig) {
+   @Override boolean preVisit(ASTNode orig,ASTRewrite rw) {
       if (orig instanceof MethodDeclaration) {
          MethodDeclaration md = (MethodDeclaration) orig;
          JcompSymbol ms = JcompAst.getDefinition(md);
@@ -177,6 +177,7 @@ private class FixReturnMapper extends EtchMapper {
          return_type = fix_returns.get(ms);
          orig_type = ms.getType().getBaseType();
        }
+      return true;
     }
    
    @Override void rewriteTree(ASTNode orig,ASTRewrite rw) {

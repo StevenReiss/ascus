@@ -228,12 +228,16 @@ private double matchClasses(SumpModel base,SumpModel pat,
       // System.err.println("MAP " + fromcls + " ->  " + sc);
       
       Collection<SumpClass> i1 = pat.getInheritedClasses(fromcls);
+      Collection<SumpClass> i2 = base.getInheritedClasses(sc);
       if (!i1.isEmpty()) {
-         Collection<SumpClass> i2 = base.getInheritedClasses(sc);
          for (SumpClass ifc : i1) {
             SumpClass nfc = nmap.get(ifc);
             if (nfc != null && !i2.contains(nfc)) usescore = 0;
           }
+       }
+      else {
+        if (!i2.isEmpty()) 
+           usescore = 0;
        }
       Collection<SumpClass> i3 = getSubClasses(pat,fromcls);
       if (!i3.isEmpty()) {
@@ -449,6 +453,8 @@ private double maxMatchClasss(SumpModel base,SumpModel pat,Map<String,String> rs
 static double computeClassMatchScore(SumpClass base,SumpClass pat,Map<String,String> namemap)
 {
    // Set<Object> done = new HashSet<>();
+   if (!base.isMatchable() || !pat.isMatchable())
+      return 0;
    
    RowelMatcher<SumpAttribute> rm = new RowelMatcher<>(pat.getAttributes(),base.getAttributes());
    Map<SumpAttribute,SumpAttribute> map = rm.bestMatch(MatchType.MATCH_EXACT);

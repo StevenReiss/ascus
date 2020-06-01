@@ -227,7 +227,7 @@ private class ParamMapper extends EtchMapper {
       fix_set.put(m,pf);
     }
    
-   @Override void preVisit(ASTNode orig) {
+   @Override boolean preVisit(ASTNode orig,ASTRewrite rw) {
       if (orig instanceof MethodDeclaration) {
          JcompSymbol jm = JcompAst.getDefinition(orig);
          ParamFix pf = fix_set.get(jm);
@@ -241,6 +241,7 @@ private class ParamMapper extends EtchMapper {
              }
           }
        }
+      return true;
     }
    
    @Override void rewriteTree(ASTNode orig,ASTRewrite rw) {

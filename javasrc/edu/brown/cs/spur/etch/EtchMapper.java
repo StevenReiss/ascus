@@ -84,7 +84,7 @@ final String getMapName()
 
 protected String getSpecificsName()		{ return null; }
 
-void preVisit(ASTNode n)			{ }
+boolean preVisit(ASTNode n,ASTRewrite rw)		{ return true; }
 
 abstract void rewriteTree(ASTNode orig,ASTRewrite rw);
 

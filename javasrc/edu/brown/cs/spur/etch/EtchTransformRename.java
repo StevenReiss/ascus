@@ -41,11 +41,11 @@ import java.util.Map;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
-import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
 import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 
@@ -224,43 +224,12 @@ private class NameMapper extends EtchMapper {
       JcompSymbol jsd = JcompAst.getDefinition(orig);
       JcompSymbol jsr = JcompAst.getReference(orig);
       JcompType jt = JcompAst.getJavaType(orig);
-      if (jsd != null) {
-         String newname = sym_mapping.get(jsd);
-         if (newname == null && jsd.getName().equals("<init>")) {
-            for (ASTNode p = orig; p != null; p = p.getParent()) {
-               if (p instanceof TypeDeclaration) {
-                  JcompSymbol tjs = JcompAst.getDefinition(p);
-                  newname = sym_mapping.get(tjs);
-                  break;
-                }
-             }
-          }
-         if (newname != null) {
-            rewriteName(orig,rw,newname);
-          }
-       }
-      else if (jsr != null) {
-         String newname = sym_mapping.get(jsr);
-         if (newname != null) {
-            rewriteName(orig,rw,newname);
-          }
+      if (jsd != null || jsr != null) {
+         handleName(orig,rw);
        }
       else if (jt != null) {
-         String newname = type_mapping.get(jt);
-         if (newname != null) {
-            if (orig instanceof QualifiedName) {
-               Name nm = JcompAst.getQualifiedName(rw.getAST(),newname);
-               rw.replace(orig,nm,null);
-             }
-            else if (orig instanceof SimpleName) {
-               int idx = newname.lastIndexOf(".");
-               if (idx > 0) newname = newname.substring(idx+1);
-               SimpleName sn = JcompAst.getSimpleName(rw.getAST(),newname);
-               rw.replace(orig,sn,null);
-             }
-          }
+         handleType(orig,rw);
        }
-      
       
       if (orig instanceof PackageDeclaration) {
          PackageDeclaration pd = (PackageDeclaration) orig;
@@ -270,46 +239,66 @@ private class NameMapper extends EtchMapper {
             rw.set(pd,PackageDeclaration.NAME_PROPERTY,n,null);
           }
        }
-      else if (orig instanceof ImportDeclaration) {
-         ImportDeclaration id = (ImportDeclaration) orig;
-         String inm = id.getName().getFullyQualifiedName();
-         if (from_prefix != null && inm.startsWith(from_prefix)) {
-            String s = inm;
-            String tail = null;
-            String rep = null;
-            for ( ; ; ) {
-               rep = name_map.get(s);
-               if (rep != null) break;
-               int idx = s.lastIndexOf(".");
-               if (idx < 0) break;
-               if (tail == null) tail = s.substring(idx);
-               else tail = inm.substring(idx);
-               s = s.substring(0,idx);
+    }
+   
+   private boolean handleName(ASTNode orig,ASTRewrite rw) {
+      if (orig instanceof SimpleName) {
+         JcompSymbol jsd = JcompAst.getDefinition(orig);
+         JcompSymbol jsr = JcompAst.getReference(orig);
+         if (jsd != null) {
+            String newname = sym_mapping.get(jsd);
+            if (jsd.isConstructorSymbol()) {
+               for (ASTNode p = orig; p != null; p = p.getParent()) {
+                  if (p instanceof TypeDeclaration) {
+                     JcompSymbol tjs = JcompAst.getDefinition(p);
+                     newname = sym_mapping.get(tjs);
+                     break;
+                   }
+                }
              }
-            if (rep != null) {
-               String rnm = rep;
-               if (tail != null) rnm += tail;
-               Name n = JcompAst.getQualifiedName(rw.getAST(),rnm);
-               rw.set(id,ImportDeclaration.NAME_PROPERTY,n,null);
+            if (newname != null) {
+               rewriteName(orig,rw,newname);
+               return true;
              }
           }
-       }
-      else if (orig instanceof QualifiedName) {
-         ASTNode p = null;
-         for (p = orig; p != null; p = p.getParent()) {
-            if (!(p instanceof QualifiedName)) break;
-          }
-         if (p instanceof ImportDeclaration) ;
-         else {
-            QualifiedName qn = (QualifiedName) orig;
-            String qnm = qn.getFullyQualifiedName();
-            String rep = name_map.get(qnm);
-            if (rep != null) {
-               System.err.println("REPLACE " + qnm + " WITH " + rep);
+         else if (jsr != null) {
+            String newname = sym_mapping.get(jsr);
+            if (newname != null) {
+               rewriteName(orig,rw,newname);
+               return true;
              }
           }
        }
-   }
+      return false;
+    }
+   
+   private boolean handleType(ASTNode orig,ASTRewrite rw) {
+      JcompType jt = JcompAst.getJavaType(orig);
+      String newname = type_mapping.get(jt);
+      if (newname != null) {
+         if (orig instanceof QualifiedName) {
+            Name nm = JcompAst.getQualifiedName(rw.getAST(),newname);
+            rw.replace(orig,nm,null);
+            return true;
+          }
+         else if (orig instanceof SimpleName) {
+            int idx = newname.lastIndexOf(".");
+            if (idx > 0) newname = newname.substring(idx+1);
+            SimpleName sn = JcompAst.getSimpleName(rw.getAST(),newname);
+            rw.replace(orig,sn,null);
+            return true;
+          }
+         else if (orig instanceof SimpleType) {
+            int idx = newname.lastIndexOf(".");
+            if (idx > 0) newname = newname.substring(idx+1);
+            SimpleName sn = JcompAst.getSimpleName(rw.getAST(),newname);
+            SimpleType st = rw.getAST().newSimpleType(sn);
+            rw.replace(orig,st,null);
+            return true;
+          }
+       }
+      return false; 
+    }
    
    private void rewriteName(ASTNode nd,ASTRewrite rw,String name) {
       if (nd instanceof SimpleName) {

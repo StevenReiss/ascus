@@ -76,8 +76,8 @@ EtchRewrite(ASTNode base,EtchMapper tm)
 /*      Basic visitation methods                                                *//*                                                                              */
 /********************************************************************************/
 
-public void preVisit(ASTNode n) {
-   tree_mapper.preVisit(n);
+public boolean preVisit2(ASTNode n) { 
+   return tree_mapper.preVisit(n,tree_rewrite);
 }
 
 public void postVisit(ASTNode n) {

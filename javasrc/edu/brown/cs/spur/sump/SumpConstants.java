@@ -103,6 +103,7 @@ interface SumpPackage extends SumpElement {
 
 interface SumpClass extends SumpElement, RowelMatch {
    boolean isInterface();
+   boolean isMatchable();
    String getSuperClassName();
    Collection<String> getInterfaceNames();
    Collection<SumpAttribute> getAttributes();

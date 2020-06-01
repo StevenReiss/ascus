@@ -69,11 +69,11 @@ public EtchFactory(SumpModel target)
 
 /********************************************************************************/
 /*                                                                              */
-/*      Step 1: Fix names                                                       */
+/*      Adapt code files                                                        */
 /*                                                                              */
 /********************************************************************************/
 
-public CoseResult fixNames(CoseResult orig,Map<String,String> namemap)
+public CoseResult fixCode(CoseResult orig,Map<String,String> namemap)
 {
    CoseResult work = orig;
    
@@ -92,10 +92,10 @@ public CoseResult fixNames(CoseResult orig,Map<String,String> namemap)
    EtchTransformRename renamer = new EtchTransformRename(namemap);
    
    work = renamer.transform(work,target_model);
-   System.err.println("RESULT: " + work.getEditText());
+   
+   // need to reorder parameters in calls
    
    EtchTransformFixParameters paramfix = new EtchTransformFixParameters(namemap);
-   
    work = paramfix.transform(work,target_model);
    
    // need to change return types 
@@ -106,6 +106,35 @@ public CoseResult fixNames(CoseResult orig,Map<String,String> namemap)
    
    return work;
 }
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Adapt test code files                                                   */
+/*                                                                              */
+/********************************************************************************/
+
+public CoseResult fixTests(CoseResult orig,Map<String,String> namemap)
+{
+   CoseResult work = orig;
+   
+   EtchTransformFixPackage fixpackage = new EtchTransformFixPackage(work,namemap);
+   
+   work = fixpackage.transform(work,target_model);
+  
+   // need to reorder parameters in calls
+   
+   EtchTransformRename renamer = new EtchTransformRename(namemap);
+   
+   work = renamer.transform(work,target_model);
+   
+   // need to remove code that references undefined items
+   
+   return work;
+}
+
+
 
 
 

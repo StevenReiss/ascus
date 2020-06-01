@@ -164,10 +164,13 @@ private class FindInnerClassVisitor extends ASTVisitor {
          String n1 = nm.substring(idx2+1);
          String n2 = tnm.substring(idx4+1);
          if (n1.equals(n2)) return;
+         String xnm = nm.substring(0,idx2) + nm.substring(idx1);
+         name_map.put(xnm,tnm);
          JcompSymbol js = jt.getDefinition();
          AbstractTypeDeclaration atd = (AbstractTypeDeclaration) js.getDefinitionNode();
          if (atd != null) inner_classes.add(atd);
          checkType(jt.getSuperType());
+         
        }
     }
    
@@ -279,8 +282,9 @@ private class InnerClassMapper extends EtchMapper {
        }
     }
    
-   @Override void preVisit(ASTNode n) {
+   @Override boolean preVisit(ASTNode n,ASTRewrite rw) {
       if (extract_types.contains(n)) ignore_tree = true;
+      return true;
     }
    
    @Override void rewriteTree(ASTNode orig,ASTRewrite rw) {

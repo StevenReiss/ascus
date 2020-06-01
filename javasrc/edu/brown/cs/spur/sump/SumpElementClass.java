@@ -75,6 +75,7 @@ private Set<String>         enum_constants;
 private String              super_name;
 private List<String>        iface_names;
 private boolean             is_interface;
+private boolean             is_matchable;
 
 
 /********************************************************************************/
@@ -91,6 +92,7 @@ SumpElementClass(SumpModelBase mdl,AbstractTypeDeclaration atd)
    super_name = null;
    iface_names = new ArrayList<>();
    is_interface = false;
+   is_matchable = true;
    enum_constants = null;
    
    initialize(atd);
@@ -116,6 +118,11 @@ SumpElementClass(SumpModelBase mdl,AbstractTypeDeclaration atd)
    return is_interface;
 }
 
+
+@Override public boolean isMatchable()
+{
+   return is_matchable;
+}
 
 
 @Override public String getSuperClassName()
@@ -159,7 +166,7 @@ SumpElementClass(SumpModelBase mdl,AbstractTypeDeclaration atd)
 @Override public double getMatchScore(RowelMatch rm,RowelMatchType mt)
 {
    if (rm instanceof SumpElementClass) {
-      SumpElementClass sc = (SumpElementClass) rm;
+      SumpElementClass sc = (SumpElementClass) rm; 
       double score = SumpMatcher.computeClassMatchScore(this,sc,null);
       if (score < SumpMatcher.CLASS_CUTOFF) return 0;
       double nscore = IvyStringDiff.normalizedStringDiff(getName(),sc.getName());
@@ -219,6 +226,7 @@ private void initialize(AbstractTypeDeclaration atd)
       if (t != null) {
          JcompType jt = JcompAst.getJavaType(t);
          if (!jt.isUndefined()) super_name = jt.getName();
+         else is_matchable = false;
        }
       for (Object o : td.superInterfaceTypes()) {
          Type t1 = (Type) o;
@@ -227,6 +235,7 @@ private void initialize(AbstractTypeDeclaration atd)
             String inm = jt.getName();
             iface_names.add(inm);
           }
+         else is_matchable = false;
        }
     }
    else if (atd instanceof EnumDeclaration) {

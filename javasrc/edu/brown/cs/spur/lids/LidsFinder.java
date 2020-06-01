@@ -45,6 +45,7 @@ import java.util.Map;
 import java.util.Set;
 
 import edu.brown.cs.cose.cosecommon.CoseConstants;
+import edu.brown.cs.ivy.file.IvyLog;
 
 public class LidsFinder implements LidsConstants
 {
@@ -115,6 +116,7 @@ public List<LidsLibrary> findLibraries()
    Map<LidsLibrary,Set<String>> covered = new HashMap<>();
    
    for (String s : check_imports) {
+      IvyLog.logD("LIDS","Look for library for " + s);
       List<LidsLibrary> libs = maven_finder.findLibrariesForImport(s);
       if (libs != null) {
          for (LidsLibrary lib : libs) {
