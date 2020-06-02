@@ -65,6 +65,10 @@ class LidsMavenFinder implements LidsConstants
 private static Map<String,List<LidsLibrary>> found_libs = new HashMap<>();
 private static Map<String,MavenLibrary> known_libs = new HashMap<>();
 private static KeySearchCache cose_cache = KeySearchCache.getCache();
+private static Map<String,List<LidsLibrary>> lib_byname = new HashMap<>();
+
+private static String SEARCH_PFX =
+   "https://search.maven.org/solrsearch/select?rows=1000&wt=json&q=";  
 
 
 
@@ -124,8 +128,7 @@ private synchronized List<LidsLibrary> checkLibrary(String path,boolean iscls)
 
 private List<LidsLibrary> doMavenSearch(String path)
 {
-   String pfx = "https://search.maven.org/solrsearch/select?rows=1000&wt=json&q=";
-   String q = pfx + "fc:%22" + path + "%22";
+   String q = SEARCH_PFX + "fc:%22" + path + "%22";
    q += "%20AND%20p:%22jar%22";
 
    Map<String,Set<String>> artifacts = new HashMap<>();
@@ -162,34 +165,52 @@ private List<LidsLibrary> doMavenSearch(String path)
          if (!related.contains(art)) it.remove();
        }
     }
+   
    for (Map.Entry<String,Set<String>> ent : artifacts.entrySet()) {
-      String q1 = pfx + "g:%22" + ent.getKey() + "%22";
-      String rslt2 = getMavenResult(q1);
-      if (rslt2 !=  null) {
-         JSONObject top = new JSONObject(rslt2);
-         JSONObject resp = top.getJSONObject("response");
-         JSONArray arr = resp.optJSONArray("docs");
-         if (arr != null) {
-            for (int i = 0; i < arr.length(); ++i) {
-               JSONObject doc = arr.getJSONObject(i);
-               String type = doc.getString("p");
-               if (type == null || !type.equals("jar")) continue;
-               String lib = doc.getString("a");
-               if (!ent.getValue().contains(lib)) continue;
-               
-               String id = doc.getString("id");
-               MavenLibrary fnd = known_libs.get(id);
-               if (fnd == null) {
-                  fnd = new MavenLibrary(doc);
-                  known_libs.put(id,fnd);
-                }
-               rslt.add(fnd);
-             }
+      List<LidsLibrary> alllibs = getLibraryFromName(ent.getKey());
+      for (LidsLibrary ll : alllibs) {
+         if (ent.getValue().contains(ll.getName())) {
+            rslt.add(ll);
           }
        }
     }
    
    if (rslt.isEmpty()) rslt = null;
+   
+   return rslt;
+}
+
+
+
+private List<LidsLibrary> getLibraryFromName(String name)
+{
+   List<LidsLibrary> rslt = lib_byname.get(name);
+   if (rslt != null) return rslt;
+   
+   rslt = new ArrayList<>();
+   String q1 = SEARCH_PFX + "g:%22" + name + "%22";
+   String rslt2 = getMavenResult(q1);
+   if (rslt2 !=  null) {
+      JSONObject top = new JSONObject(rslt2);
+      JSONObject resp = top.getJSONObject("response");
+      JSONArray arr = resp.optJSONArray("docs");
+      if (arr != null) {
+         for (int i = 0; i < arr.length(); ++i) {
+            JSONObject doc = arr.getJSONObject(i);
+            String type = doc.getString("p");
+            if (type == null || !type.equals("jar")) continue;
+            String id = doc.getString("id");
+            MavenLibrary fnd = known_libs.get(id);
+            if (fnd == null) {
+               fnd = new MavenLibrary(doc);
+               known_libs.put(id,fnd);
+             }
+            rslt.add(fnd);
+          }
+       }
+    }
+   
+   lib_byname.put(name,rslt);
    
    return rslt;
 }
@@ -217,7 +238,7 @@ private String getMavenResult(String q)
          return rslt;
        }
       catch (Exception e) {
-         if (delay < 60000 && e.toString().contains(" 504 ")) {
+         if (delay < 30000 && e.toString().contains(" 504 ")) {
             try {
                Thread.sleep(delay);
              }

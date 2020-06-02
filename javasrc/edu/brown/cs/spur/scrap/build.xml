@@ -26,6 +26,9 @@
       <pathelement location='${IVYLIB}/jsoup.jar' />
       <pathelement location='${IVYLIB}/json.jar' />
       <pathelement location='${IVYLIB}/junit.jar' />
+      <pathelement location='${IVYLIB}/mysql.jar' />
+      <pathelement location='${IVYLIB}/postgresql.jar' />
+      <pathelement location='${COSE}/java' />
       <pathelement location='${SPUR}/lib/jtar-1.1.jar'  />
       <fileset dir='${SPUR}/lib/' includes='velocity-1.7*.jar' />
       <fileset dir='${PRO}/ivy/lib/' includes='asm6.jar' />
@@ -45,7 +48,7 @@
 	 <assertions><enable/></assertions>
 	 <formatter type='plain' usefile='true' />
 	 <test name='edu.brown.cs.spur.scrap.ScrapTest' haltonfailure='no'
-	      methods='packagetest01' outfile='test.out' />
+	      methods='candidateTest01' outfile='test.out' />
       </junit>
    </target>
 
