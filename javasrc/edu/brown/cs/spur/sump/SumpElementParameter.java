@@ -133,7 +133,7 @@ SumpElementParameter(SumpModelBase mdl,JcompSymbol js,SingleVariableDeclaration 
 {
    outputComment(pw);
    
-   if (param_type != null) param_type.outputJava(pw);
+   if (param_type != null) param_type.outputJava(sump_model,pw);
    else pw.print("Object");
    pw.print(" " + getName());
 }

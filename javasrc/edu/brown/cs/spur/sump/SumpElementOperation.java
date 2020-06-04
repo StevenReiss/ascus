@@ -266,7 +266,7 @@ private boolean matchOperation(SumpElementOperation op)
     }   
    else {
       if (!getData().isCurrentInterface()) pw.print("abstract ");
-      if (return_type != null) return_type.outputJava(pw);
+      if (return_type != null) return_type.outputJava(sump_model,pw);
       else pw.print("void");
       pw.print(" ");
     }

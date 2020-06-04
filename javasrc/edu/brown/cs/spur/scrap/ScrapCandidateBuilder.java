@@ -135,6 +135,7 @@ private List<CandidateMatch> findInitialMatches(SumpModel model)
    Map<CoseResult,SumpModel> mmap = new HashMap<>();
    for (CoseResult orig : all_results) {
       CompilationUnit cu = (CompilationUnit) orig.getStructure();
+      System.err.println("CHECK RESULT:\n" + cu);
       JcompProject proj = null;
       try { 
          if (!JcompAst.isResolved(cu)) {

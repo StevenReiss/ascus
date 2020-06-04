@@ -89,6 +89,8 @@ public CoseResult fixCode(CoseResult orig,Map<String,String> namemap)
    
    work = inner.transform(work,target_model);
    
+   System.err.println("RENAME FOR:\n" + orig.getEditText());
+   
    EtchTransformRename renamer = new EtchTransformRename(namemap);
    
    work = renamer.transform(work,target_model);

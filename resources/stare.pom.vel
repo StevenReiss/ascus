@@ -26,7 +26,6 @@
       <dependency>
 	 <groupId>$lib.group</groupId>
 	 <artifactId>$lib.name</artifactId>
-<!--	 <version>RELEASE</version>		-->
 	 <version>$lib.version</version>
       </dependency>
 #end

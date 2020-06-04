@@ -11,6 +11,7 @@
 package edu.brown.cs.spur.sump;
 
 import java.io.PrintWriter;
+import java.io.StringWriter;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -98,31 +99,47 @@ void outputXml(String fld,IvyXmlWriter xw)
 }
 
 
-void outputJava(PrintWriter pw)
+void outputJava(SumpModelBase model,PrintWriter pw)
 {
-   if (base_type == null) pw.print(getName());
-   else outputJava(base_type,pw);
+   if (base_type == null) {
+      String nm = model.getJavaOutputName(getName());
+      pw.print(nm);
+    }
+   else outputJava(base_type,model,pw);
+}
+
+
+String getUmlOutputName(SumpModelBase model)
+{
+   StringWriter sw = new StringWriter();
+   PrintWriter pw = new PrintWriter(sw);
+   if (base_type == null) {
+      String nm = model.getJavaOutputName(getName());
+      pw.print(nm);
+    }
+   else outputJava(base_type,model,pw);
+   return sw.toString();
 }
 
 
 
-private void outputJava(JcompType jt,PrintWriter pw)
+private void outputJava(JcompType jt,SumpModelBase model,PrintWriter pw)
 {
    if (jt.isPrimitiveType()) pw.print(jt.getName());
    else if (jt.isTypeVariable() || jt.isWildcardType()) {
       pw.print("Object");
     }
    else if (jt.isArrayType()) {
-      outputJava(jt.getBaseType(),pw);
+      outputJava(jt.getBaseType(),model,pw);
       pw.print("[]");
     }
    else if (jt.isParameterizedType()) {
-      outputJava(jt.getBaseType(),pw);
+      outputJava(jt.getBaseType(),model,pw);
       pw.print("<");
       int ct = 0;
       for (JcompType pt : jt.getComponents()) {
          if (ct++ > 0) pw.print(",");
-         outputJava(pt,pw);
+         outputJava(pt,model,pw);
        }
       pw.print(">");
     }
@@ -131,34 +148,27 @@ private void outputJava(JcompType jt,PrintWriter pw)
       int ct = 0;
       for (JcompType pt : jt.getComponents()) {
          if (ct++ > 0) pw.print(",");
-         outputJava(pt,pw);
+         outputJava(pt,model,pw);
        }
       pw.print(")");
-      outputJava(jt.getBaseType(),pw);
+      outputJava(jt.getBaseType(),model,pw);
     }
    else if (jt.isUnionType()) {
       int ct = 0;
       for (JcompType pt : jt.getComponents()) {
          if (ct++ > 0) pw.print("|");
-         outputJava(pt,pw);
+         outputJava(pt,model,pw);
        }
     }
    else if (jt.isIntersectionType()) {
       int ct = 0;
       for (JcompType pt : jt.getComponents()) {
          if (ct++ > 0) pw.print("&");
-         outputJava(pt,pw);
+         outputJava(pt,model,pw);
        }
     }
    else {
-      String nm = jt.getName();
-      int idx = nm.indexOf("<");
-      if (idx > 0) {
-         nm = nm.substring(0,idx);
-       }
-      idx = nm.lastIndexOf(".");
-      nm = nm.substring(idx+1);
-      
+      String nm = model.getJavaOutputName(jt.getName());
       pw.print(nm);
     }
 }

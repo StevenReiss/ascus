@@ -43,16 +43,13 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
-import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.SimpleName;
-import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompSymbol;
 import edu.brown.cs.ivy.jcomp.JcompType;
-import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.spur.sump.SumpConstants.SumpModel;
 
 
@@ -275,43 +272,7 @@ private class NameMapper extends EtchMapper {
    private boolean handleType(ASTNode orig,ASTRewrite rw) {
       JcompType jt = JcompAst.getJavaType(orig);
       String newname = type_mapping.get(jt);
-      if (newname != null) {
-         if (orig instanceof QualifiedName) {
-            Name nm = JcompAst.getQualifiedName(rw.getAST(),newname);
-            rw.replace(orig,nm,null);
-            return true;
-          }
-         else if (orig instanceof SimpleName) {
-            int idx = newname.lastIndexOf(".");
-            if (idx > 0) newname = newname.substring(idx+1);
-            SimpleName sn = JcompAst.getSimpleName(rw.getAST(),newname);
-            rw.replace(orig,sn,null);
-            return true;
-          }
-         else if (orig instanceof SimpleType) {
-            int idx = newname.lastIndexOf(".");
-            if (idx > 0) newname = newname.substring(idx+1);
-            SimpleName sn = JcompAst.getSimpleName(rw.getAST(),newname);
-            SimpleType st = rw.getAST().newSimpleType(sn);
-            rw.replace(orig,st,null);
-            return true;
-          }
-       }
-      return false; 
-    }
-   
-   private void rewriteName(ASTNode nd,ASTRewrite rw,String name) {
-      if (nd instanceof SimpleName) {
-         String nm0 = name;
-         int idx1 = nm0.lastIndexOf(".");
-         if (idx1 > 0) nm0 = nm0.substring(idx1+1);
-         try {
-            rw.set(nd,SimpleName.IDENTIFIER_PROPERTY,nm0,null);
-          }
-         catch (IllegalArgumentException e) {
-            IvyLog.logE("JAVA","Problem with new transform name " + name + ": " + e);
-          }
-       }
+      return rewriteType(orig,rw,newname);
     }
    
 }       // end of inner class NameMapper

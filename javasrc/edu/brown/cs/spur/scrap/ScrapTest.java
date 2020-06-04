@@ -131,14 +131,15 @@ public void classTest01()
 @Test
 public void packageTest01()
 {
-   ScrapDriver sd1 = new ScrapDriver("-pu","-nr","500","-REPO","@embedded","@web","server",
+   ScrapDriver sd1 = new ScrapDriver("-pu","-nr","500","-nt","8",
+         "-REPO","@embedded","@web","server",
 	 "-t","url","uri","application","property","port","http","https","ftp","routing",
 	 "callback","request","response");
 
    sd1.processAbstractor();
 
-   ScrapDriver sd2 = new ScrapDriver("-p","-nr","500","-REPO","contact","@management",
-					"-t","address","name","phone","mail");
+   ScrapDriver sd2 = new ScrapDriver("-p","-nr","500","-nt","8",
+         "-REPO","contact","@management",					"-t","address","name","phone","mail");
    sd2.processAbstractor();
 }
 
@@ -201,7 +202,7 @@ public void candidateTest01()
       cdr.setNumberOfResults(500);
       cdr.setNumberOfThreads(8);
       // cdr.setNumberOfThreads(1);
-      
+
       ScrapDriver driver = new ScrapDriver(sd);
       driver.processBuildCandidates(mdl);
     }
@@ -279,10 +280,10 @@ public void candidateTest01()
 @Test
 public void candidateTest02()
 {
-   File f = new File("/research/people/spr/spur/scrap/src/test06.ascus");
+   File f = new File("/research/people/spr/spur/scrap/src/test05.ascus");
    System.err.println("==============================");
    System.err.println("START WORK ON " + f);
-   System.err.println("==============================");    
+   System.err.println("==============================");
    SumpModel mdl = SumpFactory.loadModel(f);
    SumpData sd = mdl.getModelData();
    CoseDefaultRequest cdr = (CoseDefaultRequest) sd.getCoseRequest();
@@ -294,9 +295,9 @@ public void candidateTest02()
 
    cdr.setNumberOfThreads(1);
    // cdr.addSpecificSource(sd.getSources());
-   
-   cdr.addSpecificSource("GITREPO:https://github.com/couchbase/couchbase-lite-java-listener/blob/141080bbb97d51a05af5b54a84af3b78d1d5d62e/vendor/tjws/src/java/Acme/Serve/SelectorAcceptor.java");
-         
+
+   cdr.addSpecificSource("GITREPO:https://github.com/d3adspace/mantikor/blob/1f3d549e21ce7491a0b7ca4385c7609f0e6ed27c/file-server/src/main/java/de/d3adspace/mantikor/server/file/MantikorFileServerApp.java");
+	
    ScrapDriver driver = new ScrapDriver(sd);
    driver.processBuildCandidates(mdl);
 }

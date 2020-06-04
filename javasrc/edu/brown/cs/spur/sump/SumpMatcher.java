@@ -160,7 +160,11 @@ private SortedSet<MatchSet> setupClassMatchings(SumpModel base,SumpModel pat)
          Map<String,String> namemap = new HashMap<>();
          double score = computeClassMatchScore(bcls,cls,namemap);
          double nmscore = IvyStringDiff.normalizedStringDiff(cls.getName(),bcls.getName());
-         score = score * 0.8 + nmscore * 0.2;
+         int sz = cls.getOperations().size() + cls.getAttributes().size();
+         double f = 0.8;
+         if (sz == 0) f = 0.2;
+         else if (sz == 1) f = 0.5;
+         score = score * f + nmscore * (1.0-f);
          if (score >= CLASS_CUTOFF) {
             ms.addMatch(bcls,score,namemap);
           }
@@ -225,7 +229,7 @@ private double matchClasses(SumpModel base,SumpModel pat,
       Map<SumpClass,SumpClass> nmap = new HashMap<>(cmap);
       nmap.put(ms.getFromClass(),sc);
       double usescore = sccls.getScore();
-      // System.err.println("MAP " + fromcls + " ->  " + sc);
+      System.err.println("MAP " + fromcls + " ->  " + sc);
       
       Collection<SumpClass> i1 = pat.getInheritedClasses(fromcls);
       Collection<SumpClass> i2 = base.getInheritedClasses(sc);
@@ -453,7 +457,10 @@ private double maxMatchClasss(SumpModel base,SumpModel pat,Map<String,String> rs
 static double computeClassMatchScore(SumpClass base,SumpClass pat,Map<String,String> namemap)
 {
    // Set<Object> done = new HashSet<>();
-   if (!base.isMatchable() || !pat.isMatchable())
+   
+   // matchable helps to eliminate using classes that require a definition that isn't
+   //   present in the match
+   if (!pat.isMatchable()) 
       return 0;
    
    RowelMatcher<SumpAttribute> rm = new RowelMatcher<>(pat.getAttributes(),base.getAttributes());

@@ -161,6 +161,7 @@ public static SumpArgType computeArgType(JcompTyper typer,JcompType jt,ASTNode n
             AbstractTypeDeclaration atd = (AbstractTypeDeclaration) p;
             JcompType ctype = JcompAst.getJavaType(atd);
             if (jt == ctype) return SumpArgType.THISTYPE;
+            break;
           }
        }
     }

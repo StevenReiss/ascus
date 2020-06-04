@@ -92,6 +92,7 @@ public SumpModelBase(JcompControl ctrl,File f)
    this(new SumpData(new CoseDefaultRequest(),null));
    if (f != null && f.exists()) {
       String nm = f.getName();
+      model_data.setSource(f.getPath());
       String ext = "";
       int idx = nm.lastIndexOf(".");
       if (idx > 0) ext = nm.substring(idx+1);
@@ -197,6 +198,19 @@ Set<SumpElementClass> findUsedClasses(SumpElementClass cls)
 }
 
 
+SumpClass getClassForName(String nm)
+{
+   if (nm == null) return null;
+   
+   for (SumpClass cls : model_package.getClasses()) {
+      if (nm.equals(cls.getName()) || nm.equals(cls.getFullName()))
+         return cls;
+    }
+   
+   return null;
+}
+
+
 
 
 /********************************************************************************/
@@ -256,7 +270,6 @@ private void createModel(CompilationUnit cu)
 private void addTypes(AbstractTypeDeclaration td,SumpPackage pkg,Map<String,SumpClass> cmap,
         Map<String,AbstractTypeDeclaration> tmap)
 {
-   String nm = td.getName().getIdentifier();
    
    boolean skip = false;
    for (Object o : td.modifiers()) {
@@ -267,6 +280,7 @@ private void addTypes(AbstractTypeDeclaration td,SumpPackage pkg,Map<String,Sump
          if (idx > 0) anm = anm.substring(idx+1);
          if (anm.equals("AscusPackage")) {
             skip = true;
+            String nm = td.getName().getIdentifier();
             model_data.setName(nm);
             String pnm = getPackage().getName() + "." + nm;
             setPackage(pnm);
@@ -276,6 +290,7 @@ private void addTypes(AbstractTypeDeclaration td,SumpPackage pkg,Map<String,Sump
    
    if (!skip) {
       SumpClass cls = pkg.addClass(td);
+      String nm = cls.getName();
       cmap.put(nm,cls);
       tmap.put(nm,td);
     }
@@ -653,6 +668,31 @@ private List<String> getStringValues(Expression exp,List<String> rslt)
    pw.println();
    
    pw.println("}");
+}
+
+
+String getJavaOutputName(String orignm)
+{
+   SumpClass sc = getClassForName(orignm);
+   String nm = orignm;
+   if (sc != null) {
+      SumpElementClass sec = (SumpElementClass) sc;
+      nm = sec.getJavaOutputName();
+    }
+   else {
+      int idx1 = nm.indexOf("<");
+      if (idx1 < 0) {
+         int idx2 = nm.lastIndexOf(".");
+         if (idx2 > 0) nm = nm.substring(idx2+1);
+       }
+      else {
+         int idx2 = nm.lastIndexOf(".",idx1);
+         if (idx2 > 0) nm = nm.substring(idx2+1);
+         // need to fix or remove parameters as well 
+       }
+    }
+   
+   return nm;
 }
 
 

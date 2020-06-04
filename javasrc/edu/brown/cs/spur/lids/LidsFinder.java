@@ -138,9 +138,14 @@ public List<LidsLibrary> findLibraries()
    while (!covered.isEmpty()) {
       LidsLibrary use = null;
       int max = 0;
+      // choose set that covers the most elements
       for (Map.Entry<LidsLibrary,Set<String>> ent : covered.entrySet()) {
          if (use == null || ent.getValue().size() > max) {
             max = ent.getValue().size();
+            use = ent.getKey();
+          }
+         else if (ent.getValue().size() == max && 
+               ent.getKey().getName().compareTo(use.getName()) > 0) {
             use = ent.getKey();
           }
        }

@@ -265,8 +265,11 @@ private void generateReadme()
       pw.println();
       SumpData smd = for_model.getModelData();
       pw.println("Name: " + smd.getName());
+      if (smd.getSource() != null) {
+         pw.println("Model File: " + smd.getSource());
+       }
       for (String src : smd.getSources()) {
-         pw.println("Source: " + src);
+         pw.println("Cose Source: " + src);
        }
       for (LidsLibrary lib : smd.getLibraries()) {
          pw.println("Library: " + lib.getFullId());

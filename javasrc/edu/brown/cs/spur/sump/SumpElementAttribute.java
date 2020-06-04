@@ -147,7 +147,7 @@ SumpElementAttribute(SumpModelBase mdl,JcompSymbol fld,ASTNode n)
    if (getAccess() != null) acc = getAccess().toString().toLowerCase();
    pw.print("   " + acc + " ");
    
-   if (data_type != null) data_type.outputJava(pw);
+   if (data_type != null) data_type.outputJava(sump_model,pw);
    else pw.print("Object");
    
    pw.println(" " + getName() + ";");

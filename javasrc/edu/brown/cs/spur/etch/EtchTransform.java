@@ -47,6 +47,8 @@ import org.eclipse.jdt.core.dom.ChildPropertyDescriptor;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ExpressionStatement;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.Name;
+import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SimpleType;
@@ -55,8 +57,10 @@ import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.StructuralPropertyDescriptor;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 
 import edu.brown.cs.cose.cosecommon.CoseResult;
+import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompControl;
 import edu.brown.cs.ivy.jcomp.JcompProject;
@@ -222,6 +226,61 @@ private static class TreeCopy {
     }
    
 }	// end of subclass TreeCopy   
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Naming methods                                                          */
+/*                                                                              */
+/********************************************************************************/
+
+protected static void rewriteName(ASTNode nd,ASTRewrite rw,String name)
+{
+   if (name == null) return;
+   
+   if (nd instanceof SimpleName) {
+      String nm0 = name;
+      int idx1 = nm0.lastIndexOf(".");
+      if (idx1 > 0) nm0 = nm0.substring(idx1+1);
+      try {
+         rw.set(nd,SimpleName.IDENTIFIER_PROPERTY,nm0,null); 
+       }
+      catch (IllegalArgumentException e) {
+         IvyLog.logE("ETCH","Problem with new transform name " + name + ": " + e);
+       }
+    } 
+}
+
+
+protected static boolean rewriteType(ASTNode nd,ASTRewrite rw,String name)
+{
+   if (name != null) {
+      if (nd instanceof QualifiedName) {
+         Name nm = JcompAst.getQualifiedName(rw.getAST(),name);
+         rw.replace(nd,nm,null);
+         return true;
+       }
+      else if (nd instanceof SimpleName) {
+         int idx = name.lastIndexOf(".");
+         if (idx > 0) name = name.substring(idx+1);
+         SimpleName sn = JcompAst.getSimpleName(rw.getAST(),name);
+         rw.replace(nd,sn,null);
+         return true;
+       }
+      else if (nd instanceof SimpleType) {
+         int idx = name.lastIndexOf(".");
+         if (idx > 0) name = name.substring(idx+1);
+         SimpleName sn = JcompAst.getSimpleName(rw.getAST(),name);
+         SimpleType st = rw.getAST().newSimpleType(sn);
+         rw.replace(nd,st,null);
+         return true;
+       }
+    }
+   
+   return false;
+}
+
 
 
 

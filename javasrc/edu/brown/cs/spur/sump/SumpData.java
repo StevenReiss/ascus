@@ -58,6 +58,7 @@ public class SumpData implements SumpConstants
 /********************************************************************************/
 
 private String          model_name;
+private String          model_source;
 private Set<LidsLibrary> library_set;
 private Set<String>     source_set;
 private Set<String>     import_set;
@@ -77,6 +78,7 @@ private Set<String>     missing_imports;
 public SumpData(CoseRequest req,CoseResult rslt)
 {
    model_name = null;
+   model_source = null;
    library_set = new HashSet<>();
    source_set = new HashSet<>();
    missing_imports = new HashSet<>();
@@ -145,6 +147,12 @@ public void setName(String name)
 }
 
 
+public void setSource(String source)
+{
+   model_source = source;
+}
+
+
 
 /********************************************************************************/
 /*                                                                              */
@@ -161,6 +169,8 @@ public Collection<String> getMissingImports()   { return missing_imports; }
 public CoseRequest getCoseRequest()             { return cose_request; }
 
 public String getName()                         { return model_name; }
+
+public String getSource()                       { return model_source; }
 
 
 void pushType(String cls,boolean iface) 

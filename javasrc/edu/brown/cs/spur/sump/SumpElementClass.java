@@ -45,6 +45,7 @@ import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
+import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.EnumConstantDeclaration;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.Type;
@@ -169,11 +170,26 @@ SumpElementClass(SumpModelBase mdl,AbstractTypeDeclaration atd)
       SumpElementClass sc = (SumpElementClass) rm; 
       double score = SumpMatcher.computeClassMatchScore(this,sc,null);
       if (score < SumpMatcher.CLASS_CUTOFF) return 0;
-      double nscore = IvyStringDiff.normalizedStringDiff(getName(),sc.getName());
+      double nscore = getNameScore(sc);
       return 0.8*score + 0.2*nscore;
     }
    
    return 0;
+}
+
+
+private double getNameScore(SumpElementClass sc)
+{
+   String s1 = getName();
+   int idx1 = s1.lastIndexOf("$");
+   if (idx1 > 0) s1 = s1.substring(idx1+1);
+   String s2 = sc.getName();
+   int idx2 = s2.lastIndexOf("$");
+   if (idx2 > 0) s2 = s2.substring(idx2+1);
+   
+   double nscore = IvyStringDiff.normalizedStringDiff(s1,s2);
+   
+   return nscore;
 }
 
 
@@ -215,7 +231,7 @@ SumpElementClass(SumpModelBase mdl,AbstractTypeDeclaration atd)
 
 private void initialize(AbstractTypeDeclaration atd)
 {
-   String nm = atd.getName().getIdentifier();
+   String nm = getSumpTypeName(atd);
    setName(nm);
    setFullName(JcompAst.getJavaType(atd).getName());
    
@@ -249,6 +265,37 @@ private void initialize(AbstractTypeDeclaration atd)
     }
    
    addCommentsFor(atd);
+}
+
+
+
+private String getSumpTypeName(AbstractTypeDeclaration atd)
+{
+   String nm = atd.getName().getIdentifier();
+   
+   for (ASTNode par = atd.getParent(); par != null; par = par.getParent()) {
+      if (par instanceof AbstractTypeDeclaration) {
+         boolean skip = false;
+         AbstractTypeDeclaration ptd = (AbstractTypeDeclaration) par;
+         for (Object o : ptd.modifiers()) {
+            if (o instanceof Annotation) {
+               Annotation an = (Annotation) o;
+               String anm = an.getTypeName().getFullyQualifiedName();
+               int idx = anm.lastIndexOf(".");
+               if (idx > 0) anm = anm.substring(idx+1);
+               if (anm.equals("AscusPackage")) {
+                  skip = true;
+                }
+             }
+          }
+         if (!skip) {
+            String nm1 = ptd.getName().getIdentifier();
+            nm = nm1 + "$" + nm;
+          }
+       }
+    }
+   
+   return nm;
 }
 
 
@@ -317,7 +364,7 @@ private void initialize(AbstractTypeDeclaration atd)
       int ct = 0;
       for (SumpElementClass cls : uses) {
          if (ct++ > 0) pw.print(",");
-         pw.print(cls.getName());
+         pw.print(cls.getJavaOutputName());
          pw.print(".class");
        }
       pw.println("})");
@@ -328,15 +375,19 @@ private void initialize(AbstractTypeDeclaration atd)
    else if (operation_list.size() == 0) pfx = "class";
    else pfx = "abstract class";
 
-   pw.print(pfx + " " + getName());
-   if (super_name != null) pw.print(" extends " + super_name);
+   pw.print(pfx + " " + getJavaOutputName());
+   if (super_name != null) {
+      String nm = getOutputName(super_name);
+      pw.print(" extends " + nm);
+    }   
    if (iface_names != null && !iface_names.isEmpty()) {
       if (is_interface) pw.print(" extends ");
       else pw.print(" implements ");
       int ct = 0;
       for (String s : iface_names) {
          if (ct++ > 0) pw.print(", ");
-         pw.print(s);
+         String nm = getOutputName(s);
+         pw.print(nm);
        }
     }
    pw.println(" {");
@@ -369,6 +420,43 @@ private void initialize(AbstractTypeDeclaration atd)
 }
 
 
+
+private String getOutputName(String orignm)
+{
+   SumpClass sc = sump_model.getClassForName(orignm);
+   String nm = orignm;
+   if (sc != null) {
+      SumpElementClass sec = (SumpElementClass) sc;
+      nm = sec.getJavaOutputName();
+    }
+   else {
+      int idx1 = nm.indexOf("<");
+      if (idx1 < 0) {
+         int idx2 = nm.lastIndexOf(".");
+         if (idx2 > 0) nm = nm.substring(idx2+1);
+       }
+      else {
+         int idx2 = nm.lastIndexOf(".",idx1);
+         if (idx2 > 0) nm = nm.substring(idx2+1);
+         // need to fix parameters as well 
+       }
+    }
+   
+   return nm;
+}
+
+
+String getJavaOutputName()
+{
+   String nm = getName();
+   int idx = nm.lastIndexOf("$");
+   if (idx < 0) return nm;
+   String nm1 = nm.replace("$","_");
+   
+   return nm1;
+}
+
+
 @Override void setupJava()
 {
    for (SumpElementAttribute att : attribute_list) {
@@ -394,7 +482,7 @@ void generateUXF(IvyXmlWriter xw,SumpLayout layout)
    xw.end("coordinates");
    StringBuffer buf = new StringBuffer();
    if (enum_constants != null) buf.append("<<enumeration>>");
-   buf.append(getName() + "\n-\n");
+   buf.append(getJavaOutputName() + "\n-\n");
    if (enum_constants != null) {
       for (String s : enum_constants) {
          buf.append(s + "\n");
@@ -415,7 +503,7 @@ void generateUXF(IvyXmlWriter xw,SumpLayout layout)
        }
       buf.append(at.getName());
       buf.append(": ");
-      buf.append(at.getDataType().getName());
+      buf.append(at.getDataType().getUmlOutputName(sump_model));
       buf.append("\n");
     }
    if (!operation_list.isEmpty()) {
@@ -440,12 +528,12 @@ void generateUXF(IvyXmlWriter xw,SumpLayout layout)
             if (ct++ > 0) buf.append(", ");
             buf.append(ep.getName());
             buf.append(": ");
-            buf.append(ep.getDataType().getName());
+            buf.append(ep.getDataType().getUmlOutputName(sump_model));
           }
          buf.append(")");
          if (op.getReturnType() != null) {
             buf.append(": ");
-            buf.append(op.getReturnType().getName());
+            buf.append(op.getReturnType().getUmlOutputName(sump_model));
           }
          buf.append("\n");
        }

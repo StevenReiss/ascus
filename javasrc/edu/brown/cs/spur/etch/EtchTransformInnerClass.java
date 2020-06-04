@@ -35,7 +35,6 @@
 
 package edu.brown.cs.spur.etch;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -49,15 +48,17 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.IExtendedModifier;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.StructuralPropertyDescriptor;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
-import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompSymbol;
 import edu.brown.cs.ivy.jcomp.JcompType;
@@ -79,6 +80,7 @@ private Map<String,String>      name_map;
 
 
 
+
 /********************************************************************************/
 /*                                                                              */
 /*      Constructors                                                            */
@@ -94,17 +96,52 @@ EtchTransformInnerClass(Map<String,String> namemap)
 
 @Override protected EtchMemo applyTransform(ASTNode n,SumpModel target)
 {
-   List<AbstractTypeDeclaration> todos = findInnerClasses(n);
+   Set<AbstractTypeDeclaration> todos = findInnerClasses(n);
    if (todos == null || todos.size() == 0) return null;
    
+   Map<Object,String> changenames = new HashMap<>();
+   
    for (AbstractTypeDeclaration atd : todos) {
-      if (atd instanceof TypeDeclaration) {
-         TypeDeclaration td = (TypeDeclaration) atd;
-         if (td.isInterface()) continue;
+      JcompSymbol js = JcompAst.getDefinition(atd);
+      JcompType jt = JcompAst.getJavaType(atd);
+      String outnm = jt.getOuterType().getName();
+      int idx = outnm.lastIndexOf(".");
+      if (idx > 0) outnm = outnm.substring(idx+1);
+      String newname = outnm + "_" + js.getName();
+      changenames.put(js,newname);
+      changenames.put(jt,newname);
+      changenames.put(atd,newname);
+      changenames.put(js.getName(),newname);
+      for (Object o : atd.bodyDeclarations()) {
+         if (o instanceof MethodDeclaration) {
+            MethodDeclaration md = (MethodDeclaration) o;
+            if (md.isConstructor()) {
+               JcompSymbol cjs = JcompAst.getDefinition(md);
+               changenames.put(cjs,newname);
+             }
+          }
        }
+      String onm = jt.getName();
+      int idx1 = onm.lastIndexOf(".");
+      int idx2 = onm.lastIndexOf(".",idx1-1);
+      String nnm = onm.substring(0,idx2+1) + newname;
+      Map<String,String> newnames = new HashMap<>();
+      for (Map.Entry<String,String> ent : name_map.entrySet()) {
+         String k = ent.getKey();
+         if (k.startsWith(onm)) {
+            String s1 = k.substring(onm.length());
+            String s2 = nnm + s1;
+            newnames.put(s2,ent.getValue());
+          }
+       }
+      name_map.putAll(newnames);
     }
    
-   InnerClassMapper csm = new InnerClassMapper(todos);
+   UsedFinder used = new UsedFinder(todos);
+   n.accept(used);
+   Set<JcompSymbol> usednames = used.getUsedNames();
+   
+   InnerClassMapper csm = new InnerClassMapper(todos,changenames,usednames);
    EtchMemo memo = csm.getMapMemo(n);
    
    return memo;
@@ -119,7 +156,7 @@ EtchTransformInnerClass(Map<String,String> namemap)
 /*                                                                              */
 /********************************************************************************/
 
-private List<AbstractTypeDeclaration> findInnerClasses(ASTNode n)
+private Set<AbstractTypeDeclaration> findInnerClasses(ASTNode n)
 {
    FindInnerClassVisitor ficv = new FindInnerClassVisitor();
    n.accept(ficv);
@@ -129,13 +166,13 @@ private List<AbstractTypeDeclaration> findInnerClasses(ASTNode n)
 
 private class FindInnerClassVisitor extends ASTVisitor {
 
-   private List<AbstractTypeDeclaration> inner_classes;
+   private Set<AbstractTypeDeclaration> inner_classes;
    
    FindInnerClassVisitor() {
-      inner_classes = new ArrayList<>();
+      inner_classes = new HashSet<>();
     }
    
-   List<AbstractTypeDeclaration> getInnerClasses() {
+   Set<AbstractTypeDeclaration> getInnerClasses() {
       return inner_classes;
     }
    
@@ -180,11 +217,56 @@ private class FindInnerClassVisitor extends ASTVisitor {
 
 /********************************************************************************/
 /*                                                                              */
+/*      Methods to find used calls to inner methods from outside                */
+/*                                                                              */
+/********************************************************************************/
+
+private class UsedFinder extends ASTVisitor {
+
+   private Set<AbstractTypeDeclaration> inner_classes;
+   private Set<JcompType> inner_types;
+   private Set<JcompSymbol> used_names;
+   
+   UsedFinder(Set<AbstractTypeDeclaration> inners) {
+      inner_classes = inners;
+      inner_types = new HashSet<>();
+      for (AbstractTypeDeclaration atd : inners) {
+         JcompType jt = JcompAst.getJavaType(atd);
+         inner_types.add(jt);
+       }
+      used_names = new HashSet<>();
+    }
+   
+   Set<JcompSymbol> getUsedNames()                      { return used_names; }
+   
+   @Override public boolean visit(TypeDeclaration n) {
+      if (inner_classes.contains(n)) return false;
+      return true;
+    }
+   
+   @Override public boolean visit(EnumDeclaration n) {
+      if (inner_classes.contains(n)) return false;
+      return true;
+    }
+   
+   @Override public void postVisit(ASTNode n) {
+      JcompSymbol js = JcompAst.getReference(n);
+      if (js != null) {
+         JcompType jt = js.getClassType();
+         if (jt != null && inner_types.contains(jt)) used_names.add(js);
+       }
+    }
+   
+}       // end of inner class UsedFinder
+
+
+/********************************************************************************/
+/*                                                                              */
 /*       Helper methods                                                          */
 /*                                                                              */
 /********************************************************************************/
 
-private AbstractTypeDeclaration createCopy(AST ast,AbstractTypeDeclaration td,Map<Object,String> names)
+private AbstractTypeDeclaration createCopy(AST ast,AbstractTypeDeclaration td,Map<Object,String> names,Set<JcompSymbol> used)
 {
    AbstractTypeDeclaration ntd = (AbstractTypeDeclaration) ASTNode.copySubtree(ast,td);
    for (Iterator<?> it = ntd.modifiers().iterator(); it.hasNext(); ) {
@@ -195,16 +277,14 @@ private AbstractTypeDeclaration createCopy(AST ast,AbstractTypeDeclaration td,Ma
 	 if (m.isFinal() || m.isProtected() || m.isPrivate() || m.isStatic()) it.remove();
        }
     }
-   SimpleName nnm = JcompAst.getSimpleName(ast,names.get(td));
-   ntd.setName(nnm);
    
-   fixSubtree(td,ntd,names,td);
+   fixSubtree(td,ntd,names,used,td);
    
    return ntd;
 }
 
 
-private void fixSubtree(ASTNode orig,ASTNode copy,Map<Object,String> names,AbstractTypeDeclaration td)
+private void fixSubtree(ASTNode orig,ASTNode copy,Map<Object,String> names,Set<JcompSymbol> used,AbstractTypeDeclaration td)
 {
    for (Object o : orig.structuralPropertiesForType()) {
       StructuralPropertyDescriptor spd = (StructuralPropertyDescriptor) o;
@@ -213,14 +293,14 @@ private void fixSubtree(ASTNode orig,ASTNode copy,Map<Object,String> names,Abstr
 	 List<?> ls2 = (List<?>) copy.getStructuralProperty(spd);
 	 if (ls1.size() == ls2.size()) {
 	    for (int i = 0; i < ls1.size(); ++i) {
-	       fixSubtree((ASTNode) ls1.get(i),(ASTNode) ls2.get(i),names,td);
+	       fixSubtree((ASTNode) ls1.get(i),(ASTNode) ls2.get(i),names,used,td);
 	     }
 	  }
        }
       else if (spd.isChildProperty()) {
 	 ASTNode n1 = (ASTNode) orig.getStructuralProperty(spd);
 	 ASTNode n2 = (ASTNode) copy.getStructuralProperty(spd);
-	 if (n1 != null) fixSubtree(n1,n2,names,td);
+	 if (n1 != null) fixSubtree(n1,n2,names,used,td);
        }
     }
    
@@ -233,12 +313,47 @@ private void fixSubtree(ASTNode orig,ASTNode copy,Map<Object,String> names,Abstr
 	    SimpleName sn = (SimpleName) copy;
 	    sn.setIdentifier(newname);
 	  }
-	 else {
-	    JcompType jt = js.getClassType();
-	    if (jt == JcompAst.getJavaType(td)) {
-	       // need to qualify expression here to use new field or class name
-	     }
-	  }
+       }
+    }
+   else if (copy.getNodeType() == ASTNode.METHOD_DECLARATION) {
+      MethodDeclaration md = (MethodDeclaration) copy;
+      JcompSymbol js = JcompAst.getDefinition(orig);
+      if (used.contains(js)) {
+         removePrivate(md.modifiers());
+       }
+    }
+   else if (copy.getNodeType() == ASTNode.FIELD_DECLARATION) {
+      FieldDeclaration fd = (FieldDeclaration) orig;
+      boolean rempri = false;
+      for (Object o : fd.fragments()) {
+         VariableDeclarationFragment vdf = (VariableDeclarationFragment) o;
+         JcompSymbol js1 = JcompAst.getDefinition(vdf);
+         if (used.contains(js1)) rempri = true; 
+       }
+      if (rempri) {
+         FieldDeclaration nfd = (FieldDeclaration) copy;
+         removePrivate(nfd.modifiers());
+       }
+    }
+   else {
+      JcompType jt = JcompAst.getJavaType(orig);
+      if (jt != null) {
+         String newname = names.get(jt);
+         if (newname != null) {
+            
+          }
+       }
+    }
+}
+
+
+private void removePrivate(List<?> mods) 
+{
+   for (Iterator<?> it = mods.iterator(); it.hasNext(); ) {
+      IExtendedModifier iem = (IExtendedModifier) it.next();
+      if (iem.isModifier()) {
+         Modifier m = (Modifier) iem;
+         if (m.isPrivate()) it.remove();
        }
     }
 }
@@ -255,90 +370,66 @@ private class InnerClassMapper extends EtchMapper {
 
    private Set<AbstractTypeDeclaration> extract_types;
    private Set<AbstractTypeDeclaration> outer_types;
+   private Set<JcompSymbol> used_names;
    private Map<Object,String> sym_mapping;
-   private boolean ignore_tree;
+   private boolean inside_move;
    
-   InnerClassMapper(List<AbstractTypeDeclaration> tds) {
+   InnerClassMapper(Set<AbstractTypeDeclaration> tds,Map<Object,String> nms,Set<JcompSymbol> used) {
       super(EtchTransformInnerClass.this);
-      extract_types = new HashSet<>(tds);
-      ignore_tree = false;
-      sym_mapping = new HashMap<>();
+      extract_types = tds;
+      used_names = used;
+      inside_move = false;
+      sym_mapping = new HashMap<>(nms);
       outer_types = new HashSet<>();
       for (AbstractTypeDeclaration atd : tds) {
-         JcompSymbol js = JcompAst.getDefinition(atd);
          JcompType jt = JcompAst.getJavaType(atd);
          JcompType outt = jt.getOuterType();
          if (outt != null) {
             AbstractTypeDeclaration xtd = (AbstractTypeDeclaration) outt.getDefinition().getDefinitionNode();
             outer_types.add(xtd);
           }
-         String nm = name_map.get(jt.getName());
-         int idx = nm.lastIndexOf(".");
-         if (idx > 0) nm = nm.substring(idx+1);
-         sym_mapping.put(js,nm);
-         sym_mapping.put(jt,nm);
-         sym_mapping.put(atd,nm);
-         sym_mapping.put(js.getName(),nm);
        }
     }
    
    @Override boolean preVisit(ASTNode n,ASTRewrite rw) {
-      if (extract_types.contains(n)) ignore_tree = true;
+      if (extract_types.contains(n)) inside_move = true;
       return true;
     }
    
    @Override void rewriteTree(ASTNode orig,ASTRewrite rw) {
       if (outer_types.contains(orig)) {
          ListRewrite lw = rw.getListRewrite(orig,TypeDeclaration.BODY_DECLARATIONS_PROPERTY);
-	 for (AbstractTypeDeclaration td : extract_types) {
-	    lw.remove(td,null);
-	  }
-	 ListRewrite lw1 = rw.getListRewrite(orig.getParent(),CompilationUnit.TYPES_PROPERTY);
-	 for (AbstractTypeDeclaration td : extract_types) {
-	    lw1.insertAfter(createCopy(orig.getAST(),td,sym_mapping),orig,null);
-	  }
+         for (AbstractTypeDeclaration td : extract_types) {
+            lw.remove(td,null);
+          }
+         ListRewrite lw1 = rw.getListRewrite(orig.getParent(),CompilationUnit.TYPES_PROPERTY);
+         for (AbstractTypeDeclaration td : extract_types) {
+            lw1.insertAfter(createCopy(orig.getAST(),td,sym_mapping,used_names),orig,null);
+          }
        }
       else if (extract_types.contains(orig)) {
-         ignore_tree = false;
+         inside_move = false;
        }
-      else if (ignore_tree) return;
-      else {
-         JcompSymbol js = JcompAst.getDefinition(orig);
-         if (js != null && orig.getNodeType() == ASTNode.QUALIFIED_NAME ||
-	    orig.getNodeType() == ASTNode.QUALIFIED_TYPE) {
-               System.err.println("QUAL: " + orig + " " + js);
+      else if (!inside_move) {
+         JcompSymbol js = JcompAst.getReference(orig);
+         JcompType jt = JcompAst.getJavaType(orig);
+         if (js != null) {
+            String newname = sym_mapping.get(js);
+            if (newname == null && js.isConstructorSymbol()) {
+               newname = sym_mapping.get(jt);
              }
-            
-            if (js != null) {
-               String newname = sym_mapping.get(js);
-               if (newname != null) {
-                  rewriteName(orig,rw,newname);
-                }
-             }
-            js = JcompAst.getReference(orig);
-            if (js != null) {
-               String newname = sym_mapping.get(js);
-               if (newname == null && js.isConstructorSymbol()) {
-                  JcompType jt = js.getClassType();
-                  newname = sym_mapping.get(jt);
-                }
-               if (newname != null) {
-                  rewriteName(orig,rw,newname);
-                }
-             }
+            rewriteName(orig,rw,newname);
+          }
+         else if (jt != null) {
+            String newname = sym_mapping.get(jt);
+            rewriteType(orig,rw,newname);
+          }
        }
     }
    
-   private void rewriteName(ASTNode nd,ASTRewrite rw,String name) {
-      if (nd instanceof SimpleName) {
-         try {
-            rw.set(nd,SimpleName.IDENTIFIER_PROPERTY,name,null);
-          }
-         catch (IllegalArgumentException e) {
-            IvyLog.logE("ETCH","Transform name problem with new name " + name + ": " + e);
-          }
-       }
-    }
+   
+   
+   
    
 }	// end of subtype InnerClassMapper
 
