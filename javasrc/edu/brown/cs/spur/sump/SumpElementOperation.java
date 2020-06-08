@@ -78,7 +78,7 @@ private boolean is_static;
 
 SumpElementOperation(SumpModelBase mdl,JcompSymbol js,ASTNode n)
 {
-   super(mdl);
+   super(mdl,n);
    setAccess(js.getModifiers());
    setName(js.getName());
    setFullName(js.getCompleteName());
@@ -186,7 +186,9 @@ private String getMappedType(String tnm)
       if (is_static != op.is_static) return 0;
       // if either is override, then require same name???
       if (!matchOperation(op)) return 0;
-      return 1 + IvyStringDiff.normalizedStringDiff(getName(),op.getName());
+      double nscore = IvyStringDiff.normalizedStringDiff(getName(),op.getName());
+      double wscore = getWordScore(op);
+      return 1 + (1.0 * nscore) + (0.0 * wscore);
     }
    
    return 0;

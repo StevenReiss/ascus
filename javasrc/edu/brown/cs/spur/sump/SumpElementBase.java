@@ -12,6 +12,7 @@ package edu.brown.cs.spur.sump;
 
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
 import edu.brown.cs.spur.sump.SumpConstants.SumpElement;
+import edu.brown.cs.spur.swift.SwiftScorer;
 
 import java.io.PrintWriter;
 import java.util.List;
@@ -40,6 +41,9 @@ private String	element_name;
 private String  full_name;
 private ElementAccess element_access;
 private String  element_comment;
+private SwiftScorer word_data;
+private SwiftScorer kgram_data;
+
 
 
 
@@ -51,17 +55,33 @@ private String  element_comment;
 
 protected SumpElementBase(SumpModelBase mdl)
 {
-   this(mdl,null);
+   this(mdl,null,null);
+}
+
+
+protected SumpElementBase(SumpModelBase mdl,ASTNode n)
+{
+   this(mdl,n,null);
 }
 
 
 protected SumpElementBase(SumpModelBase mdl,String name)
+{
+   this(mdl,null,name);
+}
+
+
+
+protected SumpElementBase(SumpModelBase mdl,ASTNode n,String name)
 {
    sump_model = mdl;
    element_name = name;
    full_name = name;
    element_access = ElementAccess.PUBLIC;
    element_comment = null;
+   word_data = null;
+   kgram_data = null;
+   computeTextScores(n);
 }
 
 
@@ -83,6 +103,23 @@ public String getName() 			{ return element_name; }
 
 public ElementAccess getAccess()		{ return element_access; }
 
+public SwiftScorer getWordScores()              { return word_data; }
+
+public SwiftScorer getKgramScores()             { return kgram_data; }
+
+protected double getWordScore(SumpElementBase seb)
+{
+   SwiftScorer w1 = getWordScores();
+   SwiftScorer w2 = seb.getWordScores();
+   SwiftScorer k1 = getKgramScores();
+   SwiftScorer k2 = seb.getKgramScores();
+   
+   if (w1 == null || w2 == null) return 1;
+   double ws = w1.getScore(w2);
+   double ks = k1.getScore(k2);
+   
+   return ws * 0.5 + ks * 0.5;
+}
 
 
 public SumpDataType getDataType() throws SumpException		
@@ -181,6 +218,17 @@ void addComment(Comment c)
    String cs = c.toString();
    addComment(cs);
 }
+
+
+
+void computeTextScores(ASTNode n)
+{
+   if (n == null) return;
+   String text = n.toString();
+   word_data = new SwiftScorer(text,false);
+   kgram_data = new SwiftScorer(text,true);
+}
+
 
 
 

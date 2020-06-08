@@ -48,7 +48,6 @@ String START_KGRAMS = "========KGRAM=======";
 
 
 
-
 }       // end of interface SwiftConstants
 
 

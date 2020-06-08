@@ -147,7 +147,7 @@ private SwiftIdfBuilder()
 /*                                                                              */
 /********************************************************************************/
 
-Map<String,Double> getTfIdf(String text,boolean kgram)
+SwiftScoredSet getTfIdf(String text,boolean kgram)
 {
    Map<String,Integer> words = null;
    Map<String,Integer> totals = null;
@@ -168,8 +168,7 @@ Map<String,Double> getTfIdf(String text,boolean kgram)
       termtot += iv;
     }
    
-   Map<String,Double> rslt = new HashMap<>();
-   double sum2 = 0;
+   SwiftScoredSet rslt = new SwiftScoredSet();
    for (Map.Entry<String,Integer> ent : words.entrySet()) {
       String wd = ent.getKey();
       double ct = ent.getValue();
@@ -179,18 +178,9 @@ Map<String,Double> getTfIdf(String text,boolean kgram)
       double idf = Math.log(tot/(1+docct));
       double tf = ct/termtot;
       double tfidf = tf*idf;
-      rslt.put(wd,tfidf);
-      sum2 += tfidf*tfidf;
+      rslt.add(wd,tfidf);
     }
-   
-   if (sum2 != 0) {
-      double sum2s = Math.sqrt(sum2);
-      for (Map.Entry<String,Double> ent : rslt.entrySet()) {
-         double v = ent.getValue();
-         v /= sum2s;
-         ent.setValue(v);
-       }
-    }
+   rslt.normalize();
    
    return rslt;
 }

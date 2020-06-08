@@ -87,7 +87,7 @@ private boolean             is_matchable;
 
 SumpElementClass(SumpModelBase mdl,AbstractTypeDeclaration atd)
 { 
-   super(mdl);
+   super(mdl,atd);
    attribute_list = new ArrayList<>();
    operation_list = new ArrayList<>();
    super_name = null;
@@ -171,7 +171,8 @@ SumpElementClass(SumpModelBase mdl,AbstractTypeDeclaration atd)
       double score = SumpMatcher.computeClassMatchScore(this,sc,null);
       if (score < SumpMatcher.CLASS_CUTOFF) return 0;
       double nscore = getNameScore(sc);
-      return 0.8*score + 0.2*nscore;
+      double wscore = getWordScore(sc);
+      return 0.8*score + 0.2*nscore + 0.0*wscore;
     }
    
    return 0;

@@ -35,11 +35,7 @@
 
 package edu.brown.cs.spur.swift;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 
 public class SwiftScorer implements SwiftConstants
 {
@@ -51,7 +47,7 @@ public class SwiftScorer implements SwiftConstants
 /*                                                                              */
 /********************************************************************************/
 
-private Map<String,Double> base_tfidf;
+private SwiftScoredSet base_tfidf;
 
 private static SwiftIdfBuilder idf_builder;
 private boolean use_kgrams;
@@ -84,18 +80,39 @@ public SwiftScorer(String text,boolean kgram)
 
 public double getScore(String text)
 {
-   Map<String,Double> ntf = idf_builder.getTfIdf(text,use_kgrams);
-   
+   SwiftScoredSet ntf = idf_builder.getTfIdf(text,use_kgrams);
+   return getScore(ntf);
+}
+
+
+ 
+
+
+public double getScore(SwiftScorer sc)
+{
+   return getScore(sc.base_tfidf);
+}
+
+
+private double getScore(SwiftScoredSet ntf)
+{
    double dot = 0;
-   for (Map.Entry<String,Double> ent : ntf.entrySet()) {
-      String wd = ent.getKey();
-      Double base = base_tfidf.get(wd);
-      if (base == null) continue;
-      dot += base*ent.getValue();
+   for (String t : ntf.getTerms()) {
+      double v = ntf.getScore(t);
+      double v1 = base_tfidf.getScore(t);
+      dot += v * v1;
     }
    
    return dot;
 }
+
+
+
+public void limit(int k)
+{
+   base_tfidf.limit(k);
+}
+
 
 
 /********************************************************************************/
@@ -106,19 +123,10 @@ public double getScore(String text)
 
 public List<String> getTopWords()
 {
-   Map<Double,String> inv = new TreeMap<>();
-   for (Map.Entry<String,Double> ent : base_tfidf.entrySet()) {
-      inv.put(ent.getValue(),ent.getKey());
-    }
-   
-   List<String> rslt = new ArrayList<>(inv.values());
-   Collections.reverse(rslt);
-   while (rslt.size() > 5) {
-      rslt.remove(5);
-    }
-   
-   return rslt;
+   return base_tfidf.getTopTerms(5);
 }
+ 
+
 
 
 }       // end of class SwiftScorer
