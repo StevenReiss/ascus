@@ -169,6 +169,9 @@ private static class SwiftScoredTerm implements Comparable<SwiftScoredTerm> {
       return term_text.compareTo(st.term_text);
     }
    
+   @Override public String toString() {
+      return term_text + "=" + term_score;
+    }
    
 }       // end of class SwiftScoredTerm
 

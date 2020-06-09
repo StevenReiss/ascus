@@ -107,8 +107,9 @@ public SwiftScorer getWordScores()              { return word_data; }
 
 public SwiftScorer getKgramScores()             { return kgram_data; }
 
-protected double getWordScore(SumpElementBase seb)
+@Override public double getWordScore(SumpElement se)
 {
+   SumpElementBase seb = (SumpElementBase) se;
    SwiftScorer w1 = getWordScores();
    SwiftScorer w2 = seb.getWordScores();
    SwiftScorer k1 = getKgramScores();

@@ -160,11 +160,13 @@ private SortedSet<MatchSet> setupClassMatchings(SumpModel base,SumpModel pat)
          Map<String,String> namemap = new HashMap<>();
          double score = computeClassMatchScore(bcls,cls,namemap);
          double nmscore = IvyStringDiff.normalizedStringDiff(cls.getName(),bcls.getName());
+         double wscore = cls.getWordScore(bcls);
+         // handle word matching
          int sz = cls.getOperations().size() + cls.getAttributes().size();
          double f = 0.8;
          if (sz == 0) f = 0.2;
          else if (sz == 1) f = 0.5;
-         score = score * f + nmscore * (1.0-f);
+         score = score * f + nmscore * (1.0-f) * wscore * 0.0;
          if (score >= CLASS_CUTOFF) {
             ms.addMatch(bcls,score,namemap);
           }

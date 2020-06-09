@@ -84,6 +84,7 @@ interface SumpElement {
    String getName();
    String getFullName();
    String getMapName();
+   double getWordScore(SumpElement se);
 }       // end of inner interface SumpElement
 
 
