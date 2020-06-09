@@ -4,7 +4,7 @@
    <property name='PRO' value='/research/people/spr' />
    <available file='${PRO}/ivy' type="dir" property="ivy.present" />
    <property name='IVYBIN' value='${PRO}/ivy/java' />
-   <property name='SPUR' value='/research/people/spr/spur' />
+   <property name='SPUR' value='${PRO}/spur' />
 
    <property name='COSE' value='${PRO}/cose' />
    <property name='SPURLIB' value='${SPUR}/lib' />

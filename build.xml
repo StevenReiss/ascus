@@ -1,8 +1,8 @@
 <project name='spur' default='jar'>
 
-   <property name='PRO' value='/research/people/spr' />
 
    <available file="./build.properties" type='file' property='setup.done' />
+
    <path id='setuppath'>
       <pathelement location='..' />
    </path>
@@ -35,7 +35,7 @@
       <zip zipfile='lib/apidoc.zip' basedir='doc' />
    </target>
 
-   <target name='all'>
+   <target name='all' depends='setup'>
       <ant antfile='build.xml' dir='javasrc' />
    </target>
 
