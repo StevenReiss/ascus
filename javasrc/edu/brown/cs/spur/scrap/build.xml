@@ -1,12 +1,15 @@
 <project name='spur.scrap' default='compile'>
 
-   <property name='PRO' value='/pro' />
-   <property name='COSE' value='/research/people/spr/cose' />
+   <property file='../../../../../../build.properties' />
+   <property name='PRO' value='/research/people/spr' />
+   <available file='${PRO}/ivy' type="dir" property="ivy.present" />
+   <property name='IVYBIN' value='${PRO}/ivy/java' />
    <property name='SPUR' value='/research/people/spr/spur' />
-   <property name='SPURLIB' value='/research/people/spr/spur/lib' />
+
+   <property name='COSE' value='${PRO}/cose' />
+   <property name='SPURLIB' value='${SPUR}/lib' />
    <property name='IVY' value='${PRO}/ivy/java' />
    <property name='IVYLIB' value='${PRO}/ivy/lib' />
-
 
    <path id='spur.classpath'>
       <pathelement location='${SPUR}/java' />

@@ -1,5 +1,9 @@
 <project name='cose' default='all' >
 
+   <property file='../build.properties' />
+   <property name='PRO' value='/research' />
+   <property name='IVYBIN' value='${PRO}/ivy/java' />
+   <property name='FAIT' value='/research/people/spr/fait' />
 
    <target name='all'>
       <ant antfile="build.xml" dir="edu/brown/cs/spur/annot" />
