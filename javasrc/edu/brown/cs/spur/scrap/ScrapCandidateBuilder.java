@@ -66,6 +66,7 @@ import edu.brown.cs.spur.lids.LidsFinder;
 import edu.brown.cs.spur.lids.LidsConstants.LidsLibrary;
 import edu.brown.cs.spur.sump.SumpConstants;
 import edu.brown.cs.spur.sump.SumpData;
+import edu.brown.cs.spur.sump.SumpParameters;
 import edu.brown.cs.spur.sump.SumpConstants.SumpModel;
 
 class ScrapCandidateBuilder implements ScrapConstants
@@ -81,6 +82,7 @@ class ScrapCandidateBuilder implements ScrapConstants
 private List<CoseResult>        all_results;
 private JcompControl            jcomp_control;
 private CoseRequest             original_request;
+private SumpParameters          search_params;
 
 
 
@@ -90,11 +92,12 @@ private CoseRequest             original_request;
 /*                                                                              */
 /********************************************************************************/
 
-ScrapCandidateBuilder(CoseRequest req,List<CoseResult> ar)
+ScrapCandidateBuilder(CoseRequest req,List<CoseResult> ar,SumpParameters sp)
 {
    original_request = req;
    all_results = ar;
    jcomp_control = new JcompControl();
+   search_params = sp;
 }
 
 
@@ -143,7 +146,7 @@ private List<CandidateMatch> findInitialMatches(SumpModel model)
             JcompAst.setProject(cu,proj);
             if (proj == null) continue;
           }
-         SumpData sdata = new SumpData(model.getModelData().getCoseRequest(),orig);
+         SumpData sdata = new SumpData(model.getModelData().getCoseRequest(),orig,search_params);
          
          LidsFinder lids = ScrapDriver.findLibraries(cu);
          for (LidsLibrary ll : lids.findLibraries()) {

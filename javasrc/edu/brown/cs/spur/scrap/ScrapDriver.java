@@ -65,6 +65,7 @@ import edu.brown.cs.spur.lids.LidsFinder;
 import edu.brown.cs.spur.stare.StareDriver;
 import edu.brown.cs.spur.sump.SumpConstants;
 import edu.brown.cs.spur.sump.SumpData;
+import edu.brown.cs.spur.sump.SumpParameters;
 import edu.brown.cs.spur.sump.SumpConstants.SumpModel;
 import edu.brown.cs.spur.swift.SwiftScorer;
 
@@ -94,6 +95,7 @@ public static void main(String [] args)
 
 private CoseDefaultRequest      search_request;
 private ScrapResultSet          search_result;
+private SumpParameters          search_params;
 
 static {
    IvyLog.setupLogging("SCRAP",true);
@@ -112,6 +114,7 @@ ScrapDriver(String... args)
 {
    search_request = new ScrapRequest();
    search_result = new ScrapResultSet();
+   search_params = new SumpParameters();
    
    scanArgs(args);
 }
@@ -122,6 +125,7 @@ ScrapDriver(SumpData sd)
 {
    search_request = (CoseDefaultRequest) sd.getCoseRequest();
    search_result = new ScrapResultSet();
+   search_params = sd.getParameters();
 }
 
 
@@ -182,6 +186,22 @@ private void scanArgs(String [] args)
             search_request.setCoseSearchType(CoseSearchType.PACKAGE);
             search_request.setCoseScopeType(CoseScopeType.SYSTEM);
           } 
+         else if (args[i].startsWith("-P") && i+1 < args.length) {      // -P name=value
+            String what = args[++i];
+            int idx = what.indexOf("=");
+            if (idx > 0) {
+               String key = what.substring(0,idx).trim();
+               String val = what.substring(idx+1).trim();
+               try {
+                  double d = Double.valueOf(val);
+                  search_params.set(key,d);
+                }
+               catch (NumberFormatException e) {
+                  badArgs();
+                }
+             }
+            else badArgs();
+          }
          else if (args[i].startsWith("-GIT")) {
             search_request.setSearchEngine(CoseSearchEngine.GITHUB);
           }
@@ -248,7 +268,7 @@ void processBuildCandidates(SumpModel mdl)
    rslts = removeOverlaps(rslts);
   
    List<ScrapCandidate> cands = null;
-   ScrapCandidateBuilder scb = new ScrapCandidateBuilder(search_request,rslts);
+   ScrapCandidateBuilder scb = new ScrapCandidateBuilder(search_request,rslts,search_params);
    try {
       cands = scb.buildCandidates(mdl);
     }
@@ -364,7 +384,7 @@ private void findAbstraction(AbstractionType at,List<CoseResult> rslts,List<Cose
    Set<String> done = new HashSet<>();
    
    try {
-      ScrapAbstractor sa = new ScrapAbstractor(search_request);
+      ScrapAbstractor sa = new ScrapAbstractor(search_request,search_params);
       for (CoseResult cr : rslts) {
          String txt = cr.getKeyText();
          String key = IvyFile.digestString(txt);
@@ -451,7 +471,7 @@ private void computeTestCases(ScrapAbstractor sa,AbstractionType at)
          JcompAst.setProject(cu,proj);
          if (proj == null) continue;
        }
-      SumpData sdata = new SumpData(null,orig);
+      SumpData sdata = new SumpData(null,orig,search_params);
       SumpModel mdl = SumpConstants.SumpFactory.createModel(sdata,cu);
       mmap.put(orig,mdl);
       
@@ -553,26 +573,28 @@ private boolean acceptResult(CoseScores scores,boolean tight)
 {
    CoseSearchType styp = search_request.getCoseSearchType();
    
-   if (scores.getBoolean("TESTCASE")) return false;
-   if (scores.getBoolean("TRIVIAL")) return false;
-   if (scores.getBoolean("NO_LOOPS")) return false;
    if (scores.getBoolean("ABSTRACT")) return false;
    
    int minmatch = 1;
    switch (styp) {
       case PACKAGE :
-         minmatch = 25;
-         if (scores.getInt("FIELDS") < 5) return false;
-         if (scores.getInt("METHODS") < 10) return false;
-         if (scores.getInt("TYPES") < 3) return false;
+         minmatch = search_params.getMinPackageTermMatches();
+         if (scores.getInt("FIELDS") < search_params.getMinFields()) return false;
+         if (scores.getInt("METHODS") < search_params.getMinMethods()) return false;
+         if (scores.getInt("TYPES") < search_params.getMinTypes()) return false;
+         if (scores.getInt("TYPES") > search_params.getMaxTypes()) return false;
          break; 
       case CLASS :
          minmatch = 10;
          if (scores.getInt("ACCESSIBLE") < 2) return false;
          if (scores.getInt("FIELDS") == 0) return false;
          if (scores.getInt("METHODS") < 2) return false;
+         if (scores.getBoolean("TESTCASE")) return false;
          break;
       case METHOD : 
+         if (scores.getBoolean("TESTCASE")) return false;
+         if (scores.getBoolean("NO_LOOPS")) return false;
+         if (scores.getBoolean("TRIVIAL")) return false;
          break;
       default :
          break;

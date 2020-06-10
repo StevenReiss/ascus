@@ -53,6 +53,7 @@ class ScrapFieldAbstraction extends ScrapAbstraction
 /********************************************************************************/
 
 private ScrapTypeAbstraction    field_type;
+private boolean                 is_static;
 
 
 
@@ -70,10 +71,11 @@ ScrapFieldAbstraction(ScrapAbstractor abs,CoseResult cr,VariableDeclarationFragm
 }
 
 
-ScrapFieldAbstraction(ScrapAbstractor abs,CoseResult cr,String name,ScrapTypeAbstraction typ)
+ScrapFieldAbstraction(ScrapAbstractor abs,CoseResult cr,String name,ScrapTypeAbstraction typ,boolean st)
 {
    super(abs,cr,null);
    field_type = typ;
+   is_static = st;
    name_set.add(name);
 }
 
@@ -93,6 +95,7 @@ private void initialize(CoseResult cr,VariableDeclarationFragment vdf)
       if (!js.isFieldSymbol()) return;
       field_type = new ScrapTypeAbstraction(proj,js.getType(),vdf);
       name_set.add(js.getName());
+      is_static = js.isStatic();
     }
    finally {
       if (oproj == null) {
@@ -135,6 +138,7 @@ ScrapTypeAbstraction getFieldType()
    
    ScrapFieldAbstraction sfa = (ScrapFieldAbstraction) abs;
    if (!sfa.field_type.isEquivalent(field_type)) return false;
+   if (is_static != sfa.is_static) return false;
    
    field_type.mergeWith(sfa.field_type);
    superMergeWith(sfa);

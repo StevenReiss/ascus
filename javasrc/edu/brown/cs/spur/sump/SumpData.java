@@ -66,6 +66,7 @@ private Stack<String>   cur_class;
 private Stack<Boolean>  is_interface;
 private CoseRequest     cose_request;
 private Set<String>     missing_imports;
+private SumpParameters  sump_parameters;
 
 
 
@@ -75,7 +76,7 @@ private Set<String>     missing_imports;
 /*                                                                              */
 /********************************************************************************/
 
-public SumpData(CoseRequest req,CoseResult rslt)
+public SumpData(CoseRequest req,CoseResult rslt,SumpParameters sp)
 {
    model_name = null;
    model_source = null;
@@ -86,6 +87,8 @@ public SumpData(CoseRequest req,CoseResult rslt)
    cur_class = new Stack<>();
    is_interface = new Stack<>();
    cose_request = req;
+   sump_parameters = sp;
+   if (sp == null) sump_parameters = new SumpParameters();
    
    if (rslt != null) {
       addSource(rslt.getSource());
@@ -171,6 +174,8 @@ public CoseRequest getCoseRequest()             { return cose_request; }
 public String getName()                         { return model_name; }
 
 public String getSource()                       { return model_source; }
+
+public SumpParameters getParameters()           { return sump_parameters; }
 
 
 void pushType(String cls,boolean iface) 

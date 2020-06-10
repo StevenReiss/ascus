@@ -323,7 +323,7 @@ private void eliminateConstructors(ScrapMergeData md,ScrapClassAbstraction sca)
       if (nconst == 0) {
 	 havedflt = true;
 	 Set<ScrapTypeAbstraction> args = new HashSet<>();
-	 ScrapMethodAbstraction dflt = scrap_abstractor.addToAbstraction(getCoseResult(),void_type,args);
+	 ScrapMethodAbstraction dflt = scrap_abstractor.addToAbstraction(getCoseResult(),void_type,args,false);
 	 if (cm.isCompatibleWith(dflt)) {
 	    md.addAssociation(cm,null);
 	    continue;
@@ -545,7 +545,7 @@ private void initialize(CoseResult cr,ASTNode an)
 
       if (typ.getOuterType() != null) {
 	 ScrapTypeAbstraction outer = new ScrapTypeAbstraction(proj,typ.getOuterType(),null);
-	 ClassField cf = new ClassField(scrap_abstractor,cr,"<OUTER>",outer);
+	 ClassField cf = new ClassField(scrap_abstractor,cr,"<OUTER>",outer,false);
 	 all_fields.add(cf);
        }
 
@@ -1111,9 +1111,9 @@ private static class ClassMethod extends ScrapComponent implements RowelMatch {
       if (isConstructor()) return false;
       if (!isCompatibleWith(cm)) return false;
       for (String s : component_names.keySet()) {
-	 Set<String> cwords = getNameWords(s);
-	 if (cwords.contains("initialize") || cwords.contains("init")) return true;
-	 if (cwords.contains("set")) return true;
+         Set<String> cwords = getNameWords(s);
+         if (cwords.contains("initialize") || cwords.contains("init")) return true;
+         if (cwords.contains("set")) return true;
        }
       return false;
    }
@@ -1201,12 +1201,12 @@ private static class ClassField extends ScrapComponent {
       field_asts.add(vdf);
     }
 
-   ClassField(ScrapAbstractor abs,CoseResult cr,String name,ScrapTypeAbstraction outer) {
+   ClassField(ScrapAbstractor abs,CoseResult cr,String name,ScrapTypeAbstraction outer,boolean stat) {
        addName(name);
        component_modifiers = 0;
        component_scores = null;
        field_asts = new ArrayList<>();
-       field_abstraction = abs.addToAbstractor(cr,name,outer);
+       field_abstraction = abs.addToAbstractor(cr,name,outer,stat);
     }
 
    ComponentType getComponentType()		{ return ComponentType.FIELD; }
@@ -1232,11 +1232,11 @@ private static class ClassField extends ScrapComponent {
 
    @Override boolean isCompatibleWith(ScrapComponent sc) {
       if (sc instanceof ClassField) {
-	 ClassField cf = (ClassField) sc;
-	 if (field_abstraction != cf.field_abstraction) {
-	    return false;
-	  }
-	 return true;
+         ClassField cf = (ClassField) sc;
+         if (field_abstraction != cf.field_abstraction) {
+            return false;
+          }
+         return true;
        }
       return false;
     }

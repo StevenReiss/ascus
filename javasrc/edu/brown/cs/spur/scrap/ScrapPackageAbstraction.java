@@ -483,7 +483,7 @@ private static class FindUsedTypes extends ASTVisitor {
    
    for (CoseResult cr : getAllResults()) {
       CompilationUnit cu = (CompilationUnit) cr.getStructure();
-      SumpData sd = new SumpData(scrap_abstractor.getRequest(),cr);
+      SumpData sd = new SumpData(scrap_abstractor.getRequest(),cr,scrap_abstractor.getParameters());
       for (LidsLibrary ll : getReferencedLibraries()) {
          sd.addLibrary(ll);
        }

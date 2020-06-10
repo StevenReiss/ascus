@@ -58,6 +58,7 @@ import edu.brown.cs.ivy.jcomp.JcompControl;
 import edu.brown.cs.ivy.jcomp.JcompExtendedSource;
 import edu.brown.cs.ivy.jcomp.JcompProject;
 import edu.brown.cs.ivy.jcomp.JcompSource;
+import edu.brown.cs.spur.sump.SumpParameters;
 
 public class ScrapAbstractor implements ScrapConstants
 {
@@ -74,6 +75,7 @@ private Map<AbstractionType,Collection<ScrapAbstraction>> abstraction_map;
 private Map<AbstractionType,Collection<ScrapAbstraction>> original_abstractions;
 private int             num_inputs;
 private JcompControl    jcomp_control;
+private SumpParameters  search_params;
 
 
 
@@ -83,10 +85,10 @@ private JcompControl    jcomp_control;
 /*                                                                              */
 /********************************************************************************/
 
-public ScrapAbstractor(CoseRequest rq)
+public ScrapAbstractor(CoseRequest rq,SumpParameters sp)
 {
    base_request = rq;
-   if (base_request == null) ;          // force use of base_request;   
+   search_params = sp;
    abstraction_map = new HashMap<>();
    for (AbstractionType at : AbstractionType.values()) {
       abstraction_map.put(at,new HashSet<>());
@@ -105,6 +107,8 @@ public ScrapAbstractor(CoseRequest rq)
 /********************************************************************************/
 
 CoseRequest getRequest()                        { return base_request; }
+
+SumpParameters getParameters()                  { return search_params; }
 
 
 JcompControl getJcompControl()  
@@ -145,16 +149,16 @@ public ScrapMethodAbstraction addToAbstractor(CoseResult cr,MethodDeclaration md
 }
 
 public ScrapMethodAbstraction addToAbstraction(CoseResult cr,ScrapTypeAbstraction ret,
-      Set<ScrapTypeAbstraction> args)
+      Set<ScrapTypeAbstraction> args,boolean stat)
 {
-   ScrapMethodAbstraction sma = new ScrapMethodAbstraction(this,cr,ret,args);
+   ScrapMethodAbstraction sma = new ScrapMethodAbstraction(this,cr,ret,args,stat);
    sma = (ScrapMethodAbstraction) getAbstraction(sma);
    return sma;
 }
 
-public ScrapFieldAbstraction addToAbstractor(CoseResult cr,String name,ScrapTypeAbstraction typ)
+public ScrapFieldAbstraction addToAbstractor(CoseResult cr,String name,ScrapTypeAbstraction typ,boolean stat)
 {
-   ScrapFieldAbstraction sfa = new ScrapFieldAbstraction(this,cr,name,typ);
+   ScrapFieldAbstraction sfa = new ScrapFieldAbstraction(this,cr,name,typ,stat);
    sfa = (ScrapFieldAbstraction) getAbstraction(sfa);
    return sfa;
 }

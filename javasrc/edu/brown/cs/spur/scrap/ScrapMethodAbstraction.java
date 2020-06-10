@@ -63,6 +63,7 @@ class ScrapMethodAbstraction extends ScrapAbstraction
 
 private Set<ScrapTypeAbstraction> call_args;
 private ScrapTypeAbstraction      return_arg;
+private boolean                   is_static;
 
 
 
@@ -82,12 +83,13 @@ ScrapMethodAbstraction(ScrapAbstractor abs,CoseResult cr,MethodDeclaration md)
 
 
 ScrapMethodAbstraction(ScrapAbstractor abs,CoseResult cr,ScrapTypeAbstraction ret,
-      Collection<ScrapTypeAbstraction> args)
+      Collection<ScrapTypeAbstraction> args,boolean stat)
 {
    super(abs,cr,null);
    call_args = new HashSet<>();
    if (args != null) call_args.addAll(args);
    return_arg = ret;
+   is_static = stat;
 }
 
 
@@ -122,6 +124,7 @@ ScrapTypeAbstraction getReturnType()                    { return return_arg; }
    ScrapMethodAbstraction sma = (ScrapMethodAbstraction) abs;
    
    if (!sma.return_arg.isEquivalent(return_arg)) return false;
+   if (sma.is_static != is_static) return false;
    
    Set<ScrapTypeAbstraction> done = new HashSet<>();
    Map<ScrapTypeAbstraction,ScrapTypeAbstraction> match = new HashMap<>();
@@ -237,6 +240,7 @@ private void initialize(CoseResult cr,ASTNode an)
        }
       return_arg = new ScrapTypeAbstraction(proj,mtyp.getBaseType(),an);
       name_set.add(js.getName());
+      is_static = js.isStatic();
     }
    finally {
       if (oproj == null) {

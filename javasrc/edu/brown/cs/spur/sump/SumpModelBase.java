@@ -35,6 +35,7 @@ import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.MemberValuePair;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.NormalAnnotation;
+import org.eclipse.jdt.core.dom.NumberLiteral;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
 import org.eclipse.jdt.core.dom.SingleMemberAnnotation;
 import org.eclipse.jdt.core.dom.StringLiteral;
@@ -89,7 +90,7 @@ public SumpModelBase(SumpData data)
 
 public SumpModelBase(JcompControl ctrl,File f)
 {
-   this(new SumpData(new CoseDefaultRequest(),null));
+   this(new SumpData(new CoseDefaultRequest(),null,null));
    if (f != null && f.exists()) {
       String nm = f.getName();
       model_data.setSource(f.getPath());
@@ -469,6 +470,24 @@ private void handleAscus(Annotation an)
          case "search" :
             // might set search type, scope, count, engine from string
             break;
+         case "parameter" :
+            String pv = getStringValue(val);
+            int idx = pv.indexOf("=");
+            String pnm = pv;
+            double vl = 0;
+            if (idx > 0) {
+               pnm = pv.substring(0,idx).trim();
+               String vs = nm.substring(idx+1).trim();
+               try {
+                  vl = Double.valueOf(vs);
+                }
+               catch (NumberFormatException e) { }
+             }
+            else {
+               vl = getDoubleValue(val);
+             }
+            model_data.getParameters().set(pnm,vl);
+            break;
          default :
             System.err.println("UNKNOWN TAG : " + nm);
             break;
@@ -486,6 +505,17 @@ private String getStringValue(Expression e)
       default :
          return null;
     }
+}
+
+
+private double getDoubleValue(Expression e)
+{
+   switch (e.getNodeType()) {
+      case ASTNode.NUMBER_LITERAL :
+         NumberLiteral nl = (NumberLiteral) e;
+         return Double.valueOf(nl.getToken());
+    }
+   return 0.0;
 }
 
 
@@ -647,6 +677,10 @@ private List<String> getStringValues(Expression exp,List<String> rslt)
             pw.print("\"" + s + "\"");
           }
          pw.println("})");
+       }
+      Map<String,Double> pmap = model_data.getParameters().getNonDefaults();
+      for (Map.Entry<String,Double> ent : pmap.entrySet()) {
+         pw.println("@Ascus(parameter=\"" + ent.getKey() + "=" + ent.getValue() + "\";");
        }
     }
    pw.println("package edu.brown.cs.SAMPLE;");

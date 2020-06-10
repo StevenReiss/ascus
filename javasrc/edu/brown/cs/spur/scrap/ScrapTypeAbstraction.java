@@ -94,7 +94,29 @@ boolean isEquivalent(ScrapTypeAbstraction sta)
 {
    // can be more sophisticated, especially for OTHER
    
-   return arg_type == sta.arg_type;
+   if (arg_type == sta.arg_type) {
+      if (arg_type == SumpArgType.JAVA) {
+         for (JcompType jt1 : base_types.values()) {
+            for (JcompType jt2 : sta.base_types.values()) {
+               if (jt1 == jt2 || jt1.getName().equals(jt2.getName())) return true;
+               if (jt1.isCompatibleWith(jt2) || jt2.isCompatibleWith(jt1)) return true;
+               try {
+                  Class<?> c1 = Class.forName(jt1.getName());
+                  Class<?> c2 = Class.forName(jt2.getName());
+                  if (c1.isAssignableFrom(c2) || c2.isAssignableFrom(c1)) return true;
+                }
+               catch (ClassNotFoundException e) { }
+             }
+          }
+         return false;
+       }
+      return true;
+    }
+   
+   if (arg_type == SumpArgType.OBJECT || sta.arg_type == SumpArgType.OBJECT) 
+      return true;
+   
+   return false;
 }
 
 

@@ -59,6 +59,8 @@ public @interface Ascus
    String [] keywords() default { };
    String [] keyterms() default { };
    String search() default "";
+   String parameter() default "";
+   double value() default 0.0;
    
 }       // end of annotation Ascus
 
