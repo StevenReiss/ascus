@@ -35,6 +35,12 @@
 
 package edu.brown.cs.spur.lids;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -44,7 +50,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import edu.brown.cs.cose.cosecommon.CoseConstants;
+import edu.brown.cs.cose.cosecommon.CoseResult;
+import edu.brown.cs.cose.keysearch.KeySearchCache;
 import edu.brown.cs.ivy.file.IvyLog;
 
 public class LidsFinder implements LidsConstants
@@ -61,6 +73,9 @@ private Set<String> check_imports;
 private Set<String> done_imports;
 private Set<String> missing_imports;
 private LidsMavenFinder maven_finder;
+private CoseResult      base_result;
+
+private static KeySearchCache cose_cache = KeySearchCache.getCache();
 
 
 
@@ -70,12 +85,13 @@ private LidsMavenFinder maven_finder;
 /*                                                                              */
 /********************************************************************************/
 
-public LidsFinder()
+public LidsFinder(CoseResult cr)
 {
    check_imports = new HashSet<>();
    done_imports = new HashSet<>();
    missing_imports = new HashSet<>();
    maven_finder = new LidsMavenFinder();
+   base_result = cr;
 }
 
 
@@ -113,23 +129,11 @@ public void addImportPaths(Collection<String> paths)
 
 public List<LidsLibrary> findLibraries()
 {
-   Map<LidsLibrary,Set<String>> covered = new HashMap<>();
+   findMavenFiles();
+   findGradleFiles();
    
-   for (String s : check_imports) {
-      IvyLog.logD("LIDS","Look for library for " + s);
-      List<LidsLibrary> libs = maven_finder.findLibrariesForImport(s);
-      if (libs != null) {
-         for (LidsLibrary lib : libs) {
-            Set<String> rslt = covered.get(lib);
-            if (rslt == null) {
-               rslt = new HashSet<>();
-               covered.put(lib,rslt);
-             }
-            rslt.add(s);
-          }
-       }
-    }
- 
+   Map<LidsLibrary,Set<String>> covered = findMavenLibraries();
+   
    // now choose the smallest covering set -- do it greedily
    
    List<LidsLibrary> rslt = new ArrayList<>();
@@ -177,6 +181,160 @@ public Collection<String> getMissingImports()
 }
 
 
+/********************************************************************************/
+/*                                                                              */
+/*      Worker methods                                                          */
+/*                                                                              */
+/********************************************************************************/
+
+private Map<LidsLibrary,Set<String>> findMavenLibraries()
+{
+   
+   Map<LidsLibrary,Set<String>> covered = new HashMap<>();
+   
+   for (String s : check_imports) {
+      IvyLog.logD("LIDS","Look for library for " + s);
+      List<LidsLibrary> libs = maven_finder.findLibrariesForImport(s);
+      if (libs != null) {
+         for (LidsLibrary lib : libs) {
+            Set<String> rslt = covered.get(lib);
+            if (rslt == null) {
+               rslt = new HashSet<>();
+               covered.put(lib,rslt);
+             }
+            rslt.add(s);
+          }
+       }
+    }
+   
+   return covered;
+}
+
+
+
+private void findMavenFiles()
+{
+   if (base_result == null) return;
+   if (!base_result.getSource().getName().startsWith("GIT")) return;
+   if (base_result.getSource().getProjectId() == null) return;
+   
+   String q = "repo:" + base_result.getSource().getProjectId();
+   q += " filename:pom.xml language:\"Maven POM\"";
+   List<URI> rslt = getGithubResult(q);
+   if (rslt == null) return;
+}
+
+
+
+
+private void findGradleFiles()
+{
+   if (base_result == null) return;
+   if (!base_result.getSource().getName().startsWith("GIT")) return;
+   if (base_result.getSource().getProjectId() == null) return;
+   
+   String q = "repo:" + base_result.getSource().getProjectId();
+   q += " filename:build.gradle language:Gradle";
+   List<URI> rslt = getGithubResult(q);
+   if (rslt == null) return;
+}
+
+
+
+
+private List<URI> getGithubResult(String q) 
+{
+   URL url = null;
+   try { 
+      URI uri = new URI("https","api.githb.com","/search/code",q,null);
+      url = uri.toURL();
+    }
+   catch (URISyntaxException e) { }
+   catch (MalformedURLException e) { }
+   if (url == null) return null;
+   
+   ByteArrayOutputStream baos = new ByteArrayOutputStream();
+   
+   long delay = 30000;
+   for ( ; ; ) {
+      try {
+         InputStream br = cose_cache.getInputStream(url,true,false);
+         byte [] buf = new byte[8192]; 
+         for ( ; ; ) {
+            int ln = br.read(buf);
+            if (ln <= 0) break;
+            baos.write(buf,0,ln);
+          }
+         br.close();
+         String rslt = baos.toString("UTF-8");
+         if (!rslt.endsWith("\n")) rslt += "\n";
+         return decodeGithubResults(rslt);
+       }
+      catch (Exception e) {
+         if (delay < 30000 && e.toString().contains(" 504 ")) {
+            try {
+               Thread.sleep(delay);
+             }
+            catch (InterruptedException ex) { }
+            delay = 2*delay;
+            continue;
+          }
+         IvyLog.logE("LIDS","Problem getting MAVEN data: " + e);
+
+         break;
+       }
+    }
+   
+   return null;
+}
+
+
+private List<URI> decodeGithubResults(String cnts)
+{
+   List<URI> rslt = new ArrayList<URI>();
+   try {
+      JSONArray jarr = null;
+      if (cnts.startsWith("{")) {
+         JSONObject jobj = new JSONObject(cnts);
+         jarr = jobj.getJSONArray("items");
+       }
+      else if (cnts.startsWith("[")) {
+         jarr = new JSONArray(cnts);
+       }
+      else jarr = new JSONArray();
+      for (int i = 0; i < jarr.length(); ++i) {
+         JSONObject jobj = jarr.getJSONObject(i);
+         URI uri2 = convertGithubSearchResults(jobj);
+         if (uri2 != null) rslt.add(uri2);
+       }
+    }
+   catch (Exception e) {
+      IvyLog.logE("LIDS","Problem parsing github json return",e);
+    }
+   
+   return rslt;
+}
+
+
+
+protected URI convertGithubSearchResults(JSONObject jobj)
+{
+   try {
+      URI uri2 = new URI(jobj.getString("html_url"));
+      return uri2;
+    }
+   catch (URISyntaxException e) {
+      IvyLog.logE("LIDS","BAD URI: " + e);
+    }
+   catch (JSONException e) {
+      IvyLog.logE("LIDS","BAD JSON: " + e);
+    }
+   
+   return null;
+}
+
+
+   
 /********************************************************************************/
 /*                                                                              */
 /*      Create a library from a string                                          */

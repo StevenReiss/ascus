@@ -148,7 +148,7 @@ private List<CandidateMatch> findInitialMatches(SumpModel model)
           }
          SumpData sdata = new SumpData(model.getModelData().getCoseRequest(),orig,search_params);
          
-         LidsFinder lids = ScrapDriver.findLibraries(cu);
+         LidsFinder lids = ScrapDriver.findLibraries(cu,orig);
          for (LidsLibrary ll : lids.findLibraries()) {
             sdata.addLibrary(ll);
           }

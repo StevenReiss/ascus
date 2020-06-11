@@ -291,7 +291,7 @@ void processBuildCandidates(SumpModel mdl)
 /*                                                                              */
 /********************************************************************************/
 
-static LidsFinder findLibraries(CompilationUnit cu)
+static LidsFinder findLibraries(CompilationUnit cu,CoseResult cr)
 {
    Set<String> imports = new HashSet<>();
    PackageDeclaration pd = cu.getPackage();
@@ -309,7 +309,7 @@ static LidsFinder findLibraries(CompilationUnit cu)
       imports.add(idnm);
     }
    
-   LidsFinder fndr = new LidsFinder();
+   LidsFinder fndr = new LidsFinder(cr);
    for (String s : imports) fndr.addImportPath(s);
    
    return fndr;

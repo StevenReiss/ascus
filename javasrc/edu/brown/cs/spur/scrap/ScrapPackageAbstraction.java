@@ -514,6 +514,7 @@ List<LidsLibrary> getReferencedLibraries()
    if (use_libraries == null) {
       use_libraries = new ArrayList<>();
       Set<String> imports = new HashSet<>();
+      CoseResult usecr = null;
       
       for (CoseResult cr : getAllResults()) {
          CompilationUnit cu = (CompilationUnit) cr.getStructure();
@@ -526,11 +527,12 @@ List<LidsLibrary> getReferencedLibraries()
             if (CoseConstants.isRelatedPackage(pnm,idnm)) continue;
             if (CoseConstants.isStandardJavaLibrary(idnm)) continue;
             if (id.isOnDemand()) idnm += ".*";
+            if (usecr == null) usecr = cr;
             imports.add(idnm);
           }
        }
       
-      LidsFinder fndr = new LidsFinder();
+      LidsFinder fndr = new LidsFinder(usecr);
       for (String s : imports) fndr.addImportPath(s);
       use_libraries = fndr.findLibraries();
       missing_imports = fndr.getMissingImports();
