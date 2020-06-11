@@ -300,7 +300,10 @@ static LidsFinder findLibraries(CompilationUnit cu)
    for (Object o : cu.imports()) {
       ImportDeclaration id = (ImportDeclaration) o;
       String idnm = id.getName().getFullyQualifiedName();
-      if (CoseConstants.isRelatedPackage(pnm,idnm)) continue;
+      if (CoseConstants.isRelatedPackage(pnm,idnm)) {
+         // check if the class exists
+         continue;
+       }     
       if (CoseConstants.isStandardJavaLibrary(idnm)) continue; 
       if (id.isOnDemand()) idnm += ".*";
       imports.add(idnm);
