@@ -116,8 +116,9 @@ void normalize()
       sum2 += s*s;
     }
    if (sum2 != 0) {
+      double sum = Math.sqrt(sum2);
       for (SwiftScoredTerm sst : ordered_set) {
-         sst.term_score /= sum2;
+         sst.term_score /= sum;
        }
     }
 }
@@ -126,6 +127,8 @@ void normalize()
 
 void limit(int count)
 {
+   if (ordered_set.size() <= count) return;
+   
    List<SwiftScoredTerm> rset = new ArrayList<>();
    int ct = 0;
    for (SwiftScoredTerm sst : ordered_set) {

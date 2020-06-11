@@ -188,7 +188,9 @@ private String getMappedType(String tnm)
       if (!matchOperation(op)) return 0;
       double nscore = IvyStringDiff.normalizedStringDiff(getName(),op.getName());
       double wscore = getWordScore(op);
-      return 1 + (1.0 * nscore) + (0.0 * wscore);
+      double nw = nscore + wscore;
+      if (nw > 1) nw = 1;
+      return 1 + nw;
     }
    
    return 0;

@@ -119,7 +119,9 @@ public SwiftScorer getKgramScores()             { return kgram_data; }
    double ws = w1.getScore(w2);
    double ks = k1.getScore(k2);
    
-   return ws * 0.5 + ks * 0.5;
+   double score = ws / 0.6 + ks / 0.25;
+   if (score > 1) score = 1;
+   return score;
 }
 
 
@@ -227,7 +229,9 @@ void computeTextScores(ASTNode n)
    if (n == null) return;
    String text = n.toString();
    word_data = new SwiftScorer(text,false);
+   word_data.limit(10);
    kgram_data = new SwiftScorer(text,true);
+   kgram_data.limit(10);
 }
 
 
