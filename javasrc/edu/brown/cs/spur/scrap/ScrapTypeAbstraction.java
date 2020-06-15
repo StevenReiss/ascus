@@ -101,11 +101,12 @@ boolean isEquivalent(ScrapTypeAbstraction sta)
                if (jt1 == jt2 || jt1.getName().equals(jt2.getName())) return true;
                if (jt1.isCompatibleWith(jt2) || jt2.isCompatibleWith(jt1)) return true;
                try {
-                  Class<?> c1 = Class.forName(jt1.getName());
-                  Class<?> c2 = Class.forName(jt2.getName());
+                  ClassLoader cldr = ClassLoader.getSystemClassLoader();
+                  Class<?> c1 = Class.forName(jt1.getName(),false,cldr);
+                  Class<?> c2 = Class.forName(jt2.getName(),false,cldr);
                   if (c1.isAssignableFrom(c2) || c2.isAssignableFrom(c1)) return true;
                 }
-               catch (ClassNotFoundException e) { }
+               catch (Throwable e) { }
              }
           }
          return false;

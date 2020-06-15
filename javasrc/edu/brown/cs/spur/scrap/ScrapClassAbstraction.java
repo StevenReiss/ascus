@@ -68,6 +68,7 @@ import edu.brown.cs.ivy.jcomp.JcompType;
 import edu.brown.cs.spur.rowel.RowelConstants.RowelMatch;
 import edu.brown.cs.spur.rowel.RowelMatcher;
 import edu.brown.cs.spur.sump.SumpArgType;
+import edu.brown.cs.spur.sump.SumpParameters;
 import edu.brown.cs.spur.sump.SumpConstants.SumpClass;
 
 class ScrapClassAbstraction extends ScrapAbstraction
@@ -424,21 +425,13 @@ private void otherMethods(ScrapMergeData md,ScrapClassAbstraction sca)
 
 private boolean checkForMatch(ScrapMergeData md,ScrapClassAbstraction sca)
 {
-   double f1 = 0.5;
-   double f2 = 0.75;
-   double f3 = 0.1;
-   double f4 = 0.25;
-   double f5 = 0.25;
-   double f6 = 0.50;
-
-   switch (scrap_abstractor.getRequest().getCoseSearchType()) {
-      case PACKAGE :
-	 f5 = 0.5;
-	 f6 = 0.75;
-	 break;
-      default :
-	 break;
-    }
+   SumpParameters sp = scrap_abstractor.getParameters();
+   double f1 = sp.getFieldMinMatch();
+   double f2 = sp.getFieldMaxMatch();
+   double f3 = sp.getConstructorMinMatch();
+   double f4 = sp.getConstructorMaxMatch();
+   double f5 = sp.getMethodMinMatch();
+   double f6 = sp.getMethodMaxMatch();
 
    if (!checkMatch(md,use_fields,sca.use_fields,f1,f2,0.0)) return false;
    if (!checkMatch(md,use_constructors,sca.use_constructors,f3,f4,0.0)) return false;
@@ -454,7 +447,7 @@ private boolean checkForMatch(ScrapMergeData md,ScrapClassAbstraction sca)
       for (String s : enum_constants) {
 	 if (sca.enum_constants.contains(s)) ++ecnt;
        }
-      if (ecnt < e2 * 0.75) return false;
+      if (ecnt < e2 * sp.getEnumMatch()) return false;
     }
 
    // System.err.println("MATCH SUCCESSFUL");
@@ -1186,7 +1179,7 @@ private static class ClassMethod extends ScrapComponent implements RowelMatch {
 /*										*/
 /********************************************************************************/
 
-private static class ClassField extends ScrapComponent {
+private class ClassField extends ScrapComponent {
 
    private ScrapFieldAbstraction field_abstraction;
    private List<VariableDeclarationFragment> field_asts;
@@ -1213,6 +1206,11 @@ private static class ClassField extends ScrapComponent {
 
    boolean isAccessible() {
       if (Modifier.isPublic(component_modifiers)) return true;
+      if (Modifier.isPrivate(component_modifiers)) return false;
+      if (Modifier.isProtected(component_modifiers)) return false;
+      if (scrap_abstractor.getParameters().usePackageFields()) 
+         return true;
+      
       return false;
     }
 

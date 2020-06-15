@@ -678,8 +678,8 @@ private List<String> getStringValues(Expression exp,List<String> rslt)
           }
          pw.println("})");
        }
-      Map<String,Double> pmap = model_data.getParameters().getNonDefaults();
-      for (Map.Entry<String,Double> ent : pmap.entrySet()) {
+      Map<String,Object> pmap = model_data.getParameters().getNonDefaults();
+      for (Map.Entry<String,Object> ent : pmap.entrySet()) {
          pw.println("@Ascus(parameter=\"" + ent.getKey() + "=" + ent.getValue() + "\";");
        }
     }

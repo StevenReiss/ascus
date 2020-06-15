@@ -67,6 +67,7 @@ import edu.brown.cs.spur.rowel.RowelMatcher;
 import edu.brown.cs.spur.lids.LidsConstants.LidsLibrary;
 import edu.brown.cs.spur.sump.SumpConstants;
 import edu.brown.cs.spur.sump.SumpData;
+import edu.brown.cs.spur.sump.SumpParameters;
 import edu.brown.cs.spur.swift.SwiftScorer;
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompProject;
@@ -185,7 +186,11 @@ ScrapPackageAbstraction(ScrapAbstractor abs,CoseResult cr,CompilationUnit cu)
 
 private boolean checkForMatch(ScrapMergeData md,ScrapPackageAbstraction spa)
 {
-   if (!checkMatch(md,use_classes,spa.use_classes,0.6,0.75,0.0)) return false;
+   SumpParameters sp = scrap_abstractor.getParameters();
+   double f1 = sp.getClassMinMatch();
+   double f2 = sp.getClassMaxMatch();
+   
+   if (!checkMatch(md,use_classes,spa.use_classes,f1,f2,0.0)) return false;
    return true;
 }
 
@@ -389,8 +394,6 @@ private Set<PackageClass> addUsedTypes(List<PackageClass> use)
    FindUsedTypes finder = new FindUsedTypes();
    
    for (PackageClass pc : use) {
-      if (pc.getName().contains("HttpRequestMessageFactory"))
-         System.err.println("CHECK HERE");
       finder.setClass(pc.getAbstraction());
       pc.getAstNode().accept(finder);
     }

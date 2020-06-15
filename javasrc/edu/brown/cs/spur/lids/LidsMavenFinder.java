@@ -51,6 +51,7 @@ import org.json.JSONObject;
 
 import edu.brown.cs.cose.cosecommon.CoseConstants;
 import edu.brown.cs.cose.keysearch.KeySearchCache;
+import edu.brown.cs.ivy.file.IvyLog;
 
 class LidsMavenFinder implements LidsConstants
 {
@@ -246,7 +247,7 @@ private String getMavenResult(String q)
             delay = 2*delay;
             continue;
           }
-         System.err.println("Problem getting MAVEN data: " + e);
+         IvyLog.logI("LIDS","Problem getting MAVEN data: " + e);
          break;
        }
     }
@@ -262,7 +263,7 @@ private String getMavenResult(String q)
 /*                                                                              */
 /********************************************************************************/
 
-private static class MavenLibrary implements LidsLibrary {
+private static class MavenLibrary extends  LidsLibrary {
 
    private String lib_id;
    private String lib_name;

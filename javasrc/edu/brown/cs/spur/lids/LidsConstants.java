@@ -41,20 +41,36 @@ public interface LidsConstants
 {
 
 
-interface LidsLibrary {
-   String getName();
-   String getVersion();
-   String getId();
-   String getFullId();
+abstract class LidsLibrary {
+   abstract public String getName();
+   abstract public String getVersion();
+   abstract public String getId();
+   abstract public String getFullId();
    
-   default String getGroup() {
+   public String getGroup() {
       String s = getId();
       int idx = s.indexOf(":");
       if (idx > 0) s = s.substring(0,idx);
       return s;
     }
    
-}       // end of inner interface LidsLibrary
+   @Override public boolean equals(Object o) {
+      if (o instanceof LidsLibrary) {
+         LidsLibrary ll = (LidsLibrary) o;
+         return getFullId().equals(ll.getFullId());
+       }
+      return false;
+    }
+   
+   @Override public int hashCode() {
+      return getFullId().hashCode();
+    }
+   
+   @Override public String toString() {
+      return getId() + "@" + getName() + "@" + getVersion();
+    }
+   
+}       // end of inner class LidsLibrary
 
 
 
