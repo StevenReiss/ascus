@@ -1,6 +1,6 @@
 <project name='spur.etch' default='compile'>
 
-  <property file='../../../../../../build.properties' />
+   <property file='../../../../../../build.properties' />
    <property name='PRO' value='/research/people/spr' />
    <available file='${PRO}/ivy' type="dir" property="ivy.present" />
    <property name='IVYBIN' value='${PRO}/ivy/java' />

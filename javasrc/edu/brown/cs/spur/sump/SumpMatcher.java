@@ -48,7 +48,6 @@ import java.util.TreeSet;
 
 import edu.brown.cs.ivy.file.IvyStringDiff;
 import edu.brown.cs.spur.rowel.RowelMatcher;
-import edu.brown.cs.spur.scrap.ScrapConstants.MatchType;
 
 class SumpMatcher implements SumpConstants
 {
@@ -468,7 +467,7 @@ static double computeClassMatchScore(SumpClass base,SumpClass pat,Map<String,Str
       return 0;
    
    RowelMatcher<SumpAttribute> rm = new RowelMatcher<>(pat.getAttributes(),base.getAttributes());
-   Map<SumpAttribute,SumpAttribute> map = rm.bestMatch(MatchType.MATCH_EXACT);
+   Map<SumpAttribute,SumpAttribute> map = rm.bestMatch(null);
    for (Map.Entry<SumpAttribute,SumpAttribute> ent : map.entrySet()) {
       namemap.put(ent.getValue().getFullName(),ent.getKey().getFullName());
     }
@@ -481,7 +480,7 @@ static double computeClassMatchScore(SumpClass base,SumpClass pat,Map<String,Str
    else if (atot > 4 && afnd / atot < ATTR_CUTOFF) return 0;
    
    RowelMatcher<SumpOperation> orm = new RowelMatcher<>(pat.getOperations(),base.getOperations());
-   Map<SumpOperation,SumpOperation> omap = orm.bestMatch(MatchType.MATCH_EXACT);
+   Map<SumpOperation,SumpOperation> omap = orm.bestMatch(null);
    for (Map.Entry<SumpOperation,SumpOperation> ent : omap.entrySet()) {
       Map<String,String> pnamemap = matchOperation(ent.getValue(),ent.getKey());
       String mapname = ent.getValue().getMapName();
@@ -519,7 +518,7 @@ static double computeClassMatchScore(SumpClass base,SumpClass pat,Map<String,Str
          // if (namemap != null) {
             // namemap.put(best.getFullName(),op.getFullName());
             // namemap.putAll(bestmap);
-          // }
+          // }Let
        // }
     // }
    
