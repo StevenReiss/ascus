@@ -59,15 +59,7 @@ class SumpMatcher implements SumpConstants
 /*                                                                              */
 /********************************************************************************/
 
-static final double     CLASS_CUTOFF = 0.5;
-static final double     ATTR_CUTOFF = 0.5;
-static final double     METHOD_CUTOFF = 0.5;
-static final double     DEPEND_CUTOFF = 0.33;
-static final double     SCORE_CUTOFF = 0.50;
-
-static final double     INTERFACE_FRACTION = 0.25;
-static final double     ENUM_FRACTION = 0.75;
-
+private SumpParameters  sump_parameters; 
 
 
 
@@ -88,22 +80,10 @@ SumpMatcher()
 /*                                                                              */
 /********************************************************************************/
 
-boolean contains(SumpModel base,SumpModel pat)
-{
-   SortedSet<MatchSet> sets = setupClassMatchings(base,pat);
-   double max = sets.size() + 1;
-      
-   double rscore = matchClasses(base,pat,sets,null,0,max,max,null);   
-   if (rscore == 0) return false;
-   if (rscore < max * SCORE_CUTOFF) return false;
-   
-   return true;
-}
-
-
-
 double matchScore(SumpModel base,SumpModel pat,Map<String,String> nmap)
 {
+   sump_parameters = pat.getModelData().getParameters();
+   
    SortedSet<MatchSet> sets = setupClassMatchings(base,pat);
    double max = sets.size() + 1;
    
@@ -111,31 +91,13 @@ double matchScore(SumpModel base,SumpModel pat,Map<String,String> nmap)
    if (rscore == 0) return 0;
    
    rscore = rscore/max;
-   if (rscore < SCORE_CUTOFF) rscore = 0;
+   if (rscore < sump_parameters.getClassCutoff()) rscore = 0;
    
    if (nmap !=  null) {
       String n1 = getPrefixName(base);
       String n2 = getPrefixName(pat);
       nmap.put(n1,n2);
     }
-   
-   return rscore;
-}
-
-
-private String getPrefixName(SumpModel mdl)
-{
-   String nm = mdl.getPackage().getName();
-   return nm;
-}
-
-
-double containScore(SumpModel base,SumpModel pat)
-{
-   SortedSet<MatchSet> sets = setupClassMatchings(base,pat);
-   double max = sets.size() + 1;
-   
-   double rscore = matchClasses(base,pat,sets,null,0,max,max,null);
    
    return rscore;
 }
@@ -149,6 +111,14 @@ double containScore(SumpModel base,SumpModel pat)
 /*                                                                              */
 /********************************************************************************/
 
+private String getPrefixName(SumpModel mdl)
+{
+   String nm = mdl.getPackage().getName();
+   return nm;
+}
+
+
+
 private SortedSet<MatchSet> setupClassMatchings(SumpModel base,SumpModel pat)
 {
    SortedSet<MatchSet> rslt = new TreeSet<>();
@@ -157,18 +127,18 @@ private SortedSet<MatchSet> setupClassMatchings(SumpModel base,SumpModel pat)
       MatchSet ms = new MatchSet(cls);
       for (SumpClass bcls : base.getPackage().getClasses()) {
          Map<String,String> namemap = new HashMap<>();
-         double score = computeClassMatchScore(bcls,cls,namemap);
+         double score = computeClassMatchScore(bcls,cls,namemap,sump_parameters);
          double nmscore = IvyStringDiff.normalizedStringDiff(cls.getName(),bcls.getName());
          double wscore = cls.getWordScore(bcls);
          double nmw = nmscore * 0.75 + wscore * 0.75;
          if (nmw > 1.0) nmw = 1.0;
          // handle word matching
          int sz = cls.getOperations().size() + cls.getAttributes().size();
-         double f = 0.8;
+         double f = 1 - sump_parameters.getWordFraction();
          if (sz == 0) f = 0.2;
          else if (sz == 1) f = 0.5;
          double tscore = score * f + nmw * (1.0-f);
-         if (score > 0 && tscore >= CLASS_CUTOFF) {
+         if (score > 0 && tscore >= sump_parameters.getClassCutoff()) {
             ms.addMatch(bcls,tscore,namemap);
           }
        }
@@ -191,7 +161,7 @@ private double matchClasses(SumpModel base,SumpModel pat,
       Map<SumpClass,SumpClass> cmap,double inscore,double max,double maxtogo,
       Map<String,String> rsltmap)
 {
-   if ((inscore + maxtogo)/max < SCORE_CUTOFF) return 0; 
+   if ((inscore + maxtogo)/max < sump_parameters.getScoreCutoff()) return 0; 
    
    if (cmap == null) cmap = new HashMap<>();
    
@@ -440,7 +410,7 @@ private double maxMatchClasss(SumpModel base,SumpModel pat,Map<String,String> rs
       SumpClass pc = ent.getValue();
       if (rsltmap != null) rsltmap.put(bc.getFullName(),pc.getFullName());
       // this computes score and adds attribute and operator names to results
-      double score = computeClassMatchScore(bc,pc,rsltmap);     
+      double score = computeClassMatchScore(bc,pc,rsltmap,sump_parameters);     
       total += score;
     }
    
@@ -457,7 +427,8 @@ private double maxMatchClasss(SumpModel base,SumpModel pat,Map<String,String> rs
 /*                                                                              */
 /********************************************************************************/
 
-static double computeClassMatchScore(SumpClass base,SumpClass pat,Map<String,String> namemap)
+static double computeClassMatchScore(SumpClass base,SumpClass pat,Map<String,String> namemap,
+      SumpParameters sp)
 {
    // Set<Object> done = new HashSet<>();
    
@@ -467,7 +438,7 @@ static double computeClassMatchScore(SumpClass base,SumpClass pat,Map<String,Str
       return 0;
    
    RowelMatcher<SumpAttribute> rm = new RowelMatcher<>(pat.getAttributes(),base.getAttributes());
-   Map<SumpAttribute,SumpAttribute> map = rm.bestMatch(null);
+   Map<SumpAttribute,SumpAttribute> map = rm.bestMatch(sp);
    for (Map.Entry<SumpAttribute,SumpAttribute> ent : map.entrySet()) {
       namemap.put(ent.getValue().getFullName(),ent.getKey().getFullName());
     }
@@ -477,10 +448,10 @@ static double computeClassMatchScore(SumpClass base,SumpClass pat,Map<String,Str
    if (atot == 2  && afnd == 0) return 0;
    else if (atot == 3 && afnd <= 1) return 0;
    else if (atot == 4 && afnd <= 2) return 0;
-   else if (atot > 4 && afnd / atot < ATTR_CUTOFF) return 0;
+   else if (atot > 4 && afnd / atot < sp.getAttrCutoff()) return 0;
    
    RowelMatcher<SumpOperation> orm = new RowelMatcher<>(pat.getOperations(),base.getOperations());
-   Map<SumpOperation,SumpOperation> omap = orm.bestMatch(null);
+   Map<SumpOperation,SumpOperation> omap = orm.bestMatch(sp);
    for (Map.Entry<SumpOperation,SumpOperation> ent : omap.entrySet()) {
       Map<String,String> pnamemap = matchOperation(ent.getValue(),ent.getKey());
       String mapname = ent.getValue().getMapName();
@@ -526,7 +497,7 @@ static double computeClassMatchScore(SumpClass base,SumpClass pat,Map<String,Str
    else if (mtot == 2  && mfnd == 0) return 0;
    else if (mtot == 3 && mfnd <= 1) return 0;
    else if (mtot == 4 && mfnd <= 2) return 0;
-   else if (mtot > 4 && mfnd / mtot < METHOD_CUTOFF) return 0;
+   else if (mtot > 4 && mfnd / mtot < sp.getMethodCutoff()) return 0;
    
    double score = 1;
    if (atot != 0 && mtot != 0) {
@@ -548,7 +519,8 @@ static double computeClassMatchScore(SumpClass base,SumpClass pat,Map<String,Str
       double emax = Math.max(eptot,ebtot);
       double escore = 1;
       if (emax > 0) escore = ecnt/emax;
-      score = escore * ENUM_FRACTION + score * (1 - ENUM_FRACTION);
+      double f = sp.getEnumFraction();
+      score = escore * f + score * (1 - f);
     }
    
    return score;
@@ -655,7 +627,7 @@ private double checkAssociations(SumpModel base,SumpModel pat,Map<SumpClass,Sump
     }
    
    if (tota == 0) return 1.0;
-   else if (totm/tota < DEPEND_CUTOFF) return 0;
+   else if (totm/tota < sump_parameters.getDependCutoff()) return 0;
    
    return totm/tota;
 }

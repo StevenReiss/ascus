@@ -29,8 +29,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import edu.brown.cs.ivy.file.IvyLog;
+import edu.brown.cs.spur.rowel.RowelConstants;
 
-public class SumpParameters implements SumpConstants
+public class SumpParameters implements SumpConstants, RowelConstants.RowelMatchType 
 {
 
 
@@ -48,6 +49,8 @@ enum Parameters {
       METHOD_MIN_MATCH, METHOD_MAX_MATCH,
       ENUM_MATCH,
       CLASS_MIN_MATCH, CLASS_MAX_MATCH,
+      CLASS_CUTOFF, ATTR_CUTOFF, METHOD_CUTOFF, DEPEND_CUTOFF, SCORE_CUTOFF,
+      INTERFACE_FRACTION, ENUM_FRACTION,WORD_FRACTION
 }
 
 private Map<Parameters,Object>      param_values;
@@ -81,6 +84,14 @@ public SumpParameters()
    param_values.put(Parameters.ENUM_MATCH,0.75);
    param_values.put(Parameters.CLASS_MIN_MATCH,0.60);
    param_values.put(Parameters.CLASS_MAX_MATCH,0.75);
+   param_values.put(Parameters.CLASS_CUTOFF,0.5);
+   param_values.put(Parameters.ATTR_CUTOFF,0.5);
+   param_values.put(Parameters.METHOD_CUTOFF,0.5);
+   param_values.put(Parameters.DEPEND_CUTOFF,0.33);
+   param_values.put(Parameters.SCORE_CUTOFF,0.50);
+   param_values.put(Parameters.INTERFACE_FRACTION,0.25);
+   param_values.put(Parameters.ENUM_FRACTION,0.75);
+   param_values.put(Parameters.WORD_FRACTION,0.20);
 }
 
 
@@ -170,6 +181,50 @@ public double getClassMaxMatch()
 {
    return getDouble(Parameters.CLASS_MAX_MATCH); 
 }
+
+
+public double getClassCutoff()
+{
+   return getDouble(Parameters.CLASS_CUTOFF);
+}
+
+public double getAttrCutoff()
+{
+   return getDouble(Parameters.ATTR_CUTOFF);
+}
+
+public double getMethodCutoff()
+{
+   return getDouble(Parameters.METHOD_CUTOFF);
+}
+
+public double getDependCutoff()
+{
+   return getDouble(Parameters.DEPEND_CUTOFF);
+}
+
+public double getScoreCutoff()
+{
+   return getDouble(Parameters.SCORE_CUTOFF);
+}
+
+public double getInterfaceFraction()
+{
+   return getDouble(Parameters.INTERFACE_FRACTION);
+}
+
+public double getEnumFraction()
+{
+   return getDouble(Parameters.ENUM_FRACTION);
+}
+
+
+public double getWordFraction()
+{
+   return getDouble(Parameters.WORD_FRACTION);
+}
+
+
 
 
 /********************************************************************************/

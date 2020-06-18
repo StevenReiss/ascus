@@ -167,9 +167,11 @@ SumpElementClass(SumpModelBase mdl,AbstractTypeDeclaration atd)
 @Override public double getMatchScore(RowelMatch rm,RowelMatchType mt)
 {
    if (rm instanceof SumpElementClass) {
+      SumpParameters sp = getData().getParameters();
+      if (mt instanceof SumpParameters) sp = (SumpParameters) mt;
       SumpElementClass sc = (SumpElementClass) rm; 
-      double score = SumpMatcher.computeClassMatchScore(this,sc,null);
-      if (score < SumpMatcher.CLASS_CUTOFF) return 0;
+      double score = SumpMatcher.computeClassMatchScore(this,sc,null,sp);
+      if (score < sp.getClassCutoff()) return 0;
       double nscore = getNameScore(sc);
       double wscore = getWordScore(sc);
       return 0.8*score + 0.2*nscore + 0.0*wscore;
