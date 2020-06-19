@@ -79,7 +79,7 @@ EtchTransformFixReturn(Map<String,String> namemap)
 /*                                                                              */
 /********************************************************************************/
 
-@Override protected EtchMemo applyTransform(ASTNode n,SumpModel target)
+@Override protected EtchMemo applyTransform(ASTNode n,SumpModel src,SumpModel target)
 {
    FixReturnMapper frm = new FixReturnMapper();
    

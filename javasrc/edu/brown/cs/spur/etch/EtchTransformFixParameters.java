@@ -95,9 +95,9 @@ EtchTransformFixParameters(Map<String,String> namemap)
 /*                                                                              */
 /********************************************************************************/
 
-@Override protected EtchMemo applyTransform(ASTNode n,SumpModel target)
+@Override protected EtchMemo applyTransform(ASTNode n,SumpModel src,SumpModel target)
 {
-   ParamMapper mapper =  findMappings(n,target);
+   ParamMapper mapper =  findMappings(n,src,target);
    if (mapper == null) return null;
    
    EtchMemo memo =  mapper.getMapMemo(n);
@@ -113,7 +113,7 @@ EtchTransformFixParameters(Map<String,String> namemap)
 /*                                                                              */
 /********************************************************************************/
 
-private ParamMapper findMappings(ASTNode cu,SumpModel target)
+private ParamMapper findMappings(ASTNode cu,SumpModel source,SumpModel target)
 {
    ParamMapper mapper = new ParamMapper();
    
@@ -138,9 +138,6 @@ private void findMatchings(ASTNode cu,SumpModel target,ParamMapper mapper)
    ParamVisitor sp = new ParamVisitor(target,mapper);
    cu.accept(sp);
 }
-
-
-
 
 
 

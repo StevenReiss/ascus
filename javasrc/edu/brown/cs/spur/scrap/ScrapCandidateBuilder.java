@@ -123,7 +123,7 @@ List<ScrapCandidate> buildCandidates(SumpModel model)
       System.err.println("MATCH:\n" + cm.getCoseResult().getEditText());
       Map<String,String> namemap = cm.getNameMap();
       CoseResult cr = cm.getCoseResult();
-      CoseResult cr1 = etcher.fixCode(cr,namemap);
+      CoseResult cr1 = etcher.fixCode(cr,cm.getModel(),namemap);
       cm.updateResult(cr1);
     }
    
@@ -207,6 +207,7 @@ private void addTestCases(CandidateMatch cm,EtchFactory etcher)
    req.setCoseScopeType(CoseScopeType.FILE);
    for (String s : cr.getPackages()) {
       req.addKeywordSet("package " + s,"junit","test");
+      req.addKeywordSet("import " + s,"junit","test"); 
     }
   
    req.setDoDebug(true);
@@ -247,7 +248,7 @@ private void addTestCases(CandidateMatch cm,EtchFactory etcher)
          String top = namemap.get(origpkg);
          namemap.put(pkg,top);
        }
-      CoseResult test1 = etcher.fixTests(testresult,namemap);
+      CoseResult test1 = etcher.fixTests(testresult,cm.getModel(),namemap);
       cm.updateTestResult(test1);
       System.err.println("TEST CODE:\n" + test1.getEditText());
     }
@@ -258,6 +259,7 @@ private void addTestCases(CandidateMatch cm,EtchFactory etcher)
 private boolean isViableTestCase(CoseResult cr,CandidateMatch cm)
 {
    boolean allok = true;
+   boolean someok = true;
    
    String pkg = cm.getCoseResult().getBasePackage();
    Map<String,String> namemap = cm.getNameMap();
@@ -278,12 +280,15 @@ private boolean isViableTestCase(CoseResult cr,CandidateMatch cm)
       if (CoseConstants.isStandardJavaLibrary(nm)) continue;
       int idx = nm.lastIndexOf(".");
       String pnm = pkg + nm.substring(idx);
-      if (namemap.containsKey(pnm)) continue;
+      if (namemap.containsKey(pnm)) {
+         someok = true;
+         continue;
+       }     
       System.err.println("MISSING IMPORT: " + nm);
       allok = false;
     }
    
-   return allok;
+   return allok || someok;
 }
 
 

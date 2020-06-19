@@ -74,7 +74,7 @@ EtchTransformFixPackage(CoseResult cr,Map<String,String> namemap)
 /*                                                                              */
 /********************************************************************************/
 
-@Override protected EtchMemo applyTransform(ASTNode n,SumpModel target)
+@Override protected EtchMemo applyTransform(ASTNode n,SumpModel src,SumpModel target)
 {
    PackageMapper mapper = findMappings(n,target);
    if (mapper == null) return null;

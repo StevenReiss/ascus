@@ -93,7 +93,7 @@ EtchTransformRename(Map<String,String> namemap)
 /*                                                                              */
 /********************************************************************************/
 
-@Override protected EtchMemo applyTransform(ASTNode n,SumpModel target)
+@Override protected EtchMemo applyTransform(ASTNode n,SumpModel src,SumpModel target)
 {
    NameMapper mapper = findMappings(n,target);
    if (mapper == null) return null;

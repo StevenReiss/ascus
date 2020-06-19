@@ -1,8 +1,8 @@
 /********************************************************************************/
 /*                                                                              */
-/*              EtchTransformAddMissing.java                                    */
+/*              EtchTransformFixReturns.java                                    */
 /*                                                                              */
-/*      Transforms to add missing classes and methods                           */
+/*      Handle return type differences between models                           */
 /*                                                                              */
 /********************************************************************************/
 /*      Copyright 2011 Brown University -- Steven P. Reiss                    */
@@ -24,25 +24,25 @@
 
 package edu.brown.cs.spur.etch;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.ReturnStatement;
+import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
-import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompSymbol;
-import edu.brown.cs.spur.sump.SumpConstants.SumpClass;
+import edu.brown.cs.ivy.jcomp.JcompType;
+import edu.brown.cs.ivy.jcomp.JcompTyper;
 import edu.brown.cs.spur.sump.SumpConstants.SumpModel;
 import edu.brown.cs.spur.sump.SumpConstants.SumpOperation;
 
-class EtchTransformAddMissing extends EtchTransform
+class EtchTransformFixReturns extends EtchTransform
 {
 
 
@@ -61,12 +61,11 @@ private Map<String,String> name_map;
 /*                                                                              */
 /********************************************************************************/
 
-EtchTransformAddMissing(Map<String,String> namemap)
+EtchTransformFixReturns(Map<String,String> namemap)
 {
-   super("AddMissing");
+   super("FixReturns");
    name_map = namemap;
 }
-
 
 
 /********************************************************************************/
@@ -77,108 +76,139 @@ EtchTransformAddMissing(Map<String,String> namemap)
 
 @Override protected EtchMemo applyTransform(ASTNode n,SumpModel src,SumpModel target)
 {
-   AddMissingMapper amm = new AddMissingMapper();
+   ReturnMapper mapper =  findMappings(n,src,target);
+   if (mapper == null) return null;
    
-   findMissingItems(amm,target);
-   
-   if (amm.isEmpty()) return null;
-   
-   EtchMemo memo = amm.getMapMemo(n);
+   EtchMemo memo =  mapper.getMapMemo(n);
    
    return memo;
 }
 
 
-
 /********************************************************************************/
 /*                                                                              */
-/*      Determine what needs to be added                                        */
+/*      Identify all parameters to update                                       */
 /*                                                                              */
 /********************************************************************************/
 
-private void findMissingItems(AddMissingMapper amm,SumpModel target)
+private ReturnMapper findMappings(ASTNode cu,SumpModel source,SumpModel target)
 {
-   Map<String,String> revname = new HashMap<>();
-   for (Map.Entry<String,String> ent : name_map.entrySet()) {
-      revname.put(ent.getValue(),ent.getKey());
-    }
+   ReturnMapper mapper = new ReturnMapper();
    
-   for (SumpClass sc : target.getPackage().getClasses()) {
-      String orig = revname.get(sc.getFullName());
-      if (orig != null) {
-         for (SumpOperation op : sc.getOperations()) {
-            if (!revname.containsKey(op.getFullName())) {
-               amm.addMethod(orig,op);
-             }
-          }
-       }
-      else amm.addClass(sc);
-    }
+   findMatchings(cu,target,mapper);
+   
+   if (mapper.isEmpty()) return null;
+   
+   return mapper;
 }
 
 
-/*************************************************************  *******************/
+
+private void findMatchings(ASTNode cu,SumpModel target,ReturnMapper mapper)
+{
+   ReturnVisitor sp = new ReturnVisitor(target,mapper);
+   cu.accept(sp);
+}
+
+
+
+private class ReturnVisitor extends ASTVisitor {
+
+   private SumpModel target_model;
+   private ReturnMapper return_mapper;
+   
+   ReturnVisitor(SumpModel t,ReturnMapper pm) {
+      target_model = t;
+      return_mapper = pm;
+    }
+   
+   @Override public boolean visit(MethodDeclaration md) {
+      JcompSymbol jm = JcompAst.getDefinition(md);
+      String mnm = getMapName(jm);
+      String tnm = name_map.get(mnm);
+      if (tnm == null) return false;
+      Type t = md.getReturnType2();
+      if (t == null) return false;
+      SumpOperation op = findOperation(tnm,target_model);
+      if (op == null) return false;
+      String rtyp = op.getReturnType().getName();
+      if (t.toString().equals(rtyp)) return false;
+      return_mapper.addMapping(jm,rtyp);
+      
+      return false;
+    }
+   
+}       // end of inner class ReturnVisitor
+
+
+
+
+
+/********************************************************************************/
 /*                                                                              */
-/*      Mapper to add missing items                                             */
+/*      Actual mapping transform                                                */
 /*                                                                              */
 /********************************************************************************/
 
-private class AddMissingMapper extends EtchMapper {
+private class ReturnMapper extends EtchMapper {
 
-   private List<SumpClass> add_classes;
-   private Map<String,List<SumpOperation>> add_methods;
+   private Map<JcompSymbol,String> return_type;
+   private JcompType current_type;
    
-   AddMissingMapper() {
-      super(EtchTransformAddMissing.this);
-      add_classes = new ArrayList<>();
-      add_methods = new HashMap<>();
+   ReturnMapper() {
+      super(EtchTransformFixReturns.this);
+      return_type = new HashMap<>();
+      current_type = null;
     }
    
-   void addClass(SumpClass sc)                  { add_classes.add(sc); }
+   boolean isEmpty()                    { return return_type.isEmpty(); }
    
-   void addMethod(String cls,SumpOperation op) {
-      List<SumpOperation> newops = add_methods.get(cls);
-      if (newops == null) {
-         newops = new ArrayList<>();
-         add_methods.put(cls,newops);
+   void addMapping(JcompSymbol js,String typ) {
+      return_type.put(js,typ);
+    }
+   
+   @Override boolean preVisit(ASTNode orig,ASTRewrite rw) {
+      if (orig instanceof MethodDeclaration) {
+         JcompSymbol jm = JcompAst.getDefinition(orig);
+         if (jm != null && current_type == null && return_type.containsKey(jm)) {
+            JcompTyper typer = JcompAst.getTyper(orig);
+            String tnm = return_type.get(jm);
+            current_type = typer.findSystemType(tnm);
+            return true;
+          }
        }
-      newops.add(op);
+      return false;
     }
-   
-   boolean isEmpty() {
-      return add_classes.isEmpty() && add_methods.isEmpty();
-    }
-   
    @Override void rewriteTree(ASTNode orig,ASTRewrite rw) {
-      if (orig instanceof TypeDeclaration) {
-         TypeDeclaration td = (TypeDeclaration) orig;
-         JcompSymbol js = JcompAst.getDefinition(td);
-         List<SumpOperation> ops = add_methods.get(js.getFullName());
-         if (ops != null) {
-            ListRewrite lrw = rw.getListRewrite(td,TypeDeclaration.BODY_DECLARATIONS_PROPERTY);
-            for (SumpOperation op : ops) {
-               MethodDeclaration md = createDummyMethod(rw.getAST(),op);
-               if (md != null) {
-                  lrw.insertLast(md,null);
-                }
-             }
+      if (orig instanceof ReturnStatement && current_type != null) {
+         ReturnStatement rs = (ReturnStatement) orig;
+         if (current_type.isVoidType()) {
+            rw.remove(rs.getExpression(),null);
           }
-       }
-      else if (orig instanceof CompilationUnit && !add_classes.isEmpty()) {
-         CompilationUnit cu = (CompilationUnit) orig;
-         ListRewrite lrw = rw.getListRewrite(cu,CompilationUnit.TYPES_PROPERTY);
-         for (SumpClass sc : add_classes) {
-            TypeDeclaration td = createDummyClass(rw.getAST(),sc);
-            lrw.insertLast(td,null);
+         else {
+            Expression newex = null;
+            if (rs.getExpression() == null) {
+               newex = current_type.createDefaultValue(rw.getAST());
+             }
+            else {
+               JcompType jt = JcompAst.getExprType(rs.getExpression());
+               Expression oex = (Expression) copyAst(rs.getExpression());
+               newex = createCastExpr(rw.getAST(),current_type,oex,jt);
+             }
+            rw.set(rs,ReturnStatement.EXPRESSION_PROPERTY,newex,null);
           }
        }
     }
-}
-
-}       // end of class EtchTransformAddMissing
-
+   
+}       // end of inner class ReturnMapper
 
 
 
-/* end of EtchTransformAddMissing.java */
+
+}       // end of class EtchTransformFixReturns
+
+
+
+
+/* end of EtchTransformFixReturns.java */
 

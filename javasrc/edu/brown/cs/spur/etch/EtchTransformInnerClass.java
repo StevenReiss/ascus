@@ -94,7 +94,7 @@ EtchTransformInnerClass(Map<String,String> namemap)
 }
 
 
-@Override protected EtchMemo applyTransform(ASTNode n,SumpModel target)
+@Override protected EtchMemo applyTransform(ASTNode n,SumpModel src,SumpModel target)
 {
    Set<AbstractTypeDeclaration> todos = findInnerClasses(n);
    if (todos == null || todos.size() == 0) return null;

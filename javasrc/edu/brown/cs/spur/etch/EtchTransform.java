@@ -115,7 +115,7 @@ public String getName()                         { return transform_name; }
 /*                                                                              */
 /********************************************************************************/
 
-public CoseResult transform(CoseResult orig,SumpModel target)
+public CoseResult transform(CoseResult orig,SumpModel srcmdl,SumpModel target)
 {
    ASTNode an = (ASTNode) orig.getStructure();
    JcompProject proj = null;
@@ -127,7 +127,7 @@ public CoseResult transform(CoseResult orig,SumpModel target)
     }
 
    try {
-      EtchMemo em = applyTransform(an,target);
+      EtchMemo em = applyTransform(an,srcmdl,target);
       if (em == null) return orig;
       return orig.cloneResult(em.getRewrite(),em.getPosition());
     }
@@ -138,7 +138,7 @@ public CoseResult transform(CoseResult orig,SumpModel target)
 
 
 
-protected EtchMemo applyTransform(ASTNode n,SumpModel target)
+protected EtchMemo applyTransform(ASTNode n,SumpModel source,SumpModel target)
 {
    return null;
 }
@@ -292,6 +292,19 @@ protected static boolean rewriteType(ASTNode nd,ASTRewrite rw,String name)
 
 protected Statement createCast(AST ast,String nm,JcompType typ,String onm,JcompType otyp)
 {
+   Assignment as = ast.newAssignment();
+   SimpleName lhs = JcompAst.getSimpleName(ast,nm);
+   as.setLeftHandSide(lhs);
+   Expression cast = createCastExpr(ast,typ,JcompAst.getSimpleName(ast,onm),otyp);
+   as.setRightHandSide(cast);
+   ExpressionStatement est = ast.newExpressionStatement(as);
+   return est;
+}
+
+
+
+protected Expression createCastExpr(AST ast,JcompType typ,Expression onm,JcompType otyp)
+{
    // needs to be extended to handle more complex mappings
    //           File <-> String <-> CharSequence
    //           Date <-> Sql Date,TimeStamp
@@ -304,16 +317,14 @@ protected Statement createCast(AST ast,String nm,JcompType typ,String onm,JcompT
    //           Exceptions
    // look for getter methods in source type returning target type
    
-   Assignment as = ast.newAssignment();
-   SimpleName lhs = JcompAst.getSimpleName(ast,nm);
-   as.setLeftHandSide(lhs);
    CastExpression cast = ast.newCastExpression();
    cast.setType(typ.createAstNode(ast));
-   cast.setExpression(JcompAst.getSimpleName(ast,onm));
-   as.setRightHandSide(cast);
-   ExpressionStatement est = ast.newExpressionStatement(as);
-   return est;
+   cast.setExpression(onm);
+   return cast;
 }
+
+
+
 
 
 
@@ -430,6 +441,7 @@ protected static SumpOperation findOperation(String nm,SumpModel target)
       if (nm.startsWith(sc.getFullName())) {
          for (SumpOperation op : sc.getOperations()) {
             if (nm.startsWith(op.getFullName())) {
+               // might want to check for . or end of name here
                return op;
              }
           }

@@ -73,36 +73,44 @@ public EtchFactory(SumpModel target)
 /*                                                                              */
 /********************************************************************************/
 
-public CoseResult fixCode(CoseResult orig,Map<String,String> namemap)
+public CoseResult fixCode(CoseResult orig,SumpModel srcmdl,Map<String,String> namemap)
 {
    CoseResult work = orig;
    
    EtchTransformFixPackage fixpackage = new EtchTransformFixPackage(work,namemap);
    
-   work = fixpackage.transform(work,target_model);
+   work = fixpackage.transform(work,srcmdl,target_model);
    
    EtchTransformInnerClassStatic innerstatic = new EtchTransformInnerClassStatic(namemap);
    
-   work = innerstatic.transform(work,target_model);
+   work = innerstatic.transform(work,srcmdl,target_model);
    
    EtchTransformInnerClass inner = new EtchTransformInnerClass(namemap);
    
-   work = inner.transform(work,target_model);
+   work = inner.transform(work,srcmdl,target_model);
    
    EtchTransformRename renamer = new EtchTransformRename(namemap);
    
-   work = renamer.transform(work,target_model);
+   work = renamer.transform(work,srcmdl,target_model);
+   
+   // need to handle changes to field types
    
    // need to reorder parameters in calls
    
+   // need to handle type changes in calls
+   
    EtchTransformFixParameters paramfix = new EtchTransformFixParameters(namemap);
-   work = paramfix.transform(work,target_model);
+   work = paramfix.transform(work,srcmdl,target_model);
    
    // need to change return types 
    
+   EtchTransformFixCalls callfix = new EtchTransformFixCalls(namemap);
+   work = callfix.transform(work,srcmdl,target_model);
+   
+   
    EtchTransformAddMissing addmissing = new EtchTransformAddMissing(namemap);
    
-   work = addmissing.transform(work,target_model);
+   work = addmissing.transform(work,srcmdl,target_model);
    
    return work;
 }
@@ -115,19 +123,25 @@ public CoseResult fixCode(CoseResult orig,Map<String,String> namemap)
 /*                                                                              */
 /********************************************************************************/
 
-public CoseResult fixTests(CoseResult orig,Map<String,String> namemap)
+public CoseResult fixTests(CoseResult orig,SumpModel srcmdl,Map<String,String> namemap)
 {
    CoseResult work = orig;
    
    EtchTransformFixPackage fixpackage = new EtchTransformFixPackage(work,namemap);
    
-   work = fixpackage.transform(work,target_model);
+   work = fixpackage.transform(work,srcmdl,target_model);
   
    // need to reorder parameters in calls
+   // need to handle changes to field types
+   // need to handle changes to parameter types
    
    EtchTransformRename renamer = new EtchTransformRename(namemap);
    
-   work = renamer.transform(work,target_model);
+   work = renamer.transform(work,srcmdl,target_model);
+   
+   EtchTransformFixCalls callfix = new EtchTransformFixCalls(namemap);
+   work = callfix.transform(work,srcmdl,target_model);
+   
    
    // need to remove code that references undefined items
    
