@@ -128,11 +128,15 @@ private class ReturnVisitor extends ASTVisitor {
       String tnm = name_map.get(mnm);
       if (tnm == null) return false;
       Type t = md.getReturnType2();
-      if (t == null) return false;
+      if (t == null) return false;              // constructor
       SumpOperation op = findOperation(tnm,target_model);
       if (op == null) return false;
+      String rtnm = "void";
+      JcompType jt = JcompAst.getJavaType(t);
+      if (jt == null) rtnm = t.toString();
+      else rtnm = jt.getName();
       String rtyp = op.getReturnType().getName();
-      if (t.toString().equals(rtyp)) return false;
+      if (rtnm.equals(rtyp)) return false;
       return_mapper.addMapping(jm,rtyp);
       
       return false;
