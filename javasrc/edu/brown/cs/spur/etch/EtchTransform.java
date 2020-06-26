@@ -452,6 +452,15 @@ protected static SumpOperation findOperation(String nm,SumpModel target)
 }
 
 
+protected static SumpClass findClass(String nm,SumpModel target)
+{
+   for (SumpClass sc : target.getPackage().getClasses()) {
+      if (nm.equals(sc.getFullName())) return sc;
+    }
+   return null;
+}
+
+
 protected static String getMapName(JcompSymbol js)
 {
    if (js.isMethodSymbol()) {

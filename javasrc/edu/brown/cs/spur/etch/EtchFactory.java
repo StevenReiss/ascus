@@ -95,21 +95,16 @@ public CoseResult fixCode(CoseResult orig,SumpModel srcmdl,Map<String,String> na
    
    // need to handle changes to field types
    
-   // need to reorder parameters in calls
-   
-   // need to handle type changes in calls
+   EtchTransformFixReturns returnfix = new EtchTransformFixReturns(namemap);
+   work = returnfix.transform(work,srcmdl,target_model);
    
    EtchTransformFixParameters paramfix = new EtchTransformFixParameters(namemap);
    work = paramfix.transform(work,srcmdl,target_model);
    
-   // need to change return types 
-   
    EtchTransformFixCalls callfix = new EtchTransformFixCalls(namemap);
    work = callfix.transform(work,srcmdl,target_model);
    
-   
    EtchTransformAddMissing addmissing = new EtchTransformAddMissing(namemap);
-   
    work = addmissing.transform(work,srcmdl,target_model);
    
    return work;
@@ -141,7 +136,6 @@ public CoseResult fixTests(CoseResult orig,SumpModel srcmdl,Map<String,String> n
    
    EtchTransformFixCalls callfix = new EtchTransformFixCalls(namemap);
    work = callfix.transform(work,srcmdl,target_model);
-   
    
    // need to remove code that references undefined items
    
