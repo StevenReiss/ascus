@@ -154,6 +154,18 @@ public void packageTest02()
 }
 
 
+@Test
+public void packageTest03()
+{
+   ScrapDriver sd1 = new ScrapDriver("-pu","-nr","500","-nt","8",
+         "-GITHUB","@embedded","@web","server",
+	 "-t","url","uri","application","property","port","http","https","ftp","routing",
+	 "callback","request","response");
+   
+   sd1.processAbstractor();
+}
+
+
 
 /********************************************************************************/
 /*										*/

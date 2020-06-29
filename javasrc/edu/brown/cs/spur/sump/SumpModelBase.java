@@ -551,7 +551,7 @@ private List<String> getStringValues(Expression exp,List<String> rslt)
 @Override public boolean contains(SumpModel mdl)
 {
    SumpMatcher match = new SumpMatcher();
-   return match.contains(this,mdl);
+   return match.matchScore(this,mdl,null) > 0;
 }
 
 
