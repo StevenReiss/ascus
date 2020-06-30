@@ -79,6 +79,12 @@ ScrapResultSet()
 }
 
 
+@Override public void removeResult(CoseResult cr)
+{
+   all_results.remove(cr);
+}
+
+
 List<CoseResult> getResults()
 {
    return all_results; 
