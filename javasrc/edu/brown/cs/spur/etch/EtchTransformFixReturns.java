@@ -30,15 +30,18 @@ import java.util.Map;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.Type;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompSymbol;
 import edu.brown.cs.ivy.jcomp.JcompType;
 import edu.brown.cs.ivy.jcomp.JcompTyper;
+import edu.brown.cs.spur.sump.SumpConstants.SumpAttribute;
 import edu.brown.cs.spur.sump.SumpConstants.SumpModel;
 import edu.brown.cs.spur.sump.SumpConstants.SumpOperation;
 
@@ -142,6 +145,24 @@ private class ReturnVisitor extends ASTVisitor {
       return false;
     }
    
+   @Override public boolean visit(FieldDeclaration fd) {
+      for (Object o : fd.fragments()) {
+         VariableDeclarationFragment vdf = (VariableDeclarationFragment) o;
+         JcompSymbol jm = JcompAst.getDefinition(vdf);
+         String mnm = getMapName(jm);
+         String tnm = name_map.get(mnm);
+         if (tnm == null) continue;
+         Type t = fd.getType();
+         JcompType jt = JcompAst.getJavaType(t);
+         SumpAttribute at = findAttribute(tnm,target_model);
+         if (at == null) continue;
+         String atyp = at.getDataType().getName();
+         if (jt.getName().equals(atyp)) continue;
+         return_mapper.addMapping(jm,atyp);
+       }
+      return false;
+    }
+   
 }       // end of inner class ReturnVisitor
 
 
@@ -181,8 +202,29 @@ private class ReturnMapper extends EtchMapper {
             return true;
           }
        }
+      if (orig instanceof FieldDeclaration) {
+         FieldDeclaration fd = (FieldDeclaration) orig;
+         int ct = 0;
+         boolean use = false;
+         for (Object o : fd.fragments()) {
+            VariableDeclarationFragment vdf = (VariableDeclarationFragment) o;
+            ++ct;
+            JcompSymbol jm = JcompAst.getDefinition(vdf);
+            if (jm != null && return_type.containsKey(jm)) {     
+               use = true;
+             }
+          }
+         if (!use) return false;
+         if (ct > 1) {
+            
+          }
+         else {
+            
+          }
+       }
       return false;
     }
+   
    @Override void rewriteTree(ASTNode orig,ASTRewrite rw) {
       if (orig instanceof ReturnStatement && current_type != null) {
          ReturnStatement rs = (ReturnStatement) orig;
@@ -200,6 +242,23 @@ private class ReturnMapper extends EtchMapper {
                newex = createCastExpr(rw.getAST(),current_type,oex,jt);
              }
             rw.set(rs,ReturnStatement.EXPRESSION_PROPERTY,newex,null);
+          }
+       }
+      else if (orig instanceof FieldDeclaration) {
+        
+       }
+      else if (orig instanceof VariableDeclarationFragment) {
+         ASTNode par = orig.getParent();
+         if (par instanceof FieldDeclaration) {
+            // need to isolate this declaration
+            // need to add cast to initialization expression
+            FieldDeclaration fd = (FieldDeclaration) par;
+            JcompSymbol jm = JcompAst.getDefinition(orig);
+            if (jm != null && return_type.containsKey(jm)) {
+               JcompTyper typer = JcompAst.getTyper(orig);
+               String tnm = return_type.get(jm);
+               JcompType jt = typer.findSystemType(tnm);
+             }
           }
        }
     }

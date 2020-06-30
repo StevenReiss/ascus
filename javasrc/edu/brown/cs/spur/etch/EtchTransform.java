@@ -41,12 +41,16 @@ import java.util.List;
 
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.CastExpression;
 import org.eclipse.jdt.core.dom.ChildPropertyDescriptor;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ExpressionStatement;
+import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.ReturnStatement;
@@ -67,6 +71,7 @@ import edu.brown.cs.ivy.jcomp.JcompProject;
 import edu.brown.cs.ivy.jcomp.JcompSymbol;
 import edu.brown.cs.ivy.jcomp.JcompType;
 import edu.brown.cs.spur.sump.SumpDataType;
+import edu.brown.cs.spur.sump.SumpConstants.SumpAttribute;
 import edu.brown.cs.spur.sump.SumpConstants.SumpClass;
 import edu.brown.cs.spur.sump.SumpConstants.SumpModel;
 import edu.brown.cs.spur.sump.SumpConstants.SumpOperation;
@@ -452,10 +457,107 @@ protected static SumpOperation findOperation(String nm,SumpModel target)
 }
 
 
+protected static SumpOperation findOperation(ASTNode n,SumpModel basemodel)
+{
+   SumpOperation useop = null;
+   JcompType ctyp = null;
+   String mnm = null;
+   
+   if (n instanceof MethodInvocation) {
+      MethodInvocation mi = (MethodInvocation) n;
+      if (mi.getExpression() != null) {
+         ctyp = JcompAst.getExprType(mi.getExpression());
+       }
+      else {
+         for (ASTNode p = n; p != null; p = p.getParent()) {
+            if (p instanceof AbstractTypeDeclaration) {
+               ctyp = JcompAst.getJavaType(n);
+               break;
+             }
+          }
+       }
+      mnm = mi.getName().getIdentifier();
+      if (ctyp.isErrorType()) ctyp = null;
+    }
+   else if (n instanceof ClassInstanceCreation) {
+      ClassInstanceCreation ci = (ClassInstanceCreation) n;
+      ctyp = JcompAst.getJavaType(ci.getType());
+      mnm = "<init>";
+    }
+   if (ctyp == null) return null;
+   
+   SumpClass tcls = findClass(ctyp.getName(),basemodel);
+   if (tcls == null) return null;
+   for (SumpOperation op : tcls.getOperations()) {
+      if (op.getName().equals(mnm)) {
+         // match parameters if there is more than one
+         useop = op;
+         break;
+       }
+    }
+
+   return useop;
+}
+
+
+protected static SumpAttribute findAttribute(ASTNode n,SumpModel basemodel)
+{
+   SumpAttribute useatt = null;
+   JcompType ctyp = null;
+   String mnm = null;
+   if (n instanceof FieldAccess) {
+      FieldAccess fac = (FieldAccess) n;
+      if (fac.getExpression() != null) {
+         ctyp = JcompAst.getExprType(fac.getExpression());
+       }
+      else {
+         for (ASTNode p = n; p != null; p = p.getParent()) {
+            if (p instanceof AbstractTypeDeclaration) {
+               ctyp = JcompAst.getJavaType(n);
+               break;
+             }
+          }
+       }
+      mnm = fac.getName().getIdentifier();
+    }
+   
+   if (ctyp == null) return null;
+   SumpClass tcls = findClass(ctyp.getName(),basemodel);
+   if (tcls == null) return null;
+   for (SumpAttribute att : tcls.getAttributes()) {
+      if (att.getName().equals(mnm)) {
+         // match parameters if there is more than one
+         useatt = att;
+         break;
+       }
+    }
+   
+   return useatt;
+}
+
+
+protected static SumpAttribute findAttribute(String nm,SumpModel target)
+{
+   for (SumpClass sc : target.getPackage().getClasses()) {
+      if (nm.startsWith(sc.getFullName())) {
+         for (SumpAttribute att : sc.getAttributes()) {
+            if (nm.startsWith(att.getFullName())) {
+               // might want to check for . or end of name here
+               return att;
+             }
+          }
+       }
+    }
+   
+   return null;
+}
+
+
 protected static SumpClass findClass(String nm,SumpModel target)
 {
    for (SumpClass sc : target.getPackage().getClasses()) {
       if (nm.equals(sc.getFullName())) return sc;
+      if (nm.equals(sc.getName())) return sc;
     }
    return null;
 }

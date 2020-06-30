@@ -130,8 +130,7 @@ public CoseResult fixTests(CoseResult orig,SumpModel srcmdl,Map<String,String> n
    // need to handle changes to field types
    // need to handle changes to parameter types
    
-   EtchTransformRename renamer = new EtchTransformRename(namemap);
-   
+   EtchTransformPostRename renamer = new EtchTransformPostRename(namemap);
    work = renamer.transform(work,srcmdl,target_model);
    
    EtchTransformFixCalls callfix = new EtchTransformFixCalls(namemap);

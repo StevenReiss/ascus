@@ -31,7 +31,6 @@ import java.util.Map;
 
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
@@ -102,6 +101,7 @@ private CallMapper findMappings(ASTNode cu,SumpModel src,SumpModel tgt)
 {
    // src = user model
    // tgt = retrieved model
+   // THIS HAS TO handle name-mapped calls
    
    CallMapper mapper = new CallMapper(tgt);
    
@@ -208,39 +208,7 @@ private class CallMapper extends EtchMapper {
          JcompSymbol js = JcompAst.getReference(orig);
          JcompType jt = JcompAst.getExprType(orig);
          if (js == null || jt.isErrorType()) {
-            JcompType ctyp = null;
-            String mnm = null;
-            if (orig instanceof MethodInvocation) {
-               MethodInvocation mi = (MethodInvocation) orig;
-               if (mi.getExpression() != null) {
-                  ctyp = JcompAst.getExprType(mi.getExpression());
-                }
-               else {
-                  for (ASTNode n = orig; n != null; n = n.getParent()) {
-                     if (n instanceof AbstractTypeDeclaration) {
-                        ctyp = JcompAst.getJavaType(n);
-                        break;
-                      }
-                   }
-                }
-               mnm = mi.getName().getIdentifier();
-             }
-            else if (orig instanceof ClassInstanceCreation) {
-               ClassInstanceCreation ci = (ClassInstanceCreation) orig;
-               ctyp = JcompAst.getJavaType(ci.getType());
-               mnm = "<init>";
-             }
-            if (ctyp == null) return;
-            SumpClass tcls = findClass(ctyp.getName(),target_model);
-            if (tcls == null) return;
-            SumpOperation useop = null;
-            for (SumpOperation op : tcls.getOperations()) {
-               if (op.getName().equals(mnm)) {
-                  // match parameters if there is more than one
-                  useop = op;
-                  break;
-                }
-             }
+            SumpOperation useop = findOperation(orig,target_model);
             if (useop != null) cf = op_fixes.get(useop);
           }
        }
