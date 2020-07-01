@@ -336,7 +336,8 @@ private List<CoseResult> getSearchResults()
    
    List<CoseResult> rslts = search_result.getResults();
    IvyLog.logI("RETURNED " + rslts.size() + " RESULTS");
-   
+   IvyLog.logI("SKIPPED " + search_result.getResultsRemoved() + " RESULTS");
+ 
    return rslts;
 }
 

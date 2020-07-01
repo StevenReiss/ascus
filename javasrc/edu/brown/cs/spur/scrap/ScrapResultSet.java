@@ -51,7 +51,8 @@ class ScrapResultSet implements CoseResultSet, ScrapConstants
 /*                                                                              */
 /********************************************************************************/
 
-private List<CoseResult>                all_results;
+private List<CoseResult>        all_results;
+private int                     results_removed;
 
 
 
@@ -64,6 +65,7 @@ private List<CoseResult>                all_results;
 ScrapResultSet()
 {
    all_results = new ArrayList<>();
+   results_removed = 0;
 }
 
 
@@ -82,12 +84,18 @@ ScrapResultSet()
 @Override public void removeResult(CoseResult cr)
 {
    all_results.remove(cr);
+   ++results_removed;
 }
 
 
 List<CoseResult> getResults()
 {
    return all_results; 
+}
+
+int getResultsRemoved()
+{
+   return results_removed; 
 }
 
 
