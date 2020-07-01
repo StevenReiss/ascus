@@ -60,6 +60,7 @@ public @interface Ascus
    String [] keyterms() default { };
    String search() default "";
    String parameter() default "";
+   String context() default "";
    double value() default 0.0;
    
 }       // end of annotation Ascus

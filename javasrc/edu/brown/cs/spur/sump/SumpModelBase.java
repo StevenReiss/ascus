@@ -54,6 +54,7 @@ import edu.brown.cs.ivy.jcomp.JcompProject;
 import edu.brown.cs.ivy.jcomp.JcompSymbol;
 import edu.brown.cs.ivy.jcomp.JcompType;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
+import edu.brown.cs.spur.lids.LidsInstaller;
 import edu.brown.cs.spur.lids.LidsConstants.LidsLibrary;
 import edu.brown.cs.spur.sump.SumpConstants.SumpModel;
 
@@ -211,6 +212,31 @@ SumpClass getClassForName(String nm)
    return null;
 }
 
+
+
+@Override public JcompProject resolveModel(JcompControl ctrl,CompilationUnit cu)
+{
+   if (cu == null) return null;
+   
+   if (ctrl == null) ctrl = new JcompControl();
+   
+   List<String> jars = new ArrayList<>();
+   if (getModelData().getContextPath() != null) {
+      jars.add(getModelData().getContextPath());
+    }
+   LidsInstaller inst = LidsInstaller.getInstaller();
+   for (LidsLibrary ll : getModelData().getLibraries()) {
+      String cp = inst.getClassPath(ll);
+      if (cp != null) jars.add(cp);
+    }
+   
+   if (JcompAst.isResolved(cu)) return null;
+   
+   JcompProject proj = JcompAst.getResolvedAst(ctrl,cu,jars);
+   JcompAst.setProject(cu,proj);
+   
+   return proj;
+}
 
 
 
@@ -488,6 +514,10 @@ private void handleAscus(Annotation an)
              }
             model_data.getParameters().set(pnm,vl);
             break;
+         case "context" :
+            String cv = getStringValue(val);
+            model_data.setContextPath(cv);
+            break;
          default :
             System.err.println("UNKNOWN TAG : " + nm);
             break;
@@ -596,6 +626,9 @@ private List<String> getStringValues(Expression exp,List<String> rslt)
    for (String src : model_data.getSources()) {
       xw.textElement("SOURCE",src);
     }
+   if (model_data.getContextPath() != null) {
+      xw.textElement("CONTEXT",model_data.getContextPath());
+    }
    for (LidsLibrary lib : model_data.getLibraries()) {
       xw.textElement("LIBRARY",lib.getFullId());
     }
@@ -640,6 +673,9 @@ private List<String> getStringValues(Expression exp,List<String> rslt)
    
    for (String src : model_data.getSources()) {
       pw.println("@Ascus(source=\"" + src + "\")");
+    }
+   if (model_data.getContextPath() != null) {
+      pw.println("@Ascus(context=\"" + model_data.getContextPath() + "\")");
     }
    for (LidsLibrary lib : model_data.getLibraries()) {
       pw.println("@Ascus(library=\"" + lib.getFullId() + "\")");
@@ -761,6 +797,9 @@ String getJavaOutputName(String orignm)
    for (String s : model_data.getImports()) {
       buf.append("IMPORT: " + s + ":\n");
     }
+   if (model_data.getContextPath() != null) {
+      buf.append("CONTEXT: " + model_data.getContextPath() + ":\n");
+    }
    for (LidsLibrary s : model_data.getLibraries()) {
       buf.append("LIBRARY: " + s.getFullId() + ";\n");
     }
@@ -787,7 +826,7 @@ private void loadJava(JcompControl ctrl,File f)
    try {
       String cnts = IvyFile.loadFile(f);
       CompilationUnit cu = JcompAst.parseSourceFile(cnts);
-      JcompProject proj = JcompAst.getResolvedAst(ctrl,cu);
+      JcompProject proj = resolveModel(ctrl,cu);
       createModel(cu);
       ctrl.freeProject(proj);
     }

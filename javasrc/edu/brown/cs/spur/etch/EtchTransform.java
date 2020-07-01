@@ -46,6 +46,7 @@ import org.eclipse.jdt.core.dom.Assignment;
 import org.eclipse.jdt.core.dom.CastExpression;
 import org.eclipse.jdt.core.dom.ChildPropertyDescriptor;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.ExpressionStatement;
 import org.eclipse.jdt.core.dom.FieldAccess;
@@ -122,12 +123,12 @@ public String getName()                         { return transform_name; }
 
 public CoseResult transform(CoseResult orig,SumpModel srcmdl,SumpModel target)
 {
-   ASTNode an = (ASTNode) orig.getStructure();
+   CompilationUnit an = (CompilationUnit) orig.getStructure();
    JcompProject proj = null;
+   
    if (!JcompAst.isResolved(an)) {
       if (jcomp_control == null) jcomp_control = new JcompControl();
-      proj = JcompAst.getResolvedAst(jcomp_control,an);
-      JcompAst.setProject(an,proj);
+      proj = target.resolveModel(jcomp_control,an);
       if (proj == null) return orig;
     }
 

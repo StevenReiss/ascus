@@ -15,6 +15,7 @@ import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
 import edu.brown.cs.ivy.jcomp.JcompControl;
+import edu.brown.cs.ivy.jcomp.JcompProject;
 import edu.brown.cs.ivy.jcomp.JcompSymbol;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
 import edu.brown.cs.spur.rowel.RowelConstants.RowelMatch;
@@ -75,6 +76,7 @@ interface SumpModel {
   Rectangle getBounds(SumpClass cls);
   Collection<SumpClass> getDependentClasses(SumpClass sc);
   Collection<SumpClass> getInheritedClasses(SumpClass sc);
+  JcompProject resolveModel(JcompControl ctrl,CompilationUnit cu);
 }
 
 

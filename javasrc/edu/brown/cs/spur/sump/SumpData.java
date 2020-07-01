@@ -67,6 +67,7 @@ private Stack<Boolean>  is_interface;
 private CoseRequest     cose_request;
 private Set<String>     missing_imports;
 private SumpParameters  sump_parameters;
+private String          context_path;
 
 
 
@@ -89,6 +90,7 @@ public SumpData(CoseRequest req,CoseResult rslt,SumpParameters sp)
    cose_request = req;
    sump_parameters = sp;
    if (sp == null) sump_parameters = new SumpParameters();
+   context_path = null;
    
    if (rslt != null) {
       addSource(rslt.getSource());
@@ -156,6 +158,12 @@ public void setSource(String source)
 }
 
 
+public void setContextPath(String path)
+{
+   context_path = path;
+}
+
+
 
 /********************************************************************************/
 /*                                                                              */
@@ -176,6 +184,8 @@ public String getName()                         { return model_name; }
 public String getSource()                       { return model_source; }
 
 public SumpParameters getParameters()           { return sump_parameters; }
+
+public String getContextPath()                  { return context_path; }
 
 
 void pushType(String cls,boolean iface) 

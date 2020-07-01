@@ -302,7 +302,7 @@ private double getDouble(Parameters p)
 } 
 
 
-@SuppressWarnings("unchecked")
+@SuppressWarnings({ "unchecked", "unused" })
 private <T extends Enum<T>> T getEnum(Parameters p,T dflt)
 {
    Object o = param_values.get(p);

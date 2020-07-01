@@ -258,6 +258,7 @@ private class ReturnMapper extends EtchMapper {
                JcompTyper typer = JcompAst.getTyper(orig);
                String tnm = return_type.get(jm);
                JcompType jt = typer.findSystemType(tnm);
+               System.err.println("FIX " + fd + " " + jt);
              }
           }
        }

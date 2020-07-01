@@ -389,15 +389,18 @@ private void findAbstraction(AbstractionType at,List<CoseResult> rslts,List<Cose
    
    try {
       ScrapAbstractor sa = new ScrapAbstractor(search_request,search_params);
+      int dupct = 0;
       for (CoseResult cr : rslts) {
          String txt = cr.getKeyText();
          String key = IvyFile.digestString(txt);
          if (!done.add(key)) {
-            IvyLog.logI("Duplicate result");
+            ++dupct;
             continue;
           }
          sa.addToAbstractor(cr);
        }
+      if (dupct > 0) IvyLog.logI("SCRAP","REMOVED " + dupct + " DUPICATE SOLUTIONS");
+      
       sa.orderAndPrune();
       sa.outputAbstractor(at);
       
