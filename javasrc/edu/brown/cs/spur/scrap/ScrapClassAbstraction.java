@@ -896,6 +896,9 @@ private static JcompSymbol getAccessField(MethodDeclaration md)
 
 private static JcompSymbol checkGetMethod(MethodDeclaration md)
 {
+   String nm = md.getName().getIdentifier().toLowerCase();
+   if (!nm.startsWith("get") && !nm.startsWith("is")) return null;
+   
    Block b = md.getBody();
    if (b == null) return null;
    if (b.statements().size() != 1) return null;
@@ -921,6 +924,9 @@ private static JcompSymbol checkGetMethod(MethodDeclaration md)
 
 private static JcompSymbol checkSetMethod(MethodDeclaration md)
 {
+   String nm = md.getName().getIdentifier().toLowerCase();
+   if (!nm.startsWith("set")) return null;
+   
    int np = md.parameters().size();
    Block b = md.getBody();
    if (b == null) return null;
