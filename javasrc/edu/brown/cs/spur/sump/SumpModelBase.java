@@ -792,9 +792,47 @@ String getJavaOutputName(String orignm)
 }
 
 
-@Override public void generateXMI(File f)
+@Override public void generateXMI(IvyXmlWriter xw)
 {
-   throw new Error("Not implemented yet"); 
+   xw.begin("UML:Model");
+   xw.field("isRoot",false);
+   xw.field("isSpecification",false);
+   xw.field("xmi.id","m1");
+   xw.field("isLeaf",false);
+   xw.field("isAbstract",false);
+   xw.field("name",model_data.getName());
+   
+   xw.begin("UML:Namespace.ownedElement");
+   
+   xw.begin("UML:Model");
+   xw.field("isRoot",false);
+   xw.field("isSpecification",false);
+   xw.field("xmi.id","m1");
+   xw.field("isLeaf",false);
+   xw.field("isAbstract",false);
+   xw.field("visibility","public");
+   xw.field("name","Logical_View"); 
+   
+   xw.begin("UML:Namespace.ownedElement");
+   model_package.generateXMI(xw,null);
+   xw.end("UML:Namespace.ownedElement");
+   
+   xw.begin("XMI.extension");
+   xw.field("xmi.extender","umbrello");
+   xw.begin("diagrams");
+   xw.field("resolution",96);
+   xw.begin("diagram");
+   xw.field("name","class diagram");
+   model_package.generateXMI(xw,model_layout);
+   xw.end("diagram");
+   xw.end("diagrams");
+   xw.end("XMI.extension");
+   
+   xw.end("UML:Model");
+   xw.end("UML:Namespace.ownedElement");  
+   xw.end("UML:Model");
+   
+   // need to add note and info 
 }
 
 

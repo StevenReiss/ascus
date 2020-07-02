@@ -301,6 +301,35 @@ private boolean matchOperation(SumpElementOperation op)
     }
 }
 
+
+/********************************************************************************/
+/*                                                                              */
+/*      UML diagram output methods                                              */
+/*                                                                              */
+/********************************************************************************/
+
+void generateXMI(IvyXmlWriter xw)
+{
+   xw.begin("UML:Operation");
+   xw.field("isRoot",false);
+   xw.field("isSpecification",false);
+   xw.field("isLeaf",false);
+   xw.field("isAbstract",false);
+   xw.field("xmi.id",getXmiId());
+   xw.field("visibility","public");
+   xw.field("name",getName());
+   xw.field("returnType",return_type.getName());
+   xw.begin("UML:BehavioralFeature.parameter");
+   for (SumpElementParameter sp : param_values) {
+      sp.generateXMI(xw);
+    }
+   xw.end("UML:BehavioralFeature.parameter");
+   xw.end("UML:Operation");
+}
+
+
+
+
 }       // end of class SumpElementOperation
 
 

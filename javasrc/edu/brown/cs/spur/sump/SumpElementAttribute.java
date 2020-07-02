@@ -160,6 +160,25 @@ SumpElementAttribute(SumpModelBase mdl,JcompSymbol fld,ASTNode n)
 }
 
 
+/********************************************************************************/
+/*                                                                              */
+/*      UML diagram output methods                                              */
+/*                                                                              */
+/********************************************************************************/
+
+void generateXMI(IvyXmlWriter xw)
+{
+   xw.begin("UML:Attribute");
+   xw.field("isSpecification",false);
+   xw.field("xmi.id",getXmiId());
+   xw.field("visibility","private");
+   xw.field("type",data_type.getName());
+   xw.field("name",getName());
+   xw.end("UML:Attribute");
+}
+
+
+
 
 }       // end of class SumpElementAttribute
 

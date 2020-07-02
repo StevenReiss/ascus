@@ -131,6 +131,14 @@ public SumpDataType getDataType() throws SumpException
 }
 
 
+String getXmiId()
+{
+   int x = hashCode();
+   return "u" + Integer.toHexString(x);
+}
+
+
+
 /********************************************************************************/
 /*										*/
 /*	Local access methods            					*/

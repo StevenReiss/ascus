@@ -248,6 +248,37 @@ void generateUXF(IvyXmlWriter xw,SumpLayout sl)
 
 
 
+void generateXMI(IvyXmlWriter xw,SumpLayout sl)
+{
+   if (sl == null) {    // model
+      for (SumpElementClass sc : class_map.values()) {
+         sc.generateXMI(xw,null);
+       }
+      // generate UML:Generalization for supers
+      for (SumpElementDependency sd : class_depends) {
+         sd.generateXMI(xw,null);
+       }
+    }
+   else {               // diagram
+      xw.begin("widgets");
+      for (SumpElementClass sc : class_map.values()) {
+         sc.generateXMI(xw,sl);
+       }
+      xw.begin("notewidget");
+      xw.field("text","Note text goes here");
+      // output note info here
+      xw.end("notewidget");
+      xw.end("widgets");
+      xw.begin("associations");
+      for (SumpElementDependency sd : class_depends) {
+         sd.generateXMI(xw,sl);
+       }
+      xw.end("associations");
+    }
+}
+
+
+
 }       // end of class SumpPackageElement
 
 

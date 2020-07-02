@@ -71,7 +71,7 @@ interface SumpModel {
   void outputJava(Writer w);
   void save(File file) throws IOException;
   void generateUXF(IvyXmlWriter xw);
-  void generateXMI(File file) throws IOException;
+  void generateXMI(IvyXmlWriter xw);
   void computeLayout();
   Rectangle getBounds(SumpClass cls);
   Collection<SumpClass> getDependentClasses(SumpClass sc);

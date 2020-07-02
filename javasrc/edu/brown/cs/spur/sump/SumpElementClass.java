@@ -547,6 +547,50 @@ void generateUXF(IvyXmlWriter xw,SumpLayout layout)
 
 
 
+void generateXMI(IvyXmlWriter xw,SumpLayout layout)
+{
+   if (layout == null) {                // model
+      xw.begin("UML:Class");
+      xw.field("isRoot",false);
+      xw.field("isSpecification",false);
+      xw.field("xmi.id",getXmiId());
+      xw.field("namespace","Logical_View");
+      xw.field("isLeaf",false);
+      xw.field("isAbstract",false);
+      xw.field("visibility","public");
+      xw.field("name",getJavaOutputName());
+      for (SumpElementAttribute at : attribute_list) {
+         at.generateXMI(xw);
+       }
+      for (SumpElementOperation op : operation_list) {
+         op.generateXMI(xw);
+       }
+    }
+   else {                               // widgets
+      Rectangle r = layout.getBounds(this);
+      xw.begin("classwidget");
+      xw.field("x",r.x);
+      xw.field("y",r.y);
+      xw.field("width",r.width);
+      xw.field("height",r.height);
+      xw.field("showoperations",1);
+      xw.field("showattributes",1);
+      xw.field("showscope",1);
+      xw.field("showpubliconly",1); 
+      xw.field("showstereotype",1);
+      xw.field("showpsigs",601);
+      xw.field("showattsigs",601);
+      xw.field("showpackage",1);
+      xw.field("autoresize",1);
+      xw.field("localId","x" + getXmiId());
+      xw.field("xmi.id",getXmiId());
+      xw.end("classwidget");
+    }
+}
+
+
+
+
 @Override public String toString()
 {
    return "UML class " + getName();

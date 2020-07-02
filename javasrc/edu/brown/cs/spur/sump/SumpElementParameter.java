@@ -147,6 +147,25 @@ SumpElementParameter(SumpModelBase mdl,JcompSymbol js,SingleVariableDeclaration 
 }
 
 
+/********************************************************************************/
+/*                                                                              */
+/*      UML diagram output methods                                              */
+/*                                                                              */
+/********************************************************************************/
+
+void generateXMI(IvyXmlWriter xw)
+{
+   xw.begin("UML:Parameter");
+   xw.field("isSpecification",false);
+   xw.field("xmi.id",getXmiId());
+   xw.field("visibility","private");
+   xw.field("name",getName());
+   xw.field("type",param_type.getName());
+   xw.end("UML:Parameter");
+}
+
+
+
 
 }       // end of class SumpElementParameter
 
