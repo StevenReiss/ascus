@@ -518,6 +518,12 @@ private void handleAscus(Annotation an)
             String cv = getStringValue(val);
             model_data.setContextPath(cv);
             break;
+         case "suggestedTerms" :
+            List<String> k3 = getStringValues(val,null);
+            if (k3 != null) {
+                for (String s : k3) model_data.addSuggestedWord(s);
+             }
+            break;
          default :
             System.err.println("UNKNOWN TAG : " + nm);
             break;
@@ -718,7 +724,18 @@ private List<String> getStringValues(Expression exp,List<String> rslt)
       for (Map.Entry<String,Object> ent : pmap.entrySet()) {
          pw.println("@Ascus(parameter=\"" + ent.getKey() + "=" + ent.getValue() + "\";");
        }
+      List<String> sug = model_data.getSuggestedWords();
+      if (sug.size() > 0) {
+         pw.print("@Ascus(suggestedTerms={");
+         int ct = 0;
+         for (String s : sug) {
+            if (ct++ > 0) pw.print(",");
+            pw.print("\"" + s + "\"");
+          }
+         pw.println("})");
+       }
     }
+   
    pw.println("package edu.brown.cs.SAMPLE;");
    
    pw.println();
@@ -808,6 +825,9 @@ String getJavaOutputName(String orignm)
     }
    for (String s : model_data.getSources()) {
       buf.append("SOURCE: " + s + ";\n");
+    }
+   for (String s : model_data.getSuggestedWords()) {
+      buf.append("SUGGEST: " + s + ";\n");
     }
    xw.textElement("panel_attributes",buf.toString());
    xw.end("element");

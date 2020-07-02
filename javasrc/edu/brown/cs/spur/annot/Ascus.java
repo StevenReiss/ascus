@@ -58,6 +58,7 @@ public @interface Ascus
    String [] sources() default { };
    String [] keywords() default { };
    String [] keyterms() default { };
+   String [] suggestedTerms() default { };
    String search() default "";
    String parameter() default "";
    String context() default "";

@@ -35,8 +35,10 @@
 
 package edu.brown.cs.spur.sump;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeSet;
@@ -46,6 +48,7 @@ import edu.brown.cs.cose.cosecommon.CoseResult;
 import edu.brown.cs.cose.cosecommon.CoseSource;
 import edu.brown.cs.spur.lids.LidsFinder;
 import edu.brown.cs.spur.lids.LidsConstants.LidsLibrary;
+import edu.brown.cs.spur.swift.SwiftScorer;
 
 public class SumpData implements SumpConstants
 {
@@ -68,6 +71,7 @@ private CoseRequest     cose_request;
 private Set<String>     missing_imports;
 private SumpParameters  sump_parameters;
 private String          context_path;
+private List<String>    suggested_words;
 
 
 
@@ -91,6 +95,7 @@ public SumpData(CoseRequest req,CoseResult rslt,SumpParameters sp)
    sump_parameters = sp;
    if (sp == null) sump_parameters = new SumpParameters();
    context_path = null;
+   suggested_words = new ArrayList<>();
    
    if (rslt != null) {
       addSource(rslt.getSource());
@@ -100,6 +105,8 @@ public SumpData(CoseRequest req,CoseResult rslt,SumpParameters sp)
       idx = nm.lastIndexOf(".");
       if (idx > 0) nm = nm.substring(0,idx);
       model_name = nm;
+      SwiftScorer scorer = new SwiftScorer(rslt.getText(),false);
+      suggested_words.addAll(scorer.getTopWords());
     }
 }
 
@@ -164,6 +171,12 @@ public void setContextPath(String path)
 }
 
 
+public void addSuggestedWord(String wd)
+{
+   suggested_words.add(wd);
+}
+
+
 
 /********************************************************************************/
 /*                                                                              */
@@ -186,6 +199,8 @@ public String getSource()                       { return model_source; }
 public SumpParameters getParameters()           { return sump_parameters; }
 
 public String getContextPath()                  { return context_path; }
+
+public List<String> getSuggestedWords()         { return suggested_words; }
 
 
 void pushType(String cls,boolean iface) 
