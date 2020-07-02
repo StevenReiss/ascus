@@ -879,7 +879,10 @@ void addToUmlClass(SumpClass scls,AbstractTypeDeclaration atd)
 private static JcompSymbol getAccessField(MethodDeclaration md)
 {
    if (md.isConstructor()) return null;
-   if (md.parameters().size() > 0) return checkSetMethod(md);
+   if (md.parameters().size() > 0) {
+      // return checkSetMethod(md);
+      return null;
+    }
    else {
       Type t = md.getReturnType2();
       if (t == null) return null;
@@ -896,8 +899,8 @@ private static JcompSymbol getAccessField(MethodDeclaration md)
 
 private static JcompSymbol checkGetMethod(MethodDeclaration md)
 {
-   String nm = md.getName().getIdentifier().toLowerCase();
-   if (!nm.startsWith("get") && !nm.startsWith("is")) return null;
+   // String nm = md.getName().getIdentifier().toLowerCase();
+   // if (!nm.startsWith("get") && !nm.startsWith("is")) return null;
    
    Block b = md.getBody();
    if (b == null) return null;
