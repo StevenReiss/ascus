@@ -308,23 +308,16 @@ private boolean matchOperation(SumpElementOperation op)
 /*                                                                              */
 /********************************************************************************/
 
-void generateXMI(IvyXmlWriter xw)
+void generateXMI(SumpXmiWriter xw)
 {
-   xw.begin("UML:Operation");
-   xw.field("isRoot",false);
-   xw.field("isSpecification",false);
-   xw.field("isLeaf",false);
-   xw.field("isAbstract",false);
-   xw.field("xmi.id",getXmiId());
-   xw.field("visibility","public");
-   xw.field("name",getName());
+   xw.beginXmiElement("UML:Operation",getName(),this,null);
    xw.field("returnType",return_type.getName());
    xw.begin("UML:BehavioralFeature.parameter");
    for (SumpElementParameter sp : param_values) {
       sp.generateXMI(xw);
     }
    xw.end("UML:BehavioralFeature.parameter");
-   xw.end("UML:Operation");
+   xw.endXmiElement("UML:Operation");
 }
 
 

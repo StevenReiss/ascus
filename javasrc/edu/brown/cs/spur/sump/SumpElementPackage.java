@@ -248,9 +248,16 @@ void generateUXF(IvyXmlWriter xw,SumpLayout sl)
 
 
 
-void generateXMI(IvyXmlWriter xw,SumpLayout sl)
+void generateXMI(SumpXmiWriter xw,SumpLayout sl)
 {
    if (sl == null) {    // model
+      xw.beginXmiElement("UML:Package","DataTypes","DataTypes","Logical_View");
+      xw.field("stereotype","folder");
+      xw.begin("UML:Namespace.ownedElement");
+      // output all used datatypes here
+      xw.end("UML:Namespace.ownedElement");
+      xw.endXmiElement("UML:Package");
+
       for (SumpElementClass sc : class_map.values()) {
          sc.generateXMI(xw,null);
        }

@@ -314,6 +314,7 @@ private static class CandidateMatch implements Comparable<CandidateMatch>, Scrap
       match_value = v;
       name_map = new HashMap<>(nmap);
       test_result = null;
+      mdl.getModelData().setModelScore(v);
     }
    
    @Override public SumpModel getModel()                        { return for_model; }

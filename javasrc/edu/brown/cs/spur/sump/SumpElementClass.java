@@ -547,18 +547,10 @@ void generateUXF(IvyXmlWriter xw,SumpLayout layout)
 
 
 
-void generateXMI(IvyXmlWriter xw,SumpLayout layout)
+void generateXMI(SumpXmiWriter xw,SumpLayout layout)
 {
    if (layout == null) {                // model
-      xw.begin("UML:Class");
-      xw.field("isRoot",false);
-      xw.field("isSpecification",false);
-      xw.field("xmi.id",getXmiId());
-      xw.field("namespace","Logical_View");
-      xw.field("isLeaf",false);
-      xw.field("isAbstract",false);
-      xw.field("visibility","public");
-      xw.field("name",getJavaOutputName());
+      xw.beginXmiElement("UML:Class",getJavaOutputName(),this,"Logical_View");
       for (SumpElementAttribute at : attribute_list) {
          at.generateXMI(xw);
        }

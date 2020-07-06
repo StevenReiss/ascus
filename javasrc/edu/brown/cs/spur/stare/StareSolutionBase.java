@@ -231,6 +231,7 @@ private void setup(CompilationUnit cu)
     }
     
    map_context.put("LIBRARIES",libs);
+   map_context.put("SCORE",smd.getModelScore());
    
    map_context.put("MAXTIME","10000L");
    
@@ -296,6 +297,7 @@ private void generateReadme()
          pw.print(" " + s);
        }
       pw.println();
+      pw.println("Match score: " + map_context.get("SCORE"));
     }
    catch (IOException e) { }
 }

@@ -72,6 +72,7 @@ private Set<String>     missing_imports;
 private SumpParameters  sump_parameters;
 private String          context_path;
 private List<String>    suggested_words;
+private double          model_score;
 
 
 
@@ -96,6 +97,7 @@ public SumpData(CoseRequest req,CoseResult rslt,SumpParameters sp)
    if (sp == null) sump_parameters = new SumpParameters();
    context_path = null;
    suggested_words = new ArrayList<>();
+   model_score = 0;
    
    if (rslt != null) {
       addSource(rslt.getSource());
@@ -177,6 +179,11 @@ public void addSuggestedWord(String wd)
 }
 
 
+public void setModelScore(double sc)
+{
+   model_score = sc;
+}
+
 
 /********************************************************************************/
 /*                                                                              */
@@ -202,6 +209,7 @@ public String getContextPath()                  { return context_path; }
 
 public List<String> getSuggestedWords()         { return suggested_words; }
 
+public double getModelScore()                   { return model_score; }
 
 void pushType(String cls,boolean iface) 
 { 

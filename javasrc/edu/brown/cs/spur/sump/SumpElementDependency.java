@@ -155,33 +155,13 @@ void generateUXF(IvyXmlWriter xw,SumpLayout layout)
 }
 
 
-void generateXMI(IvyXmlWriter xw,SumpLayout layout)
+void generateXMI(SumpXmiWriter xw,SumpLayout layout)
 {
    if (layout == null) {                // model
-       xw.begin("UML:Association");
-       xw.field("namespace","Logical_View");
-       xw.field("isSpecification",false);
-       xw.field("xmi.id",getXmiId());
-       xw.field("visibility","public");
-       xw.field("name","");
-       xw.begin("UML:AssociationEnd");
-       xw.field("changeability","changeable");
-       xw.field("isNavigable","false");
-       xw.field("isSpecification",false);
-       xw.field("aggregation","none");
-       xw.field("type",((SumpElementClass) from_class).getXmiId());
-       xw.field("visibility","public");
-       xw.field("name","");
-       xw.end("UML:AssociationEnd");
-       xw.begin("UML:AssociationEnd");
-       xw.field("changeability","changeable");
-       xw.field("isNavigable","true");
-       xw.field("isSpecification",false);
-       xw.field("aggregation","none");
-       xw.field("type",((SumpElementClass) to_class).getXmiId());
-       xw.field("visibility","public");
-       xw.field("name","");
-       xw.end("UML:AssociationEnd");
+      xw.beginXmiElement("UML:Association","",this,"Logical_View");
+      xw.outputAssociationEnd(from_class,false);
+      xw.outputAssociationEnd(to_class,true);
+      xw.endXmiElement("UML:Association");
     }
    else {                               // diagram
     }

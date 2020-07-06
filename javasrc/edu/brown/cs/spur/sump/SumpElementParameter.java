@@ -153,15 +153,11 @@ SumpElementParameter(SumpModelBase mdl,JcompSymbol js,SingleVariableDeclaration 
 /*                                                                              */
 /********************************************************************************/
 
-void generateXMI(IvyXmlWriter xw)
+void generateXMI(SumpXmiWriter xw)
 {
-   xw.begin("UML:Parameter");
-   xw.field("isSpecification",false);
-   xw.field("xmi.id",getXmiId());
-   xw.field("visibility","private");
-   xw.field("name",getName());
+   xw.beginXmiElement("UML:Parameter",getName(),this,null);
    xw.field("type",param_type.getName());
-   xw.end("UML:Parameter");
+   xw.endXmiElement("UML:Parameter");
 }
 
 

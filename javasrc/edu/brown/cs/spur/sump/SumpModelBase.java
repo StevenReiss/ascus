@@ -42,6 +42,7 @@ import org.eclipse.jdt.core.dom.StringLiteral;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.TypeLiteral;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import org.w3c.dom.Element;
 
 import edu.brown.cs.cose.cosecommon.CoseDefaultRequest;
 import edu.brown.cs.cose.cosecommon.CoseRequest;
@@ -53,6 +54,7 @@ import edu.brown.cs.ivy.jcomp.JcompControl;
 import edu.brown.cs.ivy.jcomp.JcompProject;
 import edu.brown.cs.ivy.jcomp.JcompSymbol;
 import edu.brown.cs.ivy.jcomp.JcompType;
+import edu.brown.cs.ivy.xml.IvyXml;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
 import edu.brown.cs.spur.lids.LidsInstaller;
 import edu.brown.cs.spur.lids.LidsConstants.LidsLibrary;
@@ -107,10 +109,10 @@ public SumpModelBase(JcompControl ctrl,File f)
             // loadXml(f);
             break;
          case "uxf" :
-            // loadUxf(f);
+            loadUxf(ctrl,f);
             break;
          case "xmi" :
-            // loadXmi(f);
+            loadXmi(ctrl,f);
             break;
          default :
             break;
@@ -735,6 +737,9 @@ private List<String> getStringValues(Expression exp,List<String> rslt)
          pw.println("})");
        }
     }
+   if (model_data.getModelScore() > 0) {
+      pw.println("@Ascus(score=" + model_data.getModelScore() + ")");
+    }
    
    pw.println("package edu.brown.cs.SAMPLE;");
    
@@ -792,26 +797,22 @@ String getJavaOutputName(String orignm)
 }
 
 
-@Override public void generateXMI(IvyXmlWriter xw)
+@Override public void generateXMI(Writer writer)
 {
-   xw.begin("UML:Model");
-   xw.field("isRoot",false);
-   xw.field("isSpecification",false);
-   xw.field("xmi.id","m1");
-   xw.field("isLeaf",false);
-   xw.field("isAbstract",false);
-   xw.field("name",model_data.getName());
+   // can we make model_data information part of model, not just in a note?
+   
+   SumpXmiWriter xw = new SumpXmiWriter(writer);
+   
+   xw.outputXmiStart();
+   
+   xw.beginXmiElement("UML:Model",model_data.getName(),"m1",null);
    
    xw.begin("UML:Namespace.ownedElement");
    
-   xw.begin("UML:Model");
-   xw.field("isRoot",false);
-   xw.field("isSpecification",false);
-   xw.field("xmi.id","m1");
-   xw.field("isLeaf",false);
-   xw.field("isAbstract",false);
-   xw.field("visibility","public");
-   xw.field("name","Logical_View"); 
+   xw.beginXmiElement("UML:Stereotype","folder","folder","m1");
+   xw.endXmiElement("UML:Stereotype");
+   
+   xw.beginXmiElement("UML:Model","Logical View","Logical_View","m1");
    
    xw.begin("UML:Namespace.ownedElement");
    model_package.generateXMI(xw,null);
@@ -828,11 +829,13 @@ String getJavaOutputName(String orignm)
    xw.end("diagrams");
    xw.end("XMI.extension");
    
-   xw.end("UML:Model");
-   xw.end("UML:Namespace.ownedElement");  
-   xw.end("UML:Model");
+   xw.endXmiElement("UML:Model");
    
-   // need to add note and info 
+   xw.end("UML:Namespace.ownedElement");  
+   
+   xw.endXmiElement("UML:Model");
+   
+   xw.end("XMI.Content");
 }
 
 
@@ -890,6 +893,43 @@ private void loadJava(JcompControl ctrl,File f)
     }
    catch (IOException e) { }
 }
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Load Sump Model from XMI file                                                       */
+/*                                                                              */
+/********************************************************************************/
+
+private void loadXmi(JcompControl ctrl,File f)
+{
+   if (ctrl == null) ctrl = new JcompControl();
+   
+   Element e = IvyXml.loadXmlFromFile(f);
+   if (e == null) return;
+   
+   
+}
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Load Sump Model from UXF file                                           */
+/*                                                                              */
+/********************************************************************************/
+
+private void loadUxf(JcompControl ctrl,File f)
+{
+   if (ctrl == null) ctrl = new JcompControl();
+   
+   Element e = IvyXml.loadXmlFromFile(f);
+   if (e == null) return;
+   
+   
+}
+
 
 
 }       // end of class SumpModel
