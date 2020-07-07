@@ -88,6 +88,8 @@ private void outputXmiStart()
    xml_writer.field("xmlns","http://schema.omg.org/spec/UML/1.4");
    
    outputXmiHeader();     
+   
+   xml_writer.begin("XMI:Content");
 }
 
 
@@ -100,6 +102,7 @@ private void outputXmiHeader()
    xml_writer.field("xmi.version","1.4");
    xml_writer.field("xmi.name","UML");
    xml_writer.field("href","UML.xml");
+   xml_writer.end("XMI.metamodel");
    xml_writer.end("XMI.header"); 
 }
 
@@ -107,6 +110,8 @@ private void outputXmiHeader()
 
 private void outputXmiEnd()
 {
+   xml_writer.end("XMI:Content");
+   
    // ouptut XMI.extensions for umbrello
    
    xml_writer.end("XMI");
@@ -256,8 +261,6 @@ private class OutputXmi extends SumpVisitor {
       
       endXmiElement("UML:Model");
       
-      xml_writer.end("XMI.Content");
-      
       outputXmiEnd();
       
       return false;
@@ -294,7 +297,7 @@ private class OutputXmi extends SumpVisitor {
    
    @Override public boolean visit(SumpClass c) {
       if (cur_layout == null) {                // model
-         beginXmiElement("UML:Class",c.getJavaOutputName(),this,"Logical_View");
+         beginXmiElement("UML:Class",c.getJavaOutputName(),c,"Logical_View");
          return true;
        }
       else {                               // widgets
@@ -324,7 +327,7 @@ private class OutputXmi extends SumpVisitor {
     }
    
    @Override public boolean visit(SumpAttribute a) {
-      beginXmiElement("UML:Attribute",a.getName(),this,null);
+      beginXmiElement("UML:Attribute",a.getName(),a,null);
       type_field = "type";
       return true;
     }
@@ -334,7 +337,7 @@ private class OutputXmi extends SumpVisitor {
     }
    
    @Override public boolean visit(SumpOperation op) {
-      beginXmiElement("UML:Operation",op.getName(),this,null);
+      beginXmiElement("UML:Operation",op.getName(),op,null);
       type_field = "returnType";
       op.getReturnType().accept(this);
       xml_writer.begin("UML:BehavioralFeature.parameter");
@@ -347,7 +350,7 @@ private class OutputXmi extends SumpVisitor {
     }
    
    @Override public boolean visit(SumpParameter p) {
-      beginXmiElement("UML:Parameter",p.getName(),this,null);
+      beginXmiElement("UML:Parameter",p.getName(),p,null);
       type_field = "type";
       p.getDataType().accept(this);
       endXmiElement("UML:Parameter");
@@ -356,7 +359,7 @@ private class OutputXmi extends SumpVisitor {
    
    @Override public boolean visit(SumpDependency sd) {
       if (cur_layout == null) {                // model
-         beginXmiElement("UML:Association","",this,"Logical_View");
+         beginXmiElement("UML:Association","",sd,"Logical_View");
          outputAssociationEnd(sd.getFromClass(),false);
          outputAssociationEnd(sd.getToClass(),true);
          endXmiElement("UML:Association");
