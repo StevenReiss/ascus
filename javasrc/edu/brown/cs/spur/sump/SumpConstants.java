@@ -70,13 +70,19 @@ interface SumpModel {
   void outputXml(IvyXmlWriter xw);
   void outputJava(Writer w);
   void save(File file) throws IOException;
-  void generateUXF(IvyXmlWriter xw);
+  void generateUXF(Writer xw);
   void generateXMI(Writer xw);
-  void computeLayout();
+  SumpLayout computeLayout();
   Rectangle getBounds(SumpClass cls);
   Collection<SumpClass> getDependentClasses(SumpClass sc);
   Collection<SumpClass> getInheritedClasses(SumpClass sc);
+  
+  Collection<SumpClass> findUsedClasses(SumpClass cls);
+  SumpClass getClassForName(String nm);
+  
   JcompProject resolveModel(JcompControl ctrl,CompilationUnit cu);
+  void accept(SumpVisitor sev);
+  
 }
 
 
@@ -86,7 +92,9 @@ interface SumpElement {
    String getName();
    String getFullName();
    String getMapName();
+   String getComment();
    double getWordScore(SumpElement se);
+   void accept(SumpVisitor sev);
 }       // end of inner interface SumpElement
 
 
@@ -112,6 +120,7 @@ interface SumpClass extends SumpElement, RowelMatch {
    Collection<SumpAttribute> getAttributes();
    Collection<SumpOperation> getOperations();
    Collection<String> getEnumConstants();
+   String getJavaOutputName();
    
    void addAttribute(JcompSymbol js,ASTNode n);
    void addOperation(JcompSymbol js,ASTNode n);

@@ -577,7 +577,7 @@ List<LidsLibrary> getReferencedLibraries()
       System.err.println("\t" + imp);
     }
    
-   System.err.println("--------UML MODELS");
+   System.err.println("--------MODELS");
    for (SumpModel mdl : uml_models) {
       IvyXmlWriter xw = new IvyXmlWriter();
       mdl.outputXml(xw);

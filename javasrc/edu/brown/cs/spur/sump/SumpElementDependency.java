@@ -35,8 +35,6 @@
 
 package edu.brown.cs.spur.sump;
 
-import java.awt.Point;
-
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
 import edu.brown.cs.spur.sump.SumpConstants.SumpDependency;
 
@@ -105,6 +103,21 @@ SumpElementDependency(SumpModelBase mdl,SumpClass frm,SumpClass to)
 
 
 
+/********************************************************************************/
+/*                                                                              */
+/*      Visitation methods                                                      */
+/*                                                                              */
+/********************************************************************************/
+
+@Override public void accept(SumpVisitor sev)
+{
+   if (!sev.preVisit(this)) return;
+   if (!sev.visit(this)) return;
+   sev.endVisit(this);
+   sev.postVisit(this);
+}
+
+
 
 /********************************************************************************/
 /*                                                                              */
@@ -125,47 +138,10 @@ SumpElementDependency(SumpModelBase mdl,SumpClass frm,SumpClass to)
 }
 
 
-void generateUXF(IvyXmlWriter xw,SumpLayout layout)
-{
-   // might need to create a separate element for each segement of the arc
-   // need to determine what the panel attributes mean
-   // need to determine what the additional attributes mean
-   xw.begin("element");
-   xw.textElement("id","Relation");
-   Point [] pts = layout.getPoints(this);
-   int minx = -1;
-   int maxx = -1;
-   int miny = -1;
-   int maxy = -1;
-   for (Point pt : pts) {
-      if (minx < 0 || minx > pt.x) minx = pt.x;
-      if (maxx < 0 || maxx < pt.x) maxx = pt.x;
-      if (miny < 0 || miny > pt.y) miny = pt.y;
-      if (maxy < 0 || maxy < pt.y) maxy = pt.y;
-    }
-   xw.begin("coordinates");
-   xw.textElement("x",minx);
-   xw.textElement("y",miny);
-   xw.textElement("w",maxx-minx);
-   xw.textElement("h",maxy-miny);
-   xw.end("coordinates");
-   xw.textElement("panel_attributes","lt=<-");
-   xw.textElement("additional_attributes","10;10;10;" + (maxy-miny-20));
-   xw.end("element");
-}
 
 
-void generateXMI(SumpXmiWriter xw,SumpLayout layout)
-{
-   if (layout == null) {                // model
-      xw.beginXmiElement("UML:Association","",this,"Logical_View");
-      xw.outputAssociationEnd(from_class,false);
-      xw.outputAssociationEnd(to_class,true);
-      xw.endXmiElement("UML:Association");
-    }
-   else {                               // diagram
-    }
-}
+
+
 
 @Override public String toString()
 {

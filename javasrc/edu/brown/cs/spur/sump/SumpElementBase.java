@@ -131,11 +131,7 @@ public SumpDataType getDataType() throws SumpException
 }
 
 
-String getXmiId()
-{
-   int x = hashCode();
-   return "u" + Integer.toHexString(x);
-}
+
 
 
 
@@ -191,7 +187,7 @@ void addComment(String cmmt)
     }
 }
 
-String getComment()                     { return element_comment; }
+@Override public String getComment()            { return element_comment; }
 
 
 void addCommentsFor(ASTNode n)
@@ -269,7 +265,7 @@ protected void basicXml(IvyXmlWriter xw)
 }
 
 
-void outputJava(PrintWriter pw)                 { }
+
 
 
 protected void outputComment(PrintWriter pw)

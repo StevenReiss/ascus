@@ -10,9 +10,6 @@
 
 package edu.brown.cs.spur.sump;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
@@ -83,6 +80,19 @@ public JcompType getBaseType()
 
 
 
+/********************************************************************************/
+/*                                                                              */
+/*      Visitation methods                                                      */
+/*                                                                              */
+/********************************************************************************/
+
+public void accept(SumpVisitor sev)
+{
+   if (!sev.visit(this)) return;
+   sev.endVisit(this);
+}
+
+
 
 /********************************************************************************/
 /*                                                                              */
@@ -99,79 +109,14 @@ void outputXml(String fld,IvyXmlWriter xw)
 }
 
 
-void outputJava(SumpModelBase model,PrintWriter pw)
-{
-   if (base_type == null) {
-      String nm = model.getJavaOutputName(getName());
-      pw.print(nm);
-    }
-   else outputJava(base_type,model,pw);
-}
-
-
-String getUmlOutputName(SumpModelBase model)
-{
-   StringWriter sw = new StringWriter();
-   PrintWriter pw = new PrintWriter(sw);
-   if (base_type == null) {
-      String nm = model.getJavaOutputName(getName());
-      pw.print(nm);
-    }
-   else outputJava(base_type,model,pw);
-   return sw.toString();
-}
 
 
 
-private void outputJava(JcompType jt,SumpModelBase model,PrintWriter pw)
-{
-   if (jt.isPrimitiveType()) pw.print(jt.getName());
-   else if (jt.isTypeVariable() || jt.isWildcardType()) {
-      pw.print("Object");
-    }
-   else if (jt.isArrayType()) {
-      outputJava(jt.getBaseType(),model,pw);
-      pw.print("[]");
-    }
-   else if (jt.isParameterizedType()) {
-      outputJava(jt.getBaseType(),model,pw);
-      pw.print("<");
-      int ct = 0;
-      for (JcompType pt : jt.getComponents()) {
-         if (ct++ > 0) pw.print(",");
-         outputJava(pt,model,pw);
-       }
-      pw.print(">");
-    }
-   else if (jt.isMethodType()) {
-      pw.print("(");
-      int ct = 0;
-      for (JcompType pt : jt.getComponents()) {
-         if (ct++ > 0) pw.print(",");
-         outputJava(pt,model,pw);
-       }
-      pw.print(")");
-      outputJava(jt.getBaseType(),model,pw);
-    }
-   else if (jt.isUnionType()) {
-      int ct = 0;
-      for (JcompType pt : jt.getComponents()) {
-         if (ct++ > 0) pw.print("|");
-         outputJava(pt,model,pw);
-       }
-    }
-   else if (jt.isIntersectionType()) {
-      int ct = 0;
-      for (JcompType pt : jt.getComponents()) {
-         if (ct++ > 0) pw.print("&");
-         outputJava(pt,model,pw);
-       }
-    }
-   else {
-      String nm = model.getJavaOutputName(jt.getName());
-      pw.print(nm);
-    }
-}
+
+
+
+
+
 
 
 void setupJava(SumpData sd)

@@ -35,8 +35,6 @@
 
 package edu.brown.cs.spur.sump;
 
-import java.io.PrintWriter;
-
 import org.eclipse.jdt.core.dom.ASTNode;
 
 import edu.brown.cs.ivy.file.IvyStringDiff;
@@ -123,6 +121,22 @@ SumpElementAttribute(SumpModelBase mdl,JcompSymbol fld,ASTNode n)
 
 
 
+/********************************************************************************/
+/*                                                                              */
+/*      Visitation methods                                                      */
+/*                                                                              */
+/********************************************************************************/
+
+@Override public void accept(SumpVisitor sev)
+{
+   if (!sev.preVisit(this)) return;
+   if (!sev.visit(this)) return;
+   if (data_type != null) data_type.accept(sev);
+   sev.endVisit(this);
+   sev.postVisit(this);
+}
+
+
 
 /********************************************************************************/
 /*                                                                              */
@@ -139,19 +153,7 @@ SumpElementAttribute(SumpModelBase mdl,JcompSymbol fld,ASTNode n)
 }
 
 
-@Override void outputJava(PrintWriter pw)
-{
-   outputComment(pw);
-   
-   String acc = "public";
-   if (getAccess() != null) acc = getAccess().toString().toLowerCase();
-   pw.print("   " + acc + " ");
-   
-   if (data_type != null) data_type.outputJava(sump_model,pw);
-   else pw.print("Object");
-   
-   pw.println(" " + getName() + ";");
-}
+
 
 
 @Override void setupJava()
@@ -160,18 +162,7 @@ SumpElementAttribute(SumpModelBase mdl,JcompSymbol fld,ASTNode n)
 }
 
 
-/********************************************************************************/
-/*                                                                              */
-/*      UML diagram output methods                                              */
-/*                                                                              */
-/********************************************************************************/
 
-void generateXMI(SumpXmiWriter xw)
-{
-   xw.beginXmiElement("UML:Attribute",getName(),this,null);
-   xw.field("type",data_type.getName());
-   xw.endXmiElement("UML:Attribute");
-}
 
 
 

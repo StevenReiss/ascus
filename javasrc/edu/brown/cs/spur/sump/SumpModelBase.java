@@ -13,7 +13,6 @@ package edu.brown.cs.spur.sump;
 import java.awt.Rectangle;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -152,9 +151,9 @@ public SumpModelBase(SumpData data,CompilationUnit cu)
 }
 
 
-Set<SumpElementClass> findUsedClasses(SumpElementClass cls)
+@Override public Collection<SumpClass> findUsedClasses(SumpClass cls)
 {
-   Set<SumpElementClass> rslt = new HashSet<>();
+   Set<SumpClass> rslt = new HashSet<>();
    for (SumpDependency dp : model_package.getDependencies()) {
       if (dp.getFromClass() == cls) {
          rslt.add((SumpElementClass) dp.getToClass());
@@ -202,7 +201,7 @@ Set<SumpElementClass> findUsedClasses(SumpElementClass cls)
 }
 
 
-SumpClass getClassForName(String nm)
+@Override public SumpClass getClassForName(String nm)
 {
    if (nm == null) return null;
    
@@ -606,10 +605,13 @@ private List<String> getStringValues(Expression exp,List<String> rslt)
 /*                                                                              */
 /********************************************************************************/
 
-@Override public void computeLayout()
+@Override public SumpLayout computeLayout()
 {
-   model_layout = new SumpLayout(model_package);
-   model_layout.process();
+   if (model_layout == null) {
+      model_layout = new SumpLayout(model_package);
+      model_layout.process();
+    }
+   return model_layout;
 }
 
 
@@ -618,6 +620,23 @@ private List<String> getStringValues(Expression exp,List<String> rslt)
    if (model_layout == null) return null;
    return model_layout.getBounds(cls);
 }
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Visitation methods                                                      */
+/*                                                                              */
+/********************************************************************************/
+
+@Override public void accept(SumpVisitor sev)
+{
+   sev.setModel(this);
+   if (!sev.visit(this)) return;
+   model_package.accept(sev);
+   sev.endVisit(this);
+}
+
+
 
 
 
@@ -671,95 +690,8 @@ private List<String> getStringValues(Expression exp,List<String> rslt)
 
 @Override public void outputJava(Writer w)
 {
-   PrintWriter pw = null;
-   if (w instanceof PrintWriter) pw = (PrintWriter) w;
-   else pw = new PrintWriter(w);
-   
-   model_package.setupJava();
-   
-   String nm = model_data.getName();
-   
-   for (String src : model_data.getSources()) {
-      pw.println("@Ascus(source=\"" + src + "\")");
-    }
-   if (model_data.getContextPath() != null) {
-      pw.println("@Ascus(context=\"" + model_data.getContextPath() + "\")");
-    }
-   for (LidsLibrary lib : model_data.getLibraries()) {
-      pw.println("@Ascus(library=\"" + lib.getFullId() + "\")");
-    }   
-   for (String imp : model_data.getMissingImports()) {
-      pw.println("@Ascus(missing=\"" + imp + "\")");
-    }  
-   CoseRequest cr = model_data.getCoseRequest();
-   if (cr != null) {
-      StringBuffer buf = new StringBuffer();
-      buf.append(cr.getCoseSearchType());
-      buf.append(",");
-      buf.append(cr.getCoseScopeType());
-      buf.append(",");
-      buf.append(cr.getNumberOfResults());
-      for (CoseSearchEngine se : cr.getEngines()) {
-         buf.append(",");
-         buf.append(se);
-       }
-      pw.println("@Ascus(search=\"" + buf.toString() + "\")");
-      for (CoseKeywordSet cks : cr.getCoseKeywordSets()) {
-         pw.print("@Ascus(keywords={");
-         int ct = 0;
-         for (String s : cks.getWords()) {
-            if (ct++ > 0) pw.print(",");
-            pw.print("\"" + s + "\"");
-          }
-         pw.println("})");
-       }
-      if (cr.getKeyTerms().size() > 0) {
-         pw.print("@Ascus(keyterms={");
-         int ct = 0;
-         for (String s : cr.getKeyTerms()) {
-            if (ct++ > 0) pw.print(",");
-            pw.print("\"" + s + "\"");
-          }
-         pw.println("})");
-       }
-      Map<String,Object> pmap = model_data.getParameters().getNonDefaults();
-      for (Map.Entry<String,Object> ent : pmap.entrySet()) {
-         pw.println("@Ascus(parameter=\"" + ent.getKey() + "=" + ent.getValue() + "\";");
-       }
-      List<String> sug = model_data.getSuggestedWords();
-      if (sug.size() > 0) {
-         pw.print("@Ascus(suggestedTerms={");
-         int ct = 0;
-         for (String s : sug) {
-            if (ct++ > 0) pw.print(",");
-            pw.print("\"" + s + "\"");
-          }
-         pw.println("})");
-       }
-    }
-   if (model_data.getModelScore() > 0) {
-      pw.println("@Ascus(score=" + model_data.getModelScore() + ")");
-    }
-   
-   pw.println("package edu.brown.cs.SAMPLE;");
-   
-   pw.println();
-   pw.println("import edu.brown.cs.sump.annot.Ascus;");
-   pw.println("import edu.brown.cs.sump.annot.AscusPackage;");
-   pw.println("import edu.brown.cs.sump.annot.AscusClass;");
-   for (String imp : model_data.getImports()) {
-      pw.println("import " + imp + ";");
-    }
-   pw.println();
-   
-   pw.println("@AscusPackage");
-   pw.println("public interface " + nm + " {");
-   
-   pw.println();
-   model_package.outputJava(pw);
-   pw.println();
-   
-   pw.println("}");
+   SumpJavaWriter sjw = new SumpJavaWriter(w);
+   sjw.generateCode(this);
 }
 
 
@@ -799,80 +731,20 @@ String getJavaOutputName(String orignm)
 
 @Override public void generateXMI(Writer writer)
 {
-   // can we make model_data information part of model, not just in a note?
-   
-   SumpXmiWriter xw = new SumpXmiWriter(writer);
-   
-   xw.outputXmiStart();
-   
-   xw.beginXmiElement("UML:Model",model_data.getName(),"m1",null);
-   
-   xw.begin("UML:Namespace.ownedElement");
-   
-   xw.beginXmiElement("UML:Stereotype","folder","folder","m1");
-   xw.endXmiElement("UML:Stereotype");
-   
-   xw.beginXmiElement("UML:Model","Logical View","Logical_View","m1");
-   
-   xw.begin("UML:Namespace.ownedElement");
-   model_package.generateXMI(xw,null);
-   xw.end("UML:Namespace.ownedElement");
-   
-   xw.begin("XMI.extension");
-   xw.field("xmi.extender","umbrello");
-   xw.begin("diagrams");
-   xw.field("resolution",96);
-   xw.begin("diagram");
-   xw.field("name","class diagram");
-   model_package.generateXMI(xw,model_layout);
-   xw.end("diagram");
-   xw.end("diagrams");
-   xw.end("XMI.extension");
-   
-   xw.endXmiElement("UML:Model");
-   
-   xw.end("UML:Namespace.ownedElement");  
-   
-   xw.endXmiElement("UML:Model");
-   
-   xw.end("XMI.Content");
+   SumpXmiWriter sx = new SumpXmiWriter(writer);
+   sx.generateXmi(this);
 }
 
 
-@Override public void generateUXF(IvyXmlWriter xw)
+
+@Override public void generateUXF(Writer writer)
 {
-   xw.begin("diagram");
-   xw.field("program","umlet");
-   xw.field("version","13.3");
-   xw.textElement("zoom_level",10);
-   model_package.generateUXF(xw,model_layout);
-   xw.end("diagram");
-   xw.close();
-   xw.begin("element");
-   xw.textElement("id","UMLNote");
-   StringBuffer buf = new StringBuffer();
-   buf.append("NAME: " + model_data.getName() + ";\n");
-   for (String s : model_data.getImports()) {
-      buf.append("IMPORT: " + s + ":\n");
-    }
-   if (model_data.getContextPath() != null) {
-      buf.append("CONTEXT: " + model_data.getContextPath() + ":\n");
-    }
-   for (LidsLibrary s : model_data.getLibraries()) {
-      buf.append("LIBRARY: " + s.getFullId() + ";\n");
-    }
-   for (String imp : model_data.getMissingImports()) {
-      buf.append("MISSING: " + imp + ";\n");
-    }
-   for (String s : model_data.getSources()) {
-      buf.append("SOURCE: " + s + ";\n");
-    }
-   for (String s : model_data.getSuggestedWords()) {
-      buf.append("SUGGEST: " + s + ";\n");
-    }
-   xw.textElement("panel_attributes",buf.toString());
-   xw.end("element");
+   SumpUxfWriter sx = new SumpUxfWriter(writer);
+   sx.generateUxf(this);
 }
+
+
+
 
 
 /********************************************************************************/
