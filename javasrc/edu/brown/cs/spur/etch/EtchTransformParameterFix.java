@@ -61,7 +61,7 @@ import edu.brown.cs.spur.sump.SumpConstants.SumpModel;
 import edu.brown.cs.spur.sump.SumpConstants.SumpParameter;
 import edu.brown.cs.spur.sump.SumpConstants.SumpOperation;
 
-class EtchTransformFixParameters extends EtchTransform
+class EtchTransformParameterFix extends EtchTransform
 {
 
 
@@ -82,9 +82,9 @@ private static final String    LOCAL_SUFFIX = "_local";
 /*                                                                              */
 /********************************************************************************/
 
-EtchTransformFixParameters(Map<String,String> namemap)
+EtchTransformParameterFix(Map<String,String> namemap)
 {
-   super("FixParameters");
+   super("ParameterFix");
    name_map = namemap;
 }
 
@@ -117,7 +117,8 @@ private ParamMapper findMappings(ASTNode cu,SumpModel source,SumpModel target)
 {
    ParamMapper mapper = new ParamMapper();
    
-   findMatchings(cu,target,mapper);
+   ParamVisitor sp = new ParamVisitor(target,mapper);
+   cu.accept(sp); 
    
    if (mapper.isEmpty()) return null;
    
@@ -132,14 +133,6 @@ private ParamMapper findMappings(ASTNode cu,SumpModel source,SumpModel target)
 /*      Identify all parameters to update                                       */
 /*                                                                              */
 /********************************************************************************/
-
-private void findMatchings(ASTNode cu,SumpModel target,ParamMapper mapper)
-{
-   ParamVisitor sp = new ParamVisitor(target,mapper);
-   cu.accept(sp);
-}
-
-
 
 private class ParamVisitor extends ASTVisitor {
 
@@ -213,7 +206,7 @@ private class ParamMapper extends EtchMapper {
    private Map<JcompSymbol,String> param_remap; 
    
    ParamMapper() {
-      super(EtchTransformFixParameters.this);
+      super(EtchTransformParameterFix.this);
       fix_set = new HashMap<>();
       param_remap = new HashMap<>();
     }
@@ -368,7 +361,7 @@ private static class ParamFix {
 
 
 
-}       // end of class EtchTransformFixParameters
+}       // end of class EtchTransformParameterFix
 
 
 

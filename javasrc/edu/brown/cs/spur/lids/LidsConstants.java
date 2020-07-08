@@ -70,6 +70,11 @@ abstract class LidsLibrary {
       return getId() + "@" + getName() + "@" + getVersion();
     }
    
+   public boolean sameLibrary(LidsLibrary ll) {
+      if (getId().equals(ll.getId())) return true;
+      return false;
+    }
+   
 }       // end of inner class LidsLibrary
 
 

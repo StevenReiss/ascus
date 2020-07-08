@@ -128,7 +128,7 @@ public CoseResult transform(CoseResult orig,SumpModel srcmdl,SumpModel target)
    
    if (!JcompAst.isResolved(an)) {
       if (jcomp_control == null) jcomp_control = new JcompControl();
-      proj = target.resolveModel(jcomp_control,an);
+      proj = srcmdl.resolveModel(jcomp_control,an);
       if (proj == null) return orig;
     }
 

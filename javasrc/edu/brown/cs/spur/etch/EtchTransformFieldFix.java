@@ -1,8 +1,8 @@
 /********************************************************************************/
 /*                                                                              */
-/*              EtchTransformFixReturns.java                                    */
+/*              EtchTransformFieldFix.java                                      */
 /*                                                                              */
-/*      Handle return type differences between models                           */
+/*      Handle changes to field types                                           */
 /*                                                                              */
 /********************************************************************************/
 /*      Copyright 2011 Brown University -- Steven P. Reiss                    */
@@ -29,23 +29,21 @@ import java.util.Map;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.Type;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
+import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompSymbol;
 import edu.brown.cs.ivy.jcomp.JcompType;
-import edu.brown.cs.ivy.jcomp.JcompTyper;
 import edu.brown.cs.spur.sump.SumpConstants.SumpAttribute;
 import edu.brown.cs.spur.sump.SumpConstants.SumpModel;
-import edu.brown.cs.spur.sump.SumpConstants.SumpOperation;
 
-class EtchTransformFixReturns extends EtchTransform
+class EtchTransformFieldFix extends EtchTransform
 {
 
 
@@ -58,15 +56,16 @@ class EtchTransformFixReturns extends EtchTransform
 private Map<String,String> name_map;
 
 
+
 /********************************************************************************/
 /*                                                                              */
 /*      Constructors                                                            */
 /*                                                                              */
 /********************************************************************************/
 
-EtchTransformFixReturns(Map<String,String> namemap)
+EtchTransformFieldFix(Map<String,String> namemap)
 {
-   super("FixReturns");
+   super("FieldFix");
    name_map = namemap;
 }
 
@@ -79,7 +78,7 @@ EtchTransformFixReturns(Map<String,String> namemap)
 
 @Override protected EtchMemo applyTransform(ASTNode n,SumpModel src,SumpModel target)
 {
-   ReturnMapper mapper =  findMappings(n,src,target);
+   FieldMapper mapper =  findMappings(n,src,target);
    if (mapper == null) return null;
    
    EtchMemo memo =  mapper.getMapMemo(n);
@@ -94,11 +93,12 @@ EtchTransformFixReturns(Map<String,String> namemap)
 /*                                                                              */
 /********************************************************************************/
 
-private ReturnMapper findMappings(ASTNode cu,SumpModel source,SumpModel target)
+private FieldMapper findMappings(ASTNode cu,SumpModel source,SumpModel target)
 {
-   ReturnMapper mapper = new ReturnMapper();
+   FieldMapper mapper = new FieldMapper();
    
-   findMatchings(cu,target,mapper);
+   FieldVisitor sp = new FieldVisitor(target,mapper);
+   cu.accept(sp); 
    
    if (mapper.isEmpty()) return null;
    
@@ -107,42 +107,14 @@ private ReturnMapper findMappings(ASTNode cu,SumpModel source,SumpModel target)
 
 
 
-private void findMatchings(ASTNode cu,SumpModel target,ReturnMapper mapper)
-{
-   ReturnVisitor sp = new ReturnVisitor(target,mapper);
-   cu.accept(sp);
-}
-
-
-
-private class ReturnVisitor extends ASTVisitor {
+private class FieldVisitor extends ASTVisitor {
 
    private SumpModel target_model;
-   private ReturnMapper return_mapper;
+   private FieldMapper field_mapper;
    
-   ReturnVisitor(SumpModel t,ReturnMapper pm) {
+   FieldVisitor(SumpModel t,FieldMapper pm) {
       target_model = t;
-      return_mapper = pm;
-    }
-   
-   @Override public boolean visit(MethodDeclaration md) {
-      JcompSymbol jm = JcompAst.getDefinition(md);
-      String mnm = getMapName(jm);
-      String tnm = name_map.get(mnm);
-      if (tnm == null) return false;
-      Type t = md.getReturnType2();
-      if (t == null) return false;              // constructor
-      SumpOperation op = findOperation(tnm,target_model);
-      if (op == null) return false;
-      String rtnm = "void";
-      JcompType jt = JcompAst.getJavaType(t);
-      if (jt == null) rtnm = t.toString();
-      else rtnm = jt.getName();
-      String rtyp = op.getReturnType().getName();
-      if (rtnm.equals(rtyp)) return false;
-      return_mapper.addMapping(jm,rtyp);
-      
-      return false;
+      field_mapper = pm;
     }
    
    @Override public boolean visit(FieldDeclaration fd) {
@@ -158,12 +130,12 @@ private class ReturnVisitor extends ASTVisitor {
          if (at == null) continue;
          String atyp = at.getDataType().getName();
          if (jt.getName().equals(atyp)) continue;
-         return_mapper.addMapping(jm,atyp);
+         field_mapper.addMapping(jm,atyp);
        }
       return false;
     }
    
-}       // end of inner class ReturnVisitor
+}       // end of inner class FieldVisitor
 
 
 
@@ -175,104 +147,105 @@ private class ReturnVisitor extends ASTVisitor {
 /*                                                                              */
 /********************************************************************************/
 
-private class ReturnMapper extends EtchMapper {
+private class FieldMapper extends EtchMapper {
 
-   private Map<JcompSymbol,String> return_type;
-   private JcompType current_type;
+   private Map<JcompSymbol,String> field_type;
    
-   ReturnMapper() {
-      super(EtchTransformFixReturns.this);
-      return_type = new HashMap<>();
-      current_type = null;
+   FieldMapper() {
+      super(EtchTransformFieldFix.this);
+      field_type = new HashMap<>();
     }
    
-   boolean isEmpty()                    { return return_type.isEmpty(); }
+   boolean isEmpty()                    { return field_type.isEmpty(); }
    
    void addMapping(JcompSymbol js,String typ) {
-      return_type.put(js,typ);
+      field_type.put(js,typ);
     }
    
-   @Override boolean preVisit(ASTNode orig,ASTRewrite rw) {
-      if (orig instanceof MethodDeclaration) {
-         JcompSymbol jm = JcompAst.getDefinition(orig);
-         if (jm != null && current_type == null && return_type.containsKey(jm)) {
-            JcompTyper typer = JcompAst.getTyper(orig);
-            String tnm = return_type.get(jm);
-            current_type = typer.findSystemType(tnm);
-            return true;
-          }
-       }
+   @SuppressWarnings("unchecked")
+   @Override void rewriteTree(ASTNode orig,ASTRewrite rw) {
       if (orig instanceof FieldDeclaration) {
          FieldDeclaration fd = (FieldDeclaration) orig;
          int ct = 0;
-         boolean use = false;
+         int samct = 0;
+         String typ = null;
          for (Object o : fd.fragments()) {
             VariableDeclarationFragment vdf = (VariableDeclarationFragment) o;
             ++ct;
             JcompSymbol jm = JcompAst.getDefinition(vdf);
-            if (jm != null && return_type.containsKey(jm)) {     
-               use = true;
+            String ntyp = field_type.get(jm);
+            if (jm != null && ntyp != null) {     
+               if (typ == null || typ.equals(ntyp)) {
+                  typ = ntyp;
+                  ++samct;
+                }
              }
           }
-         if (!use) return false;
-         if (ct > 1) {
-            
+         if (typ == null) return;
+         if (ct > 1 && ct != samct) {
+            AbstractTypeDeclaration par = (AbstractTypeDeclaration) fd.getParent();
+            ListRewrite lrw = rw.getListRewrite(par,par.getBodyDeclarationsProperty());
+            ASTNode after = null;
+            for (Object o : fd.fragments()) {
+               VariableDeclarationFragment vdf = (VariableDeclarationFragment) o;
+               JcompSymbol jm = JcompAst.getDefinition(vdf);
+               String ntyp = field_type.get(jm);
+               VariableDeclarationFragment nvdf = null;
+               Type t = null;
+               nvdf = (VariableDeclarationFragment) copyAst(vdf);
+               if (ntyp == null || vdf.getInitializer() == null) {
+                  t = (Type) copyAst(fd.getType());
+                }
+               else {
+                  JcompType otyp = JcompAst.getExprType(vdf.getInitializer());
+                  JcompType njt = JcompAst.getTyper(orig).findSystemType(ntyp);
+                  t = njt.createAstNode(rw.getAST());
+                  Expression nex = createCastExpr(rw.getAST(),njt,nvdf.getInitializer(),otyp);
+                  nvdf.setInitializer(nex);
+                }
+               
+               FieldDeclaration nfld = rw.getAST().newFieldDeclaration(nvdf);
+               nfld.setType(t);
+               for (Object o1 : fd.modifiers()) {
+                  ASTNode em = (ASTNode) o1;
+                  ASTNode nem = copyAst(em);
+                  nfld.modifiers().add(nem);
+                }
+               if (after == null) {
+                  lrw.replace(fd,nfld,null);
+                }
+               else {
+                  lrw.insertAfter(nfld,after,null);
+                }
+               after = nfld;
+             }
           }
          else {
-            
-          }
-       }
-      return false;
-    }
-   
-   @Override void rewriteTree(ASTNode orig,ASTRewrite rw) {
-      if (orig instanceof ReturnStatement && current_type != null) {
-         ReturnStatement rs = (ReturnStatement) orig;
-         if (current_type.isVoidType()) {
-            rw.remove(rs.getExpression(),null);
-          }
-         else {
-            Expression newex = null;
-            if (rs.getExpression() == null) {
-               newex = current_type.createDefaultValue(rw.getAST());
-             }
-            else {
-               JcompType jt = JcompAst.getExprType(rs.getExpression());
-               Expression oex = (Expression) copyAst(rs.getExpression());
-               newex = createCastExpr(rw.getAST(),current_type,oex,jt);
-             }
-            rw.set(rs,ReturnStatement.EXPRESSION_PROPERTY,newex,null);
-          }
-       }
-      else if (orig instanceof FieldDeclaration) {
-        
-       }
-      else if (orig instanceof VariableDeclarationFragment) {
-         ASTNode par = orig.getParent();
-         if (par instanceof FieldDeclaration) {
-            // need to isolate this declaration
-            // need to add cast to initialization expression
-            FieldDeclaration fd = (FieldDeclaration) par;
-            JcompSymbol jm = JcompAst.getDefinition(orig);
-            if (jm != null && return_type.containsKey(jm)) {
-               JcompTyper typer = JcompAst.getTyper(orig);
-               String tnm = return_type.get(jm);
-               JcompType jt = typer.findSystemType(tnm);
-               System.err.println("FIX " + fd + " " + jt);
+            JcompType jt = JcompAst.getTyper(orig).findSystemType(typ);
+            Type t = jt.createAstNode(rw.getAST());
+            rw.set(fd,FieldDeclaration.TYPE_PROPERTY,t,null);
+            for (Object o : fd.fragments()) {
+               VariableDeclarationFragment vdf = (VariableDeclarationFragment) o;
+               if (vdf.getInitializer() != null) {
+                  JcompType otyp = JcompAst.getExprType(vdf.getInitializer());
+                  Expression oex = (Expression) copyAst(vdf.getInitializer());
+                  Expression nex = createCastExpr(rw.getAST(),jt,oex,otyp);
+                  rw.set(vdf,VariableDeclarationFragment.INITIALIZER_PROPERTY,nex,null);
+                }
              }
           }
        }
     }
    
-}       // end of inner class ReturnMapper
+}       // end of inner class FieldMapper
 
 
 
 
-}       // end of class EtchTransformFixReturns
+}       // end of class EtchTransformFieldFix
 
 
 
 
-/* end of EtchTransformFixReturns.java */
+/* end of EtchTransformFieldFix.java */
 

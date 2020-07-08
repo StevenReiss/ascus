@@ -127,6 +127,10 @@ public void addLibrary(LidsLibrary lib)
 {
    if (lib == null) return;
    
+   for (LidsLibrary ll : library_set) {
+      if (lib.sameLibrary(ll)) return;
+    }
+    
    library_set.add(lib);
 }
 

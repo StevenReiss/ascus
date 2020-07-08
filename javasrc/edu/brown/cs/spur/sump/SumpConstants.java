@@ -54,6 +54,13 @@ enum DependArity {
 }
 
 
+enum NameType {
+   TYPE, LOCAL, PARAMETER, FIELD, CONSTANT, METHOD
+}
+
+
+
+
 
 /********************************************************************************/
 /*                                                                              */

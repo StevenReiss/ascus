@@ -135,6 +135,7 @@ List<ScrapCandidate> buildCandidates(SumpModel model)
 
 private List<CandidateMatch> findInitialMatches(SumpModel model)
 {
+   SumpData patdata = model.getModelData();
    Map<CoseResult,SumpModel> mmap = new HashMap<>();
    for (CoseResult orig : all_results) {
       CompilationUnit cu = (CompilationUnit) orig.getStructure();
@@ -147,7 +148,10 @@ private List<CandidateMatch> findInitialMatches(SumpModel model)
             if (proj == null) continue;
           }
          SumpData sdata = new SumpData(model.getModelData().getCoseRequest(),orig,search_params);
-         
+         sdata.setContextPath(patdata.getContextPath());
+         for (LidsLibrary ll : patdata.getLibraries()) {
+            sdata.addLibrary(ll);
+          }
          LidsFinder lids = ScrapDriver.findLibraries(cu,orig);
          for (LidsLibrary ll : lids.findLibraries()) {
             sdata.addLibrary(ll);

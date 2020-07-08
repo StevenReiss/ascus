@@ -47,7 +47,7 @@ import edu.brown.cs.spur.sump.SumpConstants.SumpOperation;
 import edu.brown.cs.spur.sump.SumpConstants.SumpParameter;
 
 
-class EtchTransformFixCalls extends EtchTransform
+class EtchTransformCallFix extends EtchTransform
 {
 
 
@@ -66,9 +66,9 @@ private Map<String,String> name_map;
 /*                                                                              */
 /********************************************************************************/
 
-EtchTransformFixCalls(Map<String,String> namemap)
+EtchTransformCallFix(Map<String,String> namemap)
 {
-   super("FixCalls");
+   super("CallFix");
    name_map = namemap;
 }
 
@@ -165,20 +165,6 @@ private CallMapper findMappings(ASTNode cu,SumpModel src,SumpModel tgt)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /********************************************************************************/
 /*                                                                              */
 /*      Actual mapping transform                                                */
@@ -191,7 +177,7 @@ private class CallMapper extends EtchMapper {
    private SumpModel target_model;
    
    CallMapper(SumpModel tgt) {
-      super(EtchTransformFixCalls.this);
+      super(EtchTransformCallFix.this);
       op_fixes = new HashMap<>();
       target_model = tgt;
     }
@@ -326,7 +312,7 @@ private static class CallFix {
 
 
 
-}       // end of class EtchTransformFixCalls
+}       // end of class EtchTransformCallFix
 
 
 
