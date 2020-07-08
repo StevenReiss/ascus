@@ -357,6 +357,7 @@ private class NameVisitor extends ASTVisitor {
             break;
          case FIELD :
             nt = NameType.FIELD;
+            if (js.isStatic() && js.isFinal()) nt = NameType.CONSTANT;
             break;
          case LOCAL :
             if (n.getParent() instanceof MethodDeclaration) nt = NameType.PARAMETER;
