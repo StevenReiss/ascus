@@ -332,7 +332,8 @@ private void produceTestFiles()
 {
    if (test_result == null) return;
    
-   CompilationUnit cu = (CompilationUnit) test_result.getStructure();  File dir = (File) map_context.get("TESTDIR");
+   CompilationUnit cu = (CompilationUnit) test_result.getStructure(); 
+   File dir = (File) map_context.get("TESTDIR");
    
    for (Object o : cu.types()) {
       AbstractTypeDeclaration td = (AbstractTypeDeclaration) o;

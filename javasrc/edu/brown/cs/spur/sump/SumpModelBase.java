@@ -264,6 +264,7 @@ private void createModel(CompilationUnit cu)
       if (idx > 0) nm = nm.substring(idx+1);
       if (nm.equals("Ascus")) handleAscus(an);
       else if (nm.equals("AscusSet")) handleAscusSet(an);
+      else if (nm.equals("AscusTestFile")) handleAscusTestFile(an);
     }
    
    Map<String,SumpClass> cmap = new HashMap<>();
@@ -312,6 +313,10 @@ private void addTypes(AbstractTypeDeclaration td,SumpPackage pkg,Map<String,Sump
             model_data.setName(nm);
             String pnm = getPackage().getName() + "." + nm;
             setPackage(pnm);
+          }
+         else if (anm.equals("AscusTest")) {
+            handleAscusTest(an);
+            skip = true;
           }
        }
     }
@@ -456,6 +461,44 @@ private void handleAscusSet(Annotation an)
     }
    else return;
    if (ex == null) return;
+}
+
+
+
+private void handleAscusTest(Annotation an)
+{
+   
+}
+
+
+
+private void handleAscusTestFile(Annotation an)
+{
+   Expression ex = null;
+   if (an.isSingleMemberAnnotation()) {
+      SingleMemberAnnotation sma = (SingleMemberAnnotation) an;
+      ex = sma.getValue();
+    }
+   else if (an.isNormalAnnotation()) {
+      NormalAnnotation na = (NormalAnnotation) an;
+      for (Object o : na.values()) {
+         MemberValuePair mvp = (MemberValuePair) o;
+         String nm = mvp.getName().getIdentifier();
+         Expression val = mvp.getValue();
+         switch (nm) {
+            case "file" :
+               ex = val;
+               break;
+            default :
+               break;
+          }
+         if (ex != null) break;
+       }
+    }
+   else return;
+   if (ex == null) return;
+   String s = getStringValue(ex);
+   model_data.addTestFile(s);
 }
 
 

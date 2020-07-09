@@ -35,6 +35,7 @@
 
 package edu.brown.cs.spur.sump;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -73,6 +74,7 @@ private SumpParameters  sump_parameters;
 private String          context_path;
 private List<String>    suggested_words;
 private double          model_score;
+private Set<File>       test_files;
 
 
 
@@ -98,6 +100,7 @@ public SumpData(CoseRequest req,CoseResult rslt,SumpParameters sp)
    context_path = null;
    suggested_words = new ArrayList<>();
    model_score = 0;
+   test_files = new HashSet<>();
    
    if (rslt != null) {
       addSource(rslt.getSource());
@@ -189,6 +192,23 @@ public void setModelScore(double sc)
 }
 
 
+
+public void addTestFile(String file)
+{
+   File f = new File(file);
+   if (f.exists()) {
+      test_files.add(f);
+    }
+}
+
+public void addTestFile(File f)
+{
+   if (f.exists()) { 
+      test_files.add(f);
+    }
+}
+
+
 /********************************************************************************/
 /*                                                                              */
 /*      Internal access methods                                                 */
@@ -212,6 +232,8 @@ public SumpParameters getParameters()           { return sump_parameters; }
 public String getContextPath()                  { return context_path; }
 
 public List<String> getSuggestedWords()         { return suggested_words; }
+
+public Collection<File> getTestFiles()          { return test_files; }
 
 public double getModelScore()                   { return model_score; }
 
