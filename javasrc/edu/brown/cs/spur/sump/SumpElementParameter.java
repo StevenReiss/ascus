@@ -35,8 +35,6 @@
 
 package edu.brown.cs.spur.sump;
 
-import java.io.PrintWriter;
-
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
 import edu.brown.cs.ivy.jcomp.JcompSymbol;
@@ -114,6 +112,24 @@ SumpElementParameter(SumpModelBase mdl,JcompSymbol js,SingleVariableDeclaration 
    return 0;
 }
 
+
+/********************************************************************************/
+/*                                                                              */
+/*      Visitation methods                                                      */
+/*                                                                              */
+/********************************************************************************/
+
+@Override public void accept(SumpVisitor sev)
+{
+   if (!sev.preVisit(this)) return;
+   if (!sev.visit(this)) return;
+   param_type.accept(sev);
+   sev.endVisit(this);
+   sev.postVisit(this);
+}
+
+
+
 /********************************************************************************/
 /*                                                                              */
 /*      Output Methods                                                          */
@@ -129,14 +145,7 @@ SumpElementParameter(SumpModelBase mdl,JcompSymbol js,SingleVariableDeclaration 
 }
 
 
-@Override void outputJava(PrintWriter pw)
-{
-   outputComment(pw);
-   
-   if (param_type != null) param_type.outputJava(sump_model,pw);
-   else pw.print("Object");
-   pw.print(" " + getName());
-}
+
 
 
 @Override void setupJava()
@@ -145,6 +154,10 @@ SumpElementParameter(SumpModelBase mdl,JcompSymbol js,SingleVariableDeclaration 
       param_type.setupJava(getData());
     }
 }
+
+
+
+
 
 
 

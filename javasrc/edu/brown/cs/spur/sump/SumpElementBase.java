@@ -131,6 +131,10 @@ public SumpDataType getDataType() throws SumpException
 }
 
 
+
+
+
+
 /********************************************************************************/
 /*										*/
 /*	Local access methods            					*/
@@ -183,7 +187,7 @@ void addComment(String cmmt)
     }
 }
 
-String getComment()                     { return element_comment; }
+@Override public String getComment()            { return element_comment; }
 
 
 void addCommentsFor(ASTNode n)
@@ -261,7 +265,7 @@ protected void basicXml(IvyXmlWriter xw)
 }
 
 
-void outputJava(PrintWriter pw)                 { }
+
 
 
 protected void outputComment(PrintWriter pw)

@@ -48,6 +48,7 @@ class ScrapRequest extends CoseDefaultRequest implements ScrapConstants
 
 ScrapRequest()
 { 
+   setMaxPackageFiles(50);
 }
 
 

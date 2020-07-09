@@ -39,6 +39,7 @@ import java.util.Map;
 
 import edu.brown.cs.cose.cosecommon.CoseResult;
 import edu.brown.cs.spur.sump.SumpConstants.SumpModel;
+import edu.brown.cs.spur.sump.SumpParameters;
 
 
 public class EtchFactory implements EtchConstants
@@ -76,12 +77,13 @@ public EtchFactory(SumpModel target)
 public CoseResult fixCode(CoseResult orig,SumpModel srcmdl,Map<String,String> namemap)
 {
    CoseResult work = orig;
+   SumpParameters sp = target_model.getModelData().getParameters();
    
    EtchTransformFixPackage fixpackage = new EtchTransformFixPackage(work,namemap);
    
    work = fixpackage.transform(work,srcmdl,target_model);
    
-   EtchTransformInnerClassStatic innerstatic = new EtchTransformInnerClassStatic(namemap);
+   EtchTransformInnerStatic innerstatic = new EtchTransformInnerStatic(namemap);
    
    work = innerstatic.transform(work,srcmdl,target_model);
    
@@ -93,24 +95,31 @@ public CoseResult fixCode(CoseResult orig,SumpModel srcmdl,Map<String,String> na
    
    work = renamer.transform(work,srcmdl,target_model);
    
-   // need to handle changes to field types
+   EtchTransformFieldFix fieldfix = new EtchTransformFieldFix(namemap);
+   work = fieldfix.transform(work,srcmdl,target_model);
    
-   // need to reorder parameters in calls
+   EtchTransformReturnFix returnfix = new EtchTransformReturnFix(namemap);
+   work = returnfix.transform(work,srcmdl,target_model);
    
-   // need to handle type changes in calls
-   
-   EtchTransformFixParameters paramfix = new EtchTransformFixParameters(namemap);
+   EtchTransformParameterFix paramfix = new EtchTransformParameterFix(namemap);
    work = paramfix.transform(work,srcmdl,target_model);
    
-   // need to change return types 
-   
-   EtchTransformFixCalls callfix = new EtchTransformFixCalls(namemap);
+   EtchTransformCallFix callfix = new EtchTransformCallFix(namemap);
    work = callfix.transform(work,srcmdl,target_model);
    
+   EtchTransformFieldUseFix fieldusefix = new EtchTransformFieldUseFix(namemap);
+   work = fieldusefix.transform(work,srcmdl,target_model);
    
    EtchTransformAddMissing addmissing = new EtchTransformAddMissing(namemap);
-   
    work = addmissing.transform(work,srcmdl,target_model);
+   
+   if (sp.getRemoveUnused()) {
+      EtchTransformRemoveUnused unused = new EtchTransformRemoveUnused(namemap);
+      work = unused.transform(work,srcmdl,target_model);    
+    }
+   
+   EtchTransformConventions conventions = new EtchTransformConventions(namemap);
+   work = conventions.transform(work,srcmdl,target_model);
    
    return work;
 }
@@ -135,13 +144,11 @@ public CoseResult fixTests(CoseResult orig,SumpModel srcmdl,Map<String,String> n
    // need to handle changes to field types
    // need to handle changes to parameter types
    
-   EtchTransformRename renamer = new EtchTransformRename(namemap);
-   
+   EtchTransformPostRename renamer = new EtchTransformPostRename(namemap);
    work = renamer.transform(work,srcmdl,target_model);
    
-   EtchTransformFixCalls callfix = new EtchTransformFixCalls(namemap);
+   EtchTransformCallFix callfix = new EtchTransformCallFix(namemap);
    work = callfix.transform(work,srcmdl,target_model);
-   
    
    // need to remove code that references undefined items
    

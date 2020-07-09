@@ -10,7 +10,6 @@
 
 package edu.brown.cs.spur.sump;
 
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -200,6 +199,30 @@ private void addDependenciesFor(JcompType jt,JcompType ourtyp,Map<String,SumpCla
 
 /********************************************************************************/
 /*                                                                              */
+/*      Visitation methods                                                      */
+/*                                                                              */
+/********************************************************************************/
+
+@Override public void accept(SumpVisitor sev)
+{
+   if (!sev.preVisit(this)) return;
+   if (!sev.visit(this)) return;
+   for (SumpElementClass c : class_map.values()) {
+      c.accept(sev);
+    }
+   for (SumpElementDependency d : class_depends) {
+      d.accept(sev);
+    }
+   // need to handle generalizations for super types
+   sev.endVisit(this);
+   sev.postVisit(this);
+}
+
+
+
+
+/********************************************************************************/
+/*                                                                              */
 /*      Output methods                                                          */
 /*                                                                              */
 /********************************************************************************/
@@ -218,15 +241,7 @@ private void addDependenciesFor(JcompType jt,JcompType ourtyp,Map<String,SumpCla
 }
 
 
-@Override void outputJava(PrintWriter pw)
-{
-   outputComment(pw);
-   
-   for (SumpElementClass sc : class_map.values()) {
-      pw.println();
-      sc.outputJava(pw);
-    }
-}
+
 
 @Override void setupJava()
 {
@@ -236,15 +251,11 @@ private void addDependenciesFor(JcompType jt,JcompType ourtyp,Map<String,SumpCla
 }
 
 
-void generateUXF(IvyXmlWriter xw,SumpLayout sl)
-{
-   for (SumpElementClass sc : class_map.values()) {
-      sc.generateUXF(xw,sl);
-    }
-   for (SumpElementDependency ed : class_depends) {
-      ed.generateUXF(xw,sl);
-    }
-}
+
+
+
+
+
 
 
 

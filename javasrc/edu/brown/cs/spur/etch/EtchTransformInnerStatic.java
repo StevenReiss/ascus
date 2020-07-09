@@ -74,7 +74,7 @@ import edu.brown.cs.ivy.jcomp.JcompSymbol;
 import edu.brown.cs.ivy.jcomp.JcompType;
 import edu.brown.cs.spur.sump.SumpConstants.SumpModel;
 
-class EtchTransformInnerClassStatic extends EtchTransform
+class EtchTransformInnerStatic extends EtchTransform
 {
 
 
@@ -97,9 +97,9 @@ private static final String OUTER_PARAM = "outerthis";
 /*                                                                              */
 /********************************************************************************/
 
-EtchTransformInnerClassStatic(Map<String,String> namemap)
+EtchTransformInnerStatic(Map<String,String> namemap)
 {
-   super("InnerClassStatic");
+   super("InnerStatic");
    name_map = namemap;
 }
 
@@ -204,7 +204,7 @@ private class ClassStaticMapper extends EtchMapper {
    private Set<JcompType> change_types;
    
    ClassStaticMapper(List<TypeDeclaration> tds) {
-      super(EtchTransformInnerClassStatic.this);
+      super(EtchTransformInnerStatic.this);
       fix_decls = tds;
       change_types = new HashSet<>();
       for (TypeDeclaration td : fix_decls) {

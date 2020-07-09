@@ -15,6 +15,7 @@ import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 
 import edu.brown.cs.ivy.jcomp.JcompControl;
+import edu.brown.cs.ivy.jcomp.JcompProject;
 import edu.brown.cs.ivy.jcomp.JcompSymbol;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
 import edu.brown.cs.spur.rowel.RowelConstants.RowelMatch;
@@ -53,6 +54,13 @@ enum DependArity {
 }
 
 
+enum NameType {
+   TYPE, LOCAL, PARAMETER, FIELD, CONSTANT, METHOD
+}
+
+
+
+
 
 /********************************************************************************/
 /*                                                                              */
@@ -69,12 +77,19 @@ interface SumpModel {
   void outputXml(IvyXmlWriter xw);
   void outputJava(Writer w);
   void save(File file) throws IOException;
-  void generateUXF(IvyXmlWriter xw);
-  void generateXMI(File file) throws IOException;
-  void computeLayout();
+  void generateUXF(Writer xw);
+  void generateXMI(Writer xw);
+  SumpLayout computeLayout();
   Rectangle getBounds(SumpClass cls);
   Collection<SumpClass> getDependentClasses(SumpClass sc);
   Collection<SumpClass> getInheritedClasses(SumpClass sc);
+  
+  Collection<SumpClass> findUsedClasses(SumpClass cls);
+  SumpClass getClassForName(String nm);
+  
+  JcompProject resolveModel(JcompControl ctrl,CompilationUnit cu);
+  void accept(SumpVisitor sev);
+  
 }
 
 
@@ -84,7 +99,9 @@ interface SumpElement {
    String getName();
    String getFullName();
    String getMapName();
+   String getComment();
    double getWordScore(SumpElement se);
+   void accept(SumpVisitor sev);
 }       // end of inner interface SumpElement
 
 
@@ -110,6 +127,7 @@ interface SumpClass extends SumpElement, RowelMatch {
    Collection<SumpAttribute> getAttributes();
    Collection<SumpOperation> getOperations();
    Collection<String> getEnumConstants();
+   String getJavaOutputName();
    
    void addAttribute(JcompSymbol js,ASTNode n);
    void addOperation(JcompSymbol js,ASTNode n);

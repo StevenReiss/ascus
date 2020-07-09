@@ -86,7 +86,6 @@ public static void main(String [] args)
 /*                                                                              */
 /********************************************************************************/
 
-private Set<String>     english_words;
 private JcompControl    jcomp_control;
 private Map<String,Integer> document_counts;
 private Map<String,Integer> kgram_counts;
@@ -95,9 +94,16 @@ private int             total_kdocuments;
 private List<File>      root_files;
 private File            output_file;
 
+private static Set<String>     english_words;
+
 private static Pattern package_pattern =
    Pattern.compile("^\\s*package\\s+([A-Za-z_0-9]+(\\s*\\.\\s*[A-Za-z_0-9]+)*)\\s*\\;",
       Pattern.MULTILINE);
+
+static {
+   getValidWords();
+}
+
 
          
 
@@ -139,6 +145,17 @@ private SwiftIdfBuilder()
 }
 
 
+
+/********************************************************************************/
+/*                                                                              */
+/*      Access methods                                                          */
+/*                                                                              */
+/********************************************************************************/
+
+public static Set<String> getEnglishWords()
+{
+   return english_words;
+}
 
 
 /********************************************************************************/
@@ -235,7 +252,7 @@ private void generateIdfOutput()
 /*                                                                              */
 /********************************************************************************/
 
-private void getValidWords()
+private static void getValidWords()
 {
    english_words = new HashSet<>();
   

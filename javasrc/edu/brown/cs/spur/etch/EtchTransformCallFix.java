@@ -31,10 +31,8 @@ import java.util.Map;
 
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
@@ -43,12 +41,13 @@ import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompSymbol;
 import edu.brown.cs.ivy.jcomp.JcompType;
 import edu.brown.cs.ivy.jcomp.JcompTyper;
+import edu.brown.cs.spur.sump.SumpConstants.SumpClass;
 import edu.brown.cs.spur.sump.SumpConstants.SumpModel;
 import edu.brown.cs.spur.sump.SumpConstants.SumpOperation;
 import edu.brown.cs.spur.sump.SumpConstants.SumpParameter;
 
 
-class EtchTransformFixCalls extends EtchTransform
+class EtchTransformCallFix extends EtchTransform
 {
 
 
@@ -67,9 +66,9 @@ private Map<String,String> name_map;
 /*                                                                              */
 /********************************************************************************/
 
-EtchTransformFixCalls(Map<String,String> namemap)
+EtchTransformCallFix(Map<String,String> namemap)
 {
-   super("FixCalls");
+   super("CallFix");
    name_map = namemap;
 }
 
@@ -94,97 +93,75 @@ EtchTransformFixCalls(Map<String,String> namemap)
 
 /********************************************************************************/
 /*                                                                              */
-/*      Find parameter mappings                                                 */
+/*      Find changed calls                                                      */
 /*                                                                              */
 /********************************************************************************/
 
-private CallMapper findMappings(ASTNode cu,SumpModel source,SumpModel target)
+private CallMapper findMappings(ASTNode cu,SumpModel src,SumpModel tgt)
 {
-   CallMapper mapper = new CallMapper();
+   // src = user model
+   // tgt = retrieved model
+   // THIS HAS TO handle name-mapped calls
    
-   findMatchings(cu,source,target,mapper);
+   CallMapper mapper = new CallMapper(tgt);
+   
+   for (SumpClass tgtcls : tgt.getPackage().getClasses()) {
+      String rslt = name_map.get(tgtcls.getFullName());
+      if (rslt == null) continue;
+      for (SumpOperation tgtop : tgtcls.getOperations()) {
+         String oprslt = name_map.get(tgtop.getMapName());
+         if (oprslt == null) continue;
+         SumpOperation srcop = findOperation(oprslt,src);
+         CallFix cf = null;
+         if (tgtop.getReturnType() != null) {
+            String tgtrt = tgtop.getReturnType().getName();
+            String srcrt = srcop.getReturnType().getName();
+            if (!tgtrt.equals(srcrt)) {
+               if (cf == null) {
+                  cf = new CallFix();
+                  mapper.addCallFix(tgtop,cf);
+                }
+               cf.setReturnType(srcrt);
+             }
+          }
+         int tgtct = 0;
+         for (SumpParameter tgtp : tgtop.getParameters()) {
+            String pnm = tgtp.getFullName();
+            String match = name_map.get(pnm);
+            if (match != null) {
+               SumpParameter usesp = null;
+               int srcct = 0;
+               for (SumpParameter srcp : srcop.getParameters()) {
+                  if (srcp.getFullName().equals(match)) {
+                     usesp = srcp;
+                     break;
+                   }
+                  ++srcct;
+                }
+               if (usesp != null) {
+                  String ptypnm = usesp.getDataType().getBaseType().getName();
+                  String btypnm = usesp.getDataType().getName();
+                  boolean samety = ptypnm.equals(btypnm);
+                  boolean sameord = srcct == tgtct;
+                  if (!samety || !sameord) {
+                     if (cf == null) {
+                        cf = new CallFix();
+                        mapper.addCallFix(tgtop,cf);
+                      }
+                     if (!samety) cf.setParameterType(tgtct,ptypnm);
+                     if (!sameord) cf.setParameterOrder(tgtct,srcct);
+                   }
+                }
+             }
+            ++tgtct;
+          }
+       }
+    }
    
    if (mapper.isEmpty()) return null;
    
    return mapper;
 }
-
-
-
-
-/********************************************************************************/
-/*                                                                              */
-/*      Identify all parameters to update                                       */
-/*                                                                              */
-/********************************************************************************/
-
-private void findMatchings(ASTNode cu,SumpModel src,SumpModel target,CallMapper mapper)
-{
-   ParamVisitor sp = new ParamVisitor(src,target,mapper);
-   cu.accept(sp);
-}
-
-
-private class ParamVisitor extends ASTVisitor {
-
-   private SumpModel source_model;
-   private SumpModel target_model;
-   private CallMapper param_mapper;
-   
-   ParamVisitor(SumpModel s,SumpModel t,CallMapper pm) {
-      source_model = s;
-      target_model = t;
-      param_mapper = pm;
-    }
-   
-   @Override public boolean visit(MethodDeclaration md) {
-      JcompSymbol jm = JcompAst.getDefinition(md);
-      String mnm = getMapName(jm);
-      ParamFix pf = null;
-      SumpOperation sop = findOperation(mnm,source_model);
-      if (sop == null) return false;
-      
-      int ct = 0;
-      for (SumpParameter srcp : sop.getParameters()) {
-          String pnm = srcp.getFullName();
-          String match = name_map.get(pnm);
-          if (match != null) {
-             SumpOperation op = findOperation(match,target_model);
-             int pct = 0;
-             SumpParameter usesp = null;
-             for (SumpParameter sp : op.getParameters()) {
-                if (sp.getFullName().equals(match)) {
-                   usesp = sp;
-                   break;
-                 }
-                ++pct;
-              }
-             if (usesp != null) {
-                String ptypnm = usesp.getDataType().getBaseType().getName();
-                String tnm = usesp.getDataType().getName();
-                String btypnm = name_map.get(tnm);
-                if (btypnm == null) btypnm = tnm;
-                boolean samety = ptypnm.equals(btypnm);
-                boolean sameord = ct == pct;
-                if (!samety || !sameord) {
-                   if (pf == null) {
-                      pf = new ParamFix();
-                      param_mapper.addParameterFix(jm,pf);
-                    }
-                   if (!samety) pf.setParameterType(ct,ptypnm);
-                   if (!sameord) pf.setParameterOrder(ct,pct);
-                 }
-              }
-           }
-          ++ct;
-       }
-      
-      return false;
-    }
-   
-}       // end of inner class ParamVisitor
-
-
 
 
 
@@ -196,37 +173,47 @@ private class ParamVisitor extends ASTVisitor {
 
 private class CallMapper extends EtchMapper {
 
-   private Map<JcompSymbol,ParamFix> fix_set;
+   private Map<SumpOperation,CallFix> op_fixes;
+   private SumpModel target_model;
    
-   CallMapper() {
-      super(EtchTransformFixCalls.this);
-      fix_set = new HashMap<>();
+   CallMapper(SumpModel tgt) {
+      super(EtchTransformCallFix.this);
+      op_fixes = new HashMap<>();
+      target_model = tgt;
     }
    
-   boolean isEmpty()                            { return fix_set.isEmpty(); }
+   boolean isEmpty()                            { return op_fixes.isEmpty(); }
    
-   void addParameterFix(JcompSymbol m,ParamFix pf) {
-      fix_set.put(m,pf);
+   void addCallFix(SumpOperation op,CallFix cf) {
+      op_fixes.put(op,cf);
     }
    
    @Override void rewriteTree(ASTNode orig,ASTRewrite rw) {
-      JcompSymbol js = JcompAst.getReference(orig);
-      ParamFix pf = fix_set.get(js);
-      if (pf == null) return;
-      
-      if (orig instanceof MethodInvocation) {
-          MethodInvocation mi = (MethodInvocation) orig;
-          ListRewrite lrw = rw.getListRewrite(mi,MethodInvocation.ARGUMENTS_PROPERTY);
-          fixParameters(pf,mi,lrw,mi.arguments());
-        }
-      else if (orig instanceof ClassInstanceCreation) {
-         ClassInstanceCreation ci = (ClassInstanceCreation) orig;
-         ListRewrite lrw = rw.getListRewrite(ci,ClassInstanceCreation.ARGUMENTS_PROPERTY);
-         fixParameters(pf,ci,lrw,ci.arguments());
+      CallFix cf = null;
+      if (orig instanceof MethodInvocation || orig instanceof ClassInstanceCreation) {
+         JcompSymbol js = JcompAst.getReference(orig);
+         JcompType jt = JcompAst.getExprType(orig);
+         if (js == null || jt.isErrorType()) {
+            SumpOperation useop = findOperation(orig,target_model);
+            if (useop != null) cf = op_fixes.get(useop);
+          }
+       }
+      if (cf != null) {
+         if (orig instanceof MethodInvocation) {
+            MethodInvocation mi = (MethodInvocation) orig;
+            ListRewrite lrw = rw.getListRewrite(mi,MethodInvocation.ARGUMENTS_PROPERTY);
+            fixParameters(cf,mi,lrw,mi.arguments());
+            fixCallReturn(cf,mi,rw);
+          }
+         else if (orig instanceof ClassInstanceCreation) {
+            ClassInstanceCreation ci = (ClassInstanceCreation) orig;
+            ListRewrite lrw = rw.getListRewrite(ci,ClassInstanceCreation.ARGUMENTS_PROPERTY);
+            fixParameters(cf,ci,lrw,ci.arguments());
+          }
        }
     }
    
-   private void fixParameters(ParamFix pf,ASTNode n,ListRewrite lrw,List<?> args) {
+   private void fixParameters(CallFix pf,ASTNode n,ListRewrite lrw,List<?> args) {
       AST ast = lrw.getASTRewrite().getAST();
       Map<Integer,Integer> order = pf.getOrderMap();
       Map<Integer,String> types = pf.getTypeMap();
@@ -270,7 +257,19 @@ private class CallMapper extends EtchMapper {
           }
        }
     }
-}
+   
+   private void fixCallReturn(CallFix cf,MethodInvocation mi,ASTRewrite rw) {
+      String tnm = cf.getReturnType();
+      if (tnm == null) return;
+      MethodInvocation nmi = (MethodInvocation) rw.createCopyTarget(mi);
+      JcompTyper typer = JcompAst.getTyper(mi);
+      JcompType jt = typer.findSystemType(tnm);
+      JcompType oty = JcompAst.getExprType(mi);
+      Expression rs = createCastExpr(rw.getAST(),jt,nmi,oty);
+      rw.replace(mi,rs,null);
+    }
+   
+}       // end of inner class CallMapper
 
 
 
@@ -281,18 +280,21 @@ private class CallMapper extends EtchMapper {
 /*                                                                              */
 /********************************************************************************/
 
-private static class ParamFix {
+private static class CallFix {
 
    private Map<Integer,String> fix_types;
    private Map<Integer,Integer> fix_order;
+   private String return_type;
    
-   ParamFix() {
+   CallFix() {
       fix_types = new HashMap<>();
       fix_order = new HashMap<>();
+      return_type = null;
     }
    
    Map<Integer,Integer> getOrderMap()       { return fix_order; }
    Map<Integer,String> getTypeMap()         { return fix_types; }
+   String getReturnType()                   { return return_type; }
    
    void setParameterType(int idx,String typ) {
       fix_types.put(idx,typ);
@@ -302,11 +304,15 @@ private static class ParamFix {
       fix_order.put(idx,ord);
     }
 
+   void setReturnType(String typ) {
+      return_type = typ;
+    }
+   
 }       // end of inner class ParamFix
 
 
 
-}       // end of class EtchTransformFixCalls
+}       // end of class EtchTransformCallFix
 
 
 

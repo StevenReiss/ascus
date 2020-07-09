@@ -41,7 +41,7 @@ public class SumpParameters implements SumpConstants, RowelConstants.RowelMatchT
 /*                                                                              */
 /********************************************************************************/
 
-enum Parameters {
+enum ParameterName {
    MIN_FIELDS, MIN_METHODS, MIN_TYPES, MAX_TYPES, MIN_PACKAGE_TERM_MATCH,
       USE_PACKAGE_FIELDS,
       FIELD_MIN_MATCH, FIELD_MAX_MATCH,
@@ -50,10 +50,13 @@ enum Parameters {
       ENUM_MATCH,
       CLASS_MIN_MATCH, CLASS_MAX_MATCH,
       CLASS_CUTOFF, ATTR_CUTOFF, METHOD_CUTOFF, DEPEND_CUTOFF, SCORE_CUTOFF,
-      INTERFACE_FRACTION, ENUM_FRACTION,WORD_FRACTION
+      INTERFACE_FRACTION, ENUM_FRACTION,WORD_FRACTION,
+      CONVENTION_TYPE, CONVENTION_LOCAL, CONVENTION_PARAMETER, CONVENTION_FIELD,
+      CONVENTION_CONSTANT, CONVENTION_METHOD,
+      REMOVE_UNUSED,
 }
 
-private Map<Parameters,Object>      param_values;
+private Map<ParameterName,Object>      param_values;
 
 
 
@@ -65,33 +68,33 @@ private Map<Parameters,Object>      param_values;
 
 public SumpParameters() 
 {
-   param_values = new EnumMap<>(Parameters.class);
-   for (Parameters p : Parameters.values()) {
+   param_values = new EnumMap<>(ParameterName.class);
+   for (ParameterName p : ParameterName.values()) {
       param_values.put(p,0);
     }
-   param_values.put(Parameters.MIN_FIELDS,5);
-   param_values.put(Parameters.MIN_METHODS,10);
-   param_values.put(Parameters.MIN_TYPES,3);
-   param_values.put(Parameters.MAX_TYPES,200);
-   param_values.put(Parameters.MIN_PACKAGE_TERM_MATCH,25);
-   param_values.put(Parameters.USE_PACKAGE_FIELDS,true);
-   param_values.put(Parameters.FIELD_MIN_MATCH,0.5);
-   param_values.put(Parameters.FIELD_MAX_MATCH,0.75);
-   param_values.put(Parameters.CONSTRUCTOR_MIN_MATCH,0.1);
-   param_values.put(Parameters.CONSTRUCTOR_MAX_MATCH,0.25);
-   param_values.put(Parameters.METHOD_MIN_MATCH,0.5);
-   param_values.put(Parameters.METHOD_MAX_MATCH,0.75);
-   param_values.put(Parameters.ENUM_MATCH,0.75);
-   param_values.put(Parameters.CLASS_MIN_MATCH,0.60);
-   param_values.put(Parameters.CLASS_MAX_MATCH,0.75);
-   param_values.put(Parameters.CLASS_CUTOFF,0.5);
-   param_values.put(Parameters.ATTR_CUTOFF,0.5);
-   param_values.put(Parameters.METHOD_CUTOFF,0.5);
-   param_values.put(Parameters.DEPEND_CUTOFF,0.33);
-   param_values.put(Parameters.SCORE_CUTOFF,0.50);
-   param_values.put(Parameters.INTERFACE_FRACTION,0.25);
-   param_values.put(Parameters.ENUM_FRACTION,0.75);
-   param_values.put(Parameters.WORD_FRACTION,0.20);
+   param_values.put(ParameterName.MIN_FIELDS,5);
+   param_values.put(ParameterName.MIN_METHODS,10);
+   param_values.put(ParameterName.MIN_TYPES,3);
+   param_values.put(ParameterName.MAX_TYPES,200);
+   param_values.put(ParameterName.MIN_PACKAGE_TERM_MATCH,25);
+   param_values.put(ParameterName.USE_PACKAGE_FIELDS,true);
+   param_values.put(ParameterName.FIELD_MIN_MATCH,0.5);
+   param_values.put(ParameterName.FIELD_MAX_MATCH,0.75);
+   param_values.put(ParameterName.CONSTRUCTOR_MIN_MATCH,0.1);
+   param_values.put(ParameterName.CONSTRUCTOR_MAX_MATCH,0.25);
+   param_values.put(ParameterName.METHOD_MIN_MATCH,0.5);
+   param_values.put(ParameterName.METHOD_MAX_MATCH,0.75);
+   param_values.put(ParameterName.ENUM_MATCH,0.75);
+   param_values.put(ParameterName.CLASS_MIN_MATCH,0.60);
+   param_values.put(ParameterName.CLASS_MAX_MATCH,0.75);
+   param_values.put(ParameterName.CLASS_CUTOFF,0.5);
+   param_values.put(ParameterName.ATTR_CUTOFF,0.5);
+   param_values.put(ParameterName.METHOD_CUTOFF,0.5);
+   param_values.put(ParameterName.DEPEND_CUTOFF,0.33);
+   param_values.put(ParameterName.SCORE_CUTOFF,0.50);
+   param_values.put(ParameterName.INTERFACE_FRACTION,0.25);
+   param_values.put(ParameterName.ENUM_FRACTION,0.75);
+   param_values.put(ParameterName.WORD_FRACTION,0.20);
 }
 
 
@@ -104,127 +107,146 @@ public SumpParameters()
 
 public int getMinFields()
 {
-   return getInt(Parameters.MIN_FIELDS);
+   return getInt(ParameterName.MIN_FIELDS);
 }
 
 
 public int getMinMethods() 
 {
-   return getInt(Parameters.MIN_METHODS);
+   return getInt(ParameterName.MIN_METHODS);
 }
 
 
 public int getMinTypes() 
 {
-   return getInt(Parameters.MIN_TYPES);
+   return getInt(ParameterName.MIN_TYPES);
 }
 
 
 public int getMaxTypes()
 {
-   return getInt(Parameters.MAX_TYPES);
+   return getInt(ParameterName.MAX_TYPES);
 }
 
 
 public int getMinPackageTermMatches()
 {
-   return getInt(Parameters.MIN_PACKAGE_TERM_MATCH);
+   return getInt(ParameterName.MIN_PACKAGE_TERM_MATCH);
 }
 
 
 public boolean usePackageFields()
 {
-   return getBoolean(Parameters.USE_PACKAGE_FIELDS);
+   return getBoolean(ParameterName.USE_PACKAGE_FIELDS);
 }
 
 public double getFieldMinMatch()
 {
-   return getDouble(Parameters.FIELD_MIN_MATCH);
+   return getDouble(ParameterName.FIELD_MIN_MATCH);
 }
 
 public double getFieldMaxMatch()
 {
-   return getDouble(Parameters.FIELD_MAX_MATCH);
+   return getDouble(ParameterName.FIELD_MAX_MATCH);
 }
 
 public double getConstructorMinMatch()
 {
-   return getDouble(Parameters.CONSTRUCTOR_MIN_MATCH);
+   return getDouble(ParameterName.CONSTRUCTOR_MIN_MATCH);
 }
 
 public double getConstructorMaxMatch()
 {
-   return getDouble(Parameters.CONSTRUCTOR_MAX_MATCH);
+   return getDouble(ParameterName.CONSTRUCTOR_MAX_MATCH);
 }
 
 public double getMethodMinMatch()
 {
-   return getDouble(Parameters.METHOD_MIN_MATCH);
+   return getDouble(ParameterName.METHOD_MIN_MATCH);
 }
 
 public double getMethodMaxMatch()
 {
-   return getDouble(Parameters.METHOD_MAX_MATCH);
+   return getDouble(ParameterName.METHOD_MAX_MATCH);
 }
 
 public double getEnumMatch()
 {
-   return getDouble(Parameters.ENUM_MATCH);
+   return getDouble(ParameterName.ENUM_MATCH);
 }
 
 public double getClassMinMatch()
 {
-   return getDouble(Parameters.CLASS_MIN_MATCH); 
+   return getDouble(ParameterName.CLASS_MIN_MATCH); 
 }
 
 public double getClassMaxMatch()
 {
-   return getDouble(Parameters.CLASS_MAX_MATCH); 
+   return getDouble(ParameterName.CLASS_MAX_MATCH); 
 }
 
 
 public double getClassCutoff()
 {
-   return getDouble(Parameters.CLASS_CUTOFF);
+   return getDouble(ParameterName.CLASS_CUTOFF);
 }
 
 public double getAttrCutoff()
 {
-   return getDouble(Parameters.ATTR_CUTOFF);
+   return getDouble(ParameterName.ATTR_CUTOFF);
 }
 
 public double getMethodCutoff()
 {
-   return getDouble(Parameters.METHOD_CUTOFF);
+   return getDouble(ParameterName.METHOD_CUTOFF);
 }
 
 public double getDependCutoff()
 {
-   return getDouble(Parameters.DEPEND_CUTOFF);
+   return getDouble(ParameterName.DEPEND_CUTOFF);
 }
 
 public double getScoreCutoff()
 {
-   return getDouble(Parameters.SCORE_CUTOFF);
+   return getDouble(ParameterName.SCORE_CUTOFF);
 }
 
 public double getInterfaceFraction()
 {
-   return getDouble(Parameters.INTERFACE_FRACTION);
+   return getDouble(ParameterName.INTERFACE_FRACTION);
 }
 
 public double getEnumFraction()
 {
-   return getDouble(Parameters.ENUM_FRACTION);
+   return getDouble(ParameterName.ENUM_FRACTION);
 }
 
 
 public double getWordFraction()
 {
-   return getDouble(Parameters.WORD_FRACTION);
+   return getDouble(ParameterName.WORD_FRACTION);
 }
 
 
+
+public String getNamingConventions(NameType nt) 
+{
+   String id = "CONVENTION_" + nt.toString();
+   try {
+      ParameterName p = ParameterName.valueOf(id);
+      return getString(p);
+    }
+   catch (IllegalArgumentException e) {
+      return null;
+    }
+}
+
+
+
+public boolean getRemoveUnused()
+{
+   return getBoolean(ParameterName.REMOVE_UNUSED);
+}
 
 
 /********************************************************************************/
@@ -238,7 +260,7 @@ Map<String,Object> getNonDefaults()
    Map<String,Object> rslt = new HashMap<>();
    SumpParameters dflt = new SumpParameters();
    
-   for (Parameters p : Parameters.values()) {
+   for (ParameterName p : ParameterName.values()) {
       if (!param_values.get(p).equals(dflt.param_values.get(p))) {
          rslt.put(p.toString(),param_values.get(p));
        }
@@ -258,7 +280,7 @@ Map<String,Object> getNonDefaults()
 public void set(String nm,double v)
 {
    try {
-      Parameters p = Parameters.valueOf(nm);
+      ParameterName p = ParameterName.valueOf(nm);
       param_values.put(p,v);
     }
    catch (IllegalArgumentException e) {
@@ -274,7 +296,7 @@ public void set(String nm,double v)
 /*                                                                              */
 /********************************************************************************/
 
-private int getInt(Parameters p)
+private int getInt(ParameterName p)
 {
    Object o = param_values.get(p);
    if (o == null) return 0;
@@ -288,7 +310,7 @@ private int getInt(Parameters p)
 }
 
 
-private double getDouble(Parameters p)
+private double getDouble(ParameterName p)
 {
    Object o = param_values.get(p);
    if (o == null) return 0;
@@ -302,8 +324,15 @@ private double getDouble(Parameters p)
 } 
 
 
-@SuppressWarnings("unchecked")
-private <T extends Enum<T>> T getEnum(Parameters p,T dflt)
+private String getString(ParameterName p)
+{
+   Object o = param_values.get(p);
+   if (o == null) return null;
+   return o.toString();
+}
+
+@SuppressWarnings({ "unchecked", "unused" })
+private <T extends Enum<T>> T getEnum(ParameterName p,T dflt)
 {
    Object o = param_values.get(p);
    if (o == null) return dflt;
@@ -317,7 +346,7 @@ private <T extends Enum<T>> T getEnum(Parameters p,T dflt)
 }
 
 
-private boolean getBoolean(Parameters p)
+private boolean getBoolean(ParameterName p)
 {
    Object o = param_values.get(p);
    if (o == null) return false;

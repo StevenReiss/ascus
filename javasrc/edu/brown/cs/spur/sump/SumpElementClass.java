@@ -36,7 +36,6 @@
 package edu.brown.cs.spur.sump;
 
 import java.awt.Rectangle;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -305,6 +304,28 @@ private String getSumpTypeName(AbstractTypeDeclaration atd)
 
 /********************************************************************************/
 /*                                                                              */
+/*      Visitation methods                                                      */
+/*                                                                              */
+/********************************************************************************/
+
+@Override public void accept(SumpVisitor sev)
+{
+   if (!sev.preVisit(this)) return;
+   if (!sev.visit(this)) return;
+   for (SumpElementAttribute a : attribute_list) {
+      a.accept(sev);
+    }
+   for (SumpElementOperation o : operation_list) {
+      o.accept(sev);
+    }
+   sev.endVisit(this);
+   sev.postVisit(this);
+}
+
+
+
+/********************************************************************************/
+/*                                                                              */
 /*      Output Methods                                                          */
 /*                                                                              */
 /********************************************************************************/
@@ -354,102 +375,14 @@ private String getSumpTypeName(AbstractTypeDeclaration atd)
 
 
 
-@Override void outputJava(PrintWriter pw)
-{
-   getData().pushType(getName(),is_interface);
-   
-   outputComment(pw);
-   
-   Set<SumpElementClass> uses = sump_model.findUsedClasses(this);
-   if (uses == null || uses.size() == 0) pw.println("@AscusClass ");
-   else {
-      pw.print("@AscusClass(uses={");
-      int ct = 0;
-      for (SumpElementClass cls : uses) {
-         if (ct++ > 0) pw.print(",");
-         pw.print(cls.getJavaOutputName());
-         pw.print(".class");
-       }
-      pw.println("})");
-    }
-   String pfx = null;
-   if (is_interface) pfx = "interface";
-   else if (enum_constants != null) pfx = "enum";
-   else if (operation_list.size() == 0) pfx = "class";
-   else pfx = "abstract class";
-
-   pw.print(pfx + " " + getJavaOutputName());
-   if (super_name != null) {
-      String nm = getOutputName(super_name);
-      pw.print(" extends " + nm);
-    }   
-   if (iface_names != null && !iface_names.isEmpty()) {
-      if (is_interface) pw.print(" extends ");
-      else pw.print(" implements ");
-      int ct = 0;
-      for (String s : iface_names) {
-         if (ct++ > 0) pw.print(", ");
-         String nm = getOutputName(s);
-         pw.print(nm);
-       }
-    }
-   pw.println(" {");
-   if (enum_constants != null) {
-      int ct = 0;
-      for (String s : enum_constants) {
-         if (ct > 0) {
-            pw.print(", ");
-            if (ct%5 == 0) pw.println();
-          }
-         ++ct;
-         pw.print(s);
-       }
-      if (!attribute_list.isEmpty() || !operation_list.isEmpty()) {
-         pw.println(";");
-       }
-      else pw.println();
-    }
-   
-   for (SumpElementAttribute att : attribute_list) {
-      att.outputJava(pw);
-    }
-   for (SumpElementOperation op : operation_list) {
-      op.outputJava(pw);
-    }
-   
-   pw.println("}");
-   
-   getData().popType();
-}
 
 
 
-private String getOutputName(String orignm)
-{
-   SumpClass sc = sump_model.getClassForName(orignm);
-   String nm = orignm;
-   if (sc != null) {
-      SumpElementClass sec = (SumpElementClass) sc;
-      nm = sec.getJavaOutputName();
-    }
-   else {
-      int idx1 = nm.indexOf("<");
-      if (idx1 < 0) {
-         int idx2 = nm.lastIndexOf(".");
-         if (idx2 > 0) nm = nm.substring(idx2+1);
-       }
-      else {
-         int idx2 = nm.lastIndexOf(".",idx1);
-         if (idx2 > 0) nm = nm.substring(idx2+1);
-         // need to fix parameters as well 
-       }
-    }
-   
-   return nm;
-}
 
 
-String getJavaOutputName()
+
+
+@Override public String getJavaOutputName()
 {
    String nm = getName();
    int idx = nm.lastIndexOf("$");
@@ -472,78 +405,12 @@ String getJavaOutputName()
 }
 
 
-void generateUXF(IvyXmlWriter xw,SumpLayout layout)
-{
-   xw.begin("element");
-   xw.textElement("id","UMLClass");
-   xw.begin("coordinates");
-   Rectangle r = layout.getBounds(this);
-   xw.textElement("x",r.x);
-   xw.textElement("y",r.y);
-   xw.textElement("w",r.width);
-   xw.textElement("h",r.height);
-   xw.end("coordinates");
-   StringBuffer buf = new StringBuffer();
-   if (enum_constants != null) buf.append("<<enumeration>>");
-   buf.append(getJavaOutputName() + "\n-\n");
-   if (enum_constants != null) {
-      for (String s : enum_constants) {
-         buf.append(s + "\n");
-       }
-    }
-   for (SumpElementAttribute at : attribute_list) {
-      if (at.getAccess() != null) {
-         switch (at.getAccess()) {
-            case PRIVATE : 
-               buf.append("#");
-               break;
-            case PUBLIC :
-               buf.append("+");
-               break;
-            default  :
-               break;
-          }
-       }
-      buf.append(at.getName());
-      buf.append(": ");
-      buf.append(at.getDataType().getUmlOutputName(sump_model));
-      buf.append("\n");
-    }
-   if (!operation_list.isEmpty()) {
-      buf.append("-\n");
-      for (SumpElementOperation op : operation_list) {
-         if (op.getAccess() != null) {
-            switch (op.getAccess()) {
-               case PRIVATE : 
-                  buf.append("#");
-                  break;
-               case PUBLIC :
-                  buf.append("+");
-                  break;
-               default :
-                  break;
-             }
-          }
-         buf.append(op.getName());
-         buf.append("(");
-         int ct = 0;
-         for (SumpParameter ep : op.getParameters()) {
-            if (ct++ > 0) buf.append(", ");
-            buf.append(ep.getName());
-            buf.append(": ");
-            buf.append(ep.getDataType().getUmlOutputName(sump_model));
-          }
-         buf.append(")");
-         if (op.getReturnType() != null) {
-            buf.append(": ");
-            buf.append(op.getReturnType().getUmlOutputName(sump_model));
-          }
-         buf.append("\n");
-       }
-    }
-   xw.textElement("panel_attributes",buf.toString());
-   xw.end("element");
-}
+
+
+
+
+
+
 
 
 

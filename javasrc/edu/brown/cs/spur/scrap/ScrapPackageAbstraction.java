@@ -577,7 +577,7 @@ List<LidsLibrary> getReferencedLibraries()
       System.err.println("\t" + imp);
     }
    
-   System.err.println("--------UML MODELS");
+   System.err.println("--------MODELS");
    for (SumpModel mdl : uml_models) {
       IvyXmlWriter xw = new IvyXmlWriter();
       mdl.outputXml(xw);
@@ -589,6 +589,9 @@ List<LidsLibrary> getReferencedLibraries()
       IvyXmlWriter uxfw = new IvyXmlWriter();
       mdl.generateUXF(uxfw);
       System.err.println(uxfw.toString());
+      StringWriter xmiw = new StringWriter();
+      mdl.generateXMI(xmiw);
+      System.err.println(xmiw.toString());
       break;            // only output one model for now
     }
    

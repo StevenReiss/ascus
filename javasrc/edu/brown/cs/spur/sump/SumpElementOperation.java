@@ -35,7 +35,6 @@
 
 package edu.brown.cs.spur.sump;
 
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -229,6 +228,25 @@ private boolean matchOperation(SumpElementOperation op)
 
 
 
+/********************************************************************************/
+/*                                                                              */
+/*      Visitation methods                                                      */
+/*                                                                              */
+/********************************************************************************/
+
+@Override public void accept(SumpVisitor sev)
+{
+   if (!sev.preVisit(this)) return;
+   if (!sev.visit(this)) return;
+   return_type.accept(sev);
+   for (SumpElementParameter p : param_values) {
+      p.accept(sev);
+    }
+   sev.endVisit(this);
+   sev.postVisit(this);
+}
+
+
 
 /********************************************************************************/
 /*                                                                              */
@@ -251,44 +269,7 @@ private boolean matchOperation(SumpElementOperation op)
 
 
 
-@Override void outputJava(PrintWriter pw)
-{
-   outputComment(pw);
-   
-   pw.print("   ");
-   if (!getData().isCurrentInterface()) {
-      String acc = "public";
-      if (getAccess() != null) acc = getAccess().toString().toLowerCase();
-      pw.print(acc + " ");
-    }
-   
-   boolean isconst = false;
-   String nm = getName();
-   if (nm.equals("<init>")) {
-      nm = getData().getCurrentType();
-      isconst = true;
-    }   
-   else {
-      if (!getData().isCurrentInterface()) pw.print("abstract ");
-      if (return_type != null) return_type.outputJava(sump_model,pw);
-      else pw.print("void");
-      pw.print(" ");
-    }
-   
-   pw.print(nm + "(");
-   
-   if (param_values != null) {
-      int ct = 0;
-      for (SumpElementParameter sp : param_values) {
-         if (ct++ > 0) pw.print(",");
-         sp.outputJava(pw);
-       }
-    }
-   pw.print(")");
-   
-   if (isconst) pw.println(" { }");
-   else pw.println(";");
-}
+
 
 
 @Override void setupJava()
@@ -300,6 +281,12 @@ private boolean matchOperation(SumpElementOperation op)
        }
     }
 }
+
+
+
+
+
+
 
 }       // end of class SumpElementOperation
 

@@ -634,23 +634,44 @@ private void findComponents(AbstractTypeDeclaration atd)
 	 fields.add(cf);
        }
     }
+   
+   Set<ClassMethod> accmthds = new HashSet<>();
    for (ClassMethod cm : all_methods) {
       if (!cm.isAccessible()) continue;
       if (cm.isStatic()) continue;
       JcompSymbol acc = cm.getAccessField();
       if (acc != null) {
 	 if (cm.isPublic()) {
-	    boolean fnd = false;
 	    for (ClassField cf : all_fields) {
 	       if (cf.getDefinition() == acc) {
 		  fields.add(cf);
-		  fnd = true;
+                  accmthds.add(cm);
 		  break;
 		}
 	     }
-	    if (fnd) continue;
 	  }
        }
+    }  
+   
+   for (ClassMethod cm : all_methods) {
+      if (!cm.isAccessible()) continue;
+      if (cm.isStatic()) continue;
+      if (accmthds.contains(cm)) continue;
+      
+      List<JcompSymbol> sets = cm.getSetAccessFields();
+      if (sets != null) {
+         int nfnd = 0;
+         for (JcompSymbol js : sets) {
+            for (ClassField cf : fields) {
+               if (cf.getDefinition() == js) {
+                  ++nfnd;
+                  break;
+                }
+             }
+          }
+         if (nfnd == sets.size()) continue;
+       }
+      
       if (cm.isConstructor() && cm.getStructure().parameters().size() == 0 &&
 	    cm.isPublic()) {
 	 consts.add(cm);
@@ -879,7 +900,9 @@ void addToUmlClass(SumpClass scls,AbstractTypeDeclaration atd)
 private static JcompSymbol getAccessField(MethodDeclaration md)
 {
    if (md.isConstructor()) return null;
-   if (md.parameters().size() > 0) return checkSetMethod(md);
+   if (md.parameters().size() > 0) {
+      return null;
+    }
    else {
       Type t = md.getReturnType2();
       if (t == null) return null;
@@ -896,6 +919,9 @@ private static JcompSymbol getAccessField(MethodDeclaration md)
 
 private static JcompSymbol checkGetMethod(MethodDeclaration md)
 {
+   // String nm = md.getName().getIdentifier().toLowerCase();
+   // if (!nm.startsWith("get") && !nm.startsWith("is")) return null;
+   
    Block b = md.getBody();
    if (b == null) return null;
    if (b.statements().size() != 1) return null;
@@ -919,8 +945,16 @@ private static JcompSymbol checkGetMethod(MethodDeclaration md)
 
 
 
-private static JcompSymbol checkSetMethod(MethodDeclaration md)
+private static List<JcompSymbol> checkSetMethod(MethodDeclaration md)
 {
+   if (md.isConstructor()) return null;
+   if (md.parameters().size() == 0) return null;
+   
+   String nm = md.getName().getIdentifier().toLowerCase();
+   if (!nm.startsWith("set")) return null;
+   
+   List<JcompSymbol> rslt = new ArrayList<>();
+   
    int np = md.parameters().size();
    Block b = md.getBody();
    if (b == null) return null;
@@ -932,9 +966,12 @@ private static JcompSymbol checkSetMethod(MethodDeclaration md)
       if (es.getExpression().getNodeType() != ASTNode.ASSIGNMENT) return null;
       Assignment as = (Assignment) es.getExpression();
       JcompSymbol js = JcompAst.getReference(as.getLeftHandSide());
-      if (js != null && js.isFieldSymbol()) return js;
+      if (js != null && js.isFieldSymbol()) rslt.add(js);
+      else return null;
     }
-   return null;
+   if (rslt.isEmpty()) return null;
+   
+   return rslt;
 }
 
 
@@ -1014,6 +1051,10 @@ private static class ClassMethod extends ScrapComponent implements RowelMatch {
    JcompSymbol getAccessField() {
       return ScrapClassAbstraction.getAccessField(method_decls.get(0));
     }
+   
+   List<JcompSymbol> getSetAccessFields() {
+      return ScrapClassAbstraction.checkSetMethod(method_decls.get(0));
+   }
 
    void clearData() {
       // method_decls.clear();
@@ -1075,26 +1116,26 @@ private static class ClassMethod extends ScrapComponent implements RowelMatch {
       if (method_abstraction.getReturnType().getArgType() != SumpArgType.VOID) return false;
       if (method_abstraction.getParameterTypes().size() != 1) return false;
       for (ScrapTypeAbstraction sta : method_abstraction.getParameterTypes()) {
-	 if (sta != ftyp) return false;
+         if (sta != ftyp) return false;
        }
-
+   
       Set<String> words = getNameWords(getNames());
       for (String s : component_names.keySet()) {
-	 Set<String> cwords = getNameWords(s);
-	 boolean havepfx = false;
-	 for (Iterator<String> it = cwords.iterator(); it.hasNext(); ) {
-	    String swd = it.next();
-	    if (swd.equals("set")) {
-	       it.remove();
-	       havepfx = true;
-	     }
-	  }
-	 int count = 0;
-	 for (String s1 : words) {
-	    if (cwords.contains(s1)) ++count;
-	  }
-	 if (count == words.size()) return true;
-	 if (havepfx && count > words.size() / 2) return true;
+         Set<String> cwords = getNameWords(s);
+         boolean havepfx = false;
+         for (Iterator<String> it = cwords.iterator(); it.hasNext(); ) {
+            String swd = it.next();
+            if (swd.equals("set")) {
+               it.remove();
+               havepfx = true;
+             }
+          }
+         int count = 0;
+         for (String s1 : words) {
+            if (cwords.contains(s1)) ++count;
+          }
+         if (count == words.size()) return true;
+         if (havepfx && count > words.size() / 2) return true;
        }
       return false;
    }

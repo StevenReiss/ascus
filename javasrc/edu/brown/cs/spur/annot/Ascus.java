@@ -58,8 +58,11 @@ public @interface Ascus
    String [] sources() default { };
    String [] keywords() default { };
    String [] keyterms() default { };
+   String [] suggestedTerms() default { };
    String search() default "";
    String parameter() default "";
+   String context() default "";
+   double score() default 0.0;
    double value() default 0.0;
    
 }       // end of annotation Ascus

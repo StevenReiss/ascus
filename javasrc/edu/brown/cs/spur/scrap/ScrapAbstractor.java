@@ -54,10 +54,9 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import edu.brown.cs.cose.cosecommon.CoseRequest;
 import edu.brown.cs.cose.cosecommon.CoseResult;
 import edu.brown.cs.cose.cosecommon.CoseScores;
+import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompControl;
-import edu.brown.cs.ivy.jcomp.JcompExtendedSource;
 import edu.brown.cs.ivy.jcomp.JcompProject;
-import edu.brown.cs.ivy.jcomp.JcompSource;
 import edu.brown.cs.spur.sump.SumpParameters;
 
 public class ScrapAbstractor implements ScrapConstants
@@ -242,58 +241,12 @@ private ScrapAbstraction  createAbstraction(CoseResult cr,ASTNode n)
 
 JcompProject getResolvedAst(ASTNode an)
 {
-   if (an == null) return null;
-   
-   List<JcompSource> srcs = new ArrayList<>();
-   JcompSource src = new ResultSource(an);
-   srcs.add(src);
-   List<String> jars = new ArrayList<>();
-   
-   JcompProject proj = jcomp_control.getProject(jars,srcs,false);
-   try {
-      ASTNode root = an.getRoot();
-      synchronized (root) {
-         proj.resolve();
-       }
-    }
-   catch (Throwable t) {
-      t.printStackTrace();
-      jcomp_control.freeProject(proj);
-      return null;
-    }
-   
-   return proj;
+   return JcompAst.getResolvedAst(jcomp_control,an);
 }
 
 
 
-/********************************************************************************/
-/*                                                                              */
-/*      Jcomp Source for result                                                 */
-/*                                                                              */
-/********************************************************************************/
 
-private static class ResultSource implements JcompExtendedSource {
-
-   private ASTNode root_result;
-   
-   ResultSource(ASTNode nd) {
-      root_result = nd.getRoot();
-    }
-   
-   @Override public String getFileContents() {
-      return root_result.toString();
-    }
-   
-   @Override public String getFileName() {
-      return "*SCRAP*";
-    }
-   
-   @Override public ASTNode getAstRootNode() {
-      return root_result;
-    }
-
-}       // end of inner class ResultSource
 
 
 

@@ -13,7 +13,6 @@ package edu.brown.cs.spur.sump;
 import java.awt.Rectangle;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -42,6 +41,7 @@ import org.eclipse.jdt.core.dom.StringLiteral;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.TypeLiteral;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
+import org.w3c.dom.Element;
 
 import edu.brown.cs.cose.cosecommon.CoseDefaultRequest;
 import edu.brown.cs.cose.cosecommon.CoseRequest;
@@ -53,7 +53,9 @@ import edu.brown.cs.ivy.jcomp.JcompControl;
 import edu.brown.cs.ivy.jcomp.JcompProject;
 import edu.brown.cs.ivy.jcomp.JcompSymbol;
 import edu.brown.cs.ivy.jcomp.JcompType;
+import edu.brown.cs.ivy.xml.IvyXml;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
+import edu.brown.cs.spur.lids.LidsInstaller;
 import edu.brown.cs.spur.lids.LidsConstants.LidsLibrary;
 import edu.brown.cs.spur.sump.SumpConstants.SumpModel;
 
@@ -106,10 +108,10 @@ public SumpModelBase(JcompControl ctrl,File f)
             // loadXml(f);
             break;
          case "uxf" :
-            // loadUxf(f);
+            loadUxf(ctrl,f);
             break;
          case "xmi" :
-            // loadXmi(f);
+            loadXmi(ctrl,f);
             break;
          default :
             break;
@@ -149,9 +151,9 @@ public SumpModelBase(SumpData data,CompilationUnit cu)
 }
 
 
-Set<SumpElementClass> findUsedClasses(SumpElementClass cls)
+@Override public Collection<SumpClass> findUsedClasses(SumpClass cls)
 {
-   Set<SumpElementClass> rslt = new HashSet<>();
+   Set<SumpClass> rslt = new HashSet<>();
    for (SumpDependency dp : model_package.getDependencies()) {
       if (dp.getFromClass() == cls) {
          rslt.add((SumpElementClass) dp.getToClass());
@@ -199,7 +201,7 @@ Set<SumpElementClass> findUsedClasses(SumpElementClass cls)
 }
 
 
-SumpClass getClassForName(String nm)
+@Override public SumpClass getClassForName(String nm)
 {
    if (nm == null) return null;
    
@@ -211,6 +213,31 @@ SumpClass getClassForName(String nm)
    return null;
 }
 
+
+
+@Override public JcompProject resolveModel(JcompControl ctrl,CompilationUnit cu)
+{
+   if (cu == null) return null;
+   
+   if (ctrl == null) ctrl = new JcompControl();
+   
+   List<String> jars = new ArrayList<>();
+   if (getModelData().getContextPath() != null) {
+      jars.add(getModelData().getContextPath());
+    }
+   LidsInstaller inst = LidsInstaller.getInstaller();
+   for (LidsLibrary ll : getModelData().getLibraries()) {
+      String cp = inst.getClassPath(ll);
+      if (cp != null) jars.add(cp);
+    }
+   
+   if (JcompAst.isResolved(cu)) return null;
+   
+   JcompProject proj = JcompAst.getResolvedAst(ctrl,cu,jars);
+   JcompAst.setProject(cu,proj);
+   
+   return proj;
+}
 
 
 
@@ -488,6 +515,16 @@ private void handleAscus(Annotation an)
              }
             model_data.getParameters().set(pnm,vl);
             break;
+         case "context" :
+            String cv = getStringValue(val);
+            model_data.setContextPath(cv);
+            break;
+         case "suggestedTerms" :
+            List<String> k3 = getStringValues(val,null);
+            if (k3 != null) {
+                for (String s : k3) model_data.addSuggestedWord(s);
+             }
+            break;
          default :
             System.err.println("UNKNOWN TAG : " + nm);
             break;
@@ -551,7 +588,7 @@ private List<String> getStringValues(Expression exp,List<String> rslt)
 @Override public boolean contains(SumpModel mdl)
 {
    SumpMatcher match = new SumpMatcher();
-   return match.contains(this,mdl);
+   return match.matchScore(this,mdl,null) > 0;
 }
 
 
@@ -568,10 +605,13 @@ private List<String> getStringValues(Expression exp,List<String> rslt)
 /*                                                                              */
 /********************************************************************************/
 
-@Override public void computeLayout()
+@Override public SumpLayout computeLayout()
 {
-   model_layout = new SumpLayout(model_package);
-   model_layout.process();
+   if (model_layout == null) {
+      model_layout = new SumpLayout(model_package);
+      model_layout.process();
+    }
+   return model_layout;
 }
 
 
@@ -580,6 +620,23 @@ private List<String> getStringValues(Expression exp,List<String> rslt)
    if (model_layout == null) return null;
    return model_layout.getBounds(cls);
 }
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Visitation methods                                                      */
+/*                                                                              */
+/********************************************************************************/
+
+@Override public void accept(SumpVisitor sev)
+{
+   sev.setModel(this);
+   if (!sev.visit(this)) return;
+   model_package.accept(sev);
+   sev.endVisit(this);
+}
+
+
 
 
 
@@ -595,6 +652,9 @@ private List<String> getStringValues(Expression exp,List<String> rslt)
    xw.field("NAME",model_data.getName());
    for (String src : model_data.getSources()) {
       xw.textElement("SOURCE",src);
+    }
+   if (model_data.getContextPath() != null) {
+      xw.textElement("CONTEXT",model_data.getContextPath());
     }
    for (LidsLibrary lib : model_data.getLibraries()) {
       xw.textElement("LIBRARY",lib.getFullId());
@@ -630,78 +690,8 @@ private List<String> getStringValues(Expression exp,List<String> rslt)
 
 @Override public void outputJava(Writer w)
 {
-   PrintWriter pw = null;
-   if (w instanceof PrintWriter) pw = (PrintWriter) w;
-   else pw = new PrintWriter(w);
-   
-   model_package.setupJava();
-   
-   String nm = model_data.getName();
-   
-   for (String src : model_data.getSources()) {
-      pw.println("@Ascus(source=\"" + src + "\")");
-    }
-   for (LidsLibrary lib : model_data.getLibraries()) {
-      pw.println("@Ascus(library=\"" + lib.getFullId() + "\")");
-    }   
-   for (String imp : model_data.getMissingImports()) {
-      pw.println("@Ascus(missing=\"" + imp + "\")");
-    }  
-   CoseRequest cr = model_data.getCoseRequest();
-   if (cr != null) {
-      StringBuffer buf = new StringBuffer();
-      buf.append(cr.getCoseSearchType());
-      buf.append(",");
-      buf.append(cr.getCoseScopeType());
-      buf.append(",");
-      buf.append(cr.getNumberOfResults());
-      for (CoseSearchEngine se : cr.getEngines()) {
-         buf.append(",");
-         buf.append(se);
-       }
-      pw.println("@Ascus(search=\"" + buf.toString() + "\")");
-      for (CoseKeywordSet cks : cr.getCoseKeywordSets()) {
-         pw.print("@Ascus(keywords={");
-         int ct = 0;
-         for (String s : cks.getWords()) {
-            if (ct++ > 0) pw.print(",");
-            pw.print("\"" + s + "\"");
-          }
-         pw.println("})");
-       }
-      if (cr.getKeyTerms().size() > 0) {
-         pw.print("@Ascus(keyterms={");
-         int ct = 0;
-         for (String s : cr.getKeyTerms()) {
-            if (ct++ > 0) pw.print(",");
-            pw.print("\"" + s + "\"");
-          }
-         pw.println("})");
-       }
-      Map<String,Object> pmap = model_data.getParameters().getNonDefaults();
-      for (Map.Entry<String,Object> ent : pmap.entrySet()) {
-         pw.println("@Ascus(parameter=\"" + ent.getKey() + "=" + ent.getValue() + "\";");
-       }
-    }
-   pw.println("package edu.brown.cs.SAMPLE;");
-   
-   pw.println();
-   pw.println("import edu.brown.cs.sump.annot.Ascus;");
-   pw.println("import edu.brown.cs.sump.annot.AscusPackage;");
-   pw.println("import edu.brown.cs.sump.annot.AscusClass;");
-   for (String imp : model_data.getImports()) {
-      pw.println("import " + imp + ";");
-    }
-   pw.println();
-   
-   pw.println("@AscusPackage");
-   pw.println("public interface " + nm + " {");
-   
-   pw.println();
-   model_package.outputJava(pw);
-   pw.println();
-   
-   pw.println("}");
+   SumpJavaWriter sjw = new SumpJavaWriter(w);
+   sjw.generateCode(this);
 }
 
 
@@ -739,40 +729,22 @@ String getJavaOutputName(String orignm)
 }
 
 
-@Override public void generateXMI(File f)
+@Override public void generateXMI(Writer writer)
 {
-   throw new Error("Not implemented yet"); 
+   SumpXmiWriter sx = new SumpXmiWriter(writer);
+   sx.generateXmi(this);
 }
 
 
-@Override public void generateUXF(IvyXmlWriter xw)
+
+@Override public void generateUXF(Writer writer)
 {
-   xw.begin("diagram");
-   xw.field("program","umlet");
-   xw.field("version","13.3");
-   xw.textElement("zoom_level",10);
-   model_package.generateUXF(xw,model_layout);
-   xw.end("diagram");
-   xw.close();
-   xw.begin("element");
-   xw.textElement("id","UMLNote");
-   StringBuffer buf = new StringBuffer();
-   buf.append("NAME: " + model_data.getName() + ";\n");
-   for (String s : model_data.getImports()) {
-      buf.append("IMPORT: " + s + ":\n");
-    }
-   for (LidsLibrary s : model_data.getLibraries()) {
-      buf.append("LIBRARY: " + s.getFullId() + ";\n");
-    }
-   for (String imp : model_data.getMissingImports()) {
-      buf.append("MISSING: " + imp + ";\n");
-    }
-   for (String s : model_data.getSources()) {
-      buf.append("SOURCE: " + s + ";\n");
-    }
-   xw.textElement("panel_attributes",buf.toString());
-   xw.end("element");
+   SumpUxfWriter sx = new SumpUxfWriter(writer);
+   sx.generateUxf(this);
 }
+
+
+
 
 
 /********************************************************************************/
@@ -787,12 +759,49 @@ private void loadJava(JcompControl ctrl,File f)
    try {
       String cnts = IvyFile.loadFile(f);
       CompilationUnit cu = JcompAst.parseSourceFile(cnts);
-      JcompProject proj = JcompAst.getResolvedAst(ctrl,cu);
+      JcompProject proj = resolveModel(ctrl,cu);
       createModel(cu);
       ctrl.freeProject(proj);
     }
    catch (IOException e) { }
 }
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Load Sump Model from XMI file                                                       */
+/*                                                                              */
+/********************************************************************************/
+
+private void loadXmi(JcompControl ctrl,File f)
+{
+   if (ctrl == null) ctrl = new JcompControl();
+   
+   Element e = IvyXml.loadXmlFromFile(f);
+   if (e == null) return;
+   
+   
+}
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Load Sump Model from UXF file                                           */
+/*                                                                              */
+/********************************************************************************/
+
+private void loadUxf(JcompControl ctrl,File f)
+{
+   if (ctrl == null) ctrl = new JcompControl();
+   
+   Element e = IvyXml.loadXmlFromFile(f);
+   if (e == null) return;
+   
+   
+}
+
 
 
 }       // end of class SumpModel
