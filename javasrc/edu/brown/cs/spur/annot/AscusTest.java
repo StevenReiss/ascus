@@ -42,18 +42,16 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.junit.Test.None;
 
 
 
 @Documented
-@Target(ElementType.TYPE)
+@Target({ElementType.TYPE,ElementType.PACKAGE})
 @Retention(RetentionPolicy.SOURCE)
 public @interface AscusTest
 {
 
-   Class<? extends Throwable> expected() default None.class;
-   long timeout() default 0;
+   String file() default "";
    
 }       // end of annotation AscusTest
 

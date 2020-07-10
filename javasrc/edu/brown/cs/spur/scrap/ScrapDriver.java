@@ -454,6 +454,8 @@ private void computeTextMatches(ScrapAbstractor sa,AbstractionType at,List<CoseR
 
 private void computeTestCases(ScrapAbstractor sa,AbstractionType at)
 {
+   // compute test cases for the abstraction as originally given
+   
    for (ScrapAbstraction abs : sa.getAbstractions(at)) {
       System.err.println("TESTS FOR " + abs.getCoseResult().getSource());
       List<CoseResult> rslts = abs.getTestResults();

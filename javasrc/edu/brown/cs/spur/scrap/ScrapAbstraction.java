@@ -45,13 +45,9 @@ import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 
-import edu.brown.cs.cose.cosecommon.CoseMaster;
 import edu.brown.cs.cose.cosecommon.CoseRequest;
 import edu.brown.cs.cose.cosecommon.CoseResult;
-import edu.brown.cs.cose.cosecommon.CoseConstants.CoseSearchEngine;
-import edu.brown.cs.cose.cosecommon.CoseConstants.CoseSearchType;
 
-import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.file.IvyWordPluralFilter;
 import edu.brown.cs.ivy.file.IvyWordStemmer;
 import edu.brown.cs.ivy.jcomp.JcompControl;
@@ -110,6 +106,7 @@ protected ScrapAbstraction(ScrapAbstractor abs,CoseResult cr,ASTNode an)
 int getUseCount()                               { return use_count; }
 
 int getResultCount()                            { return result_set.size(); }
+
 
 Collection<CoseResult> getAllResults()          { return result_set.values(); }
 
@@ -238,33 +235,14 @@ public void superMergeWith(ScrapAbstraction cr)
 public List<CoseResult> getTestResults()
 {
    if (test_results != null) return test_results;
-   
+  
+   CoseRequest req = scrap_abstractor.getRequest();
    Map<String,CoseResult> found = new HashMap<>();
-   
-   for (String s : name_set) {
-      CoseRequest origreq = scrap_abstractor.getRequest();
-      ScrapRequest req = new ScrapRequest();
-      req.setCoseSearchType(CoseSearchType.TESTCLASS);
-      for (CoseSearchEngine seng : origreq.getEngines()) {
-         if (seng == CoseSearchEngine.GITREPO)
-            seng = CoseSearchEngine.GITHUB;
-         req.setSearchEngine(seng);
-       }
-      req.addKeyword(s);
-      req.addKeyword("junit");
-      req.setDoDebug(true);
-      CoseMaster sm = CoseMaster.createMaster(req);
-      ScrapResultSet res = new ScrapResultSet();
-      try {
-         sm.computeSearchResults(res);
-       }
-      catch (Throwable t) {
-         IvyLog.logE("PROBLEM GETTING TEST RESULTS: " + t,t);
-       }
-      for (CoseResult cr : res.getResults()) {
-         String src = cr.getSource().getDisplayName();
-         found.put(src,cr);
-       }
+   ScrapTestFinder finder = new ScrapTestFinder(req,result_set.values());
+   List<CoseResult> rslts = finder.getTestResults();
+   for (CoseResult cr : rslts) {
+      String src = cr.getSource().getDisplayName();
+      found.put(src,cr);
     }
    
    test_results = new ArrayList<>(found.values());

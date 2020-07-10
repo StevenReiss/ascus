@@ -203,30 +203,14 @@ private void addTestCases(CandidateMatch cm,EtchFactory etcher)
 {
    CoseResult cr = cm.getCoseResult();
    ScrapRequest req = new ScrapRequest();
-   for (CoseSearchEngine seng : original_request.getEngines()) {
-      if (seng == CoseSearchEngine.GITREPO) seng = CoseSearchEngine.GITHUB;
-      req.setSearchEngine(seng);
-    }
-   req.setCoseSearchType(CoseSearchType.TESTCLASS);
-   req.setCoseScopeType(CoseScopeType.FILE);
-   for (String s : cr.getPackages()) {
-      req.addKeywordSet("package " + s,"junit","test");
-      req.addKeywordSet("import " + s,"junit","test"); 
-    }
-  
-   req.setDoDebug(true);
-   CoseMaster master = CoseMaster.createMaster(req);
-   ScrapResultSet tests = new ScrapResultSet();
-   try {
-      master.computeSearchResults(tests);
-    }
-   catch (Throwable t) {
-      IvyLog.logE("PROBLEM GETTING TEST RESULTS: " + t,t);
-    }
+
+   ScrapTestFinder finder = new ScrapTestFinder(req,cm.getCoseResult());
+   List<CoseResult> rawtests = finder.getTestResults();
+
    Set<String> done = new HashSet<>();
    Map<String,String> namemap = cm.getNameMap();
    CoseResult testresult = null;
-   for (CoseResult test : tests.getResults()) {
+   for (CoseResult test : rawtests) {
       String enc = IvyFile.digestString(test.getKeyText());
       if (!done.add(enc)) continue;
       System.err.println("CONSIDER TEST CODE " + test.getSource().getDisplayName());
@@ -253,7 +237,8 @@ private void addTestCases(CandidateMatch cm,EtchFactory etcher)
          namemap.put(pkg,top);
        }
       CoseResult test1 = etcher.fixTests(testresult,cm.getModel(),namemap);
-      cm.updateTestResult(test1);
+      cm.updateLocalTestResult(test1);
+      cm.updateGlobalTestResult(null);
       System.err.println("TEST CODE:\n" + test1.getEditText());
     }
 }
@@ -310,24 +295,28 @@ private static class CandidateMatch implements Comparable<CandidateMatch>, Scrap
    private CoseResult for_result;
    private Map<String,String> name_map;
    private double match_value;
-   private CoseResult test_result;
+   private CoseResult local_tests;
+   private CoseResult global_tests;
    
    CandidateMatch(SumpModel mdl,CoseResult cr,double v,Map<String,String> nmap) {
       for_model = mdl;
       for_result = cr;
       match_value = v;
       name_map = new HashMap<>(nmap);
-      test_result = null;
+      local_tests = null;
+      global_tests = null;
       mdl.getModelData().setModelScore(v);
     }
    
    @Override public SumpModel getModel()                        { return for_model; }
    @Override public CoseResult getCoseResult()                  { return for_result; }
    @Override public Map<String,String> getNameMap()             { return name_map; }
-   @Override public CoseResult getTestResult()                  { return test_result; }
+   @Override public CoseResult getLocalTestResult()             { return local_tests; }
+   @Override public CoseResult getGlobalTestResult()            { return global_tests; }
    
    void updateResult(CoseResult cr)                             { for_result = cr; }
-   void updateTestResult(CoseResult cr)                         { test_result = cr; }
+   void updateLocalTestResult(CoseResult cr)                    { local_tests = cr; }
+   void updateGlobalTestResult(CoseResult cr)                   { global_tests = cr; }
    
    @Override public int compareTo(CandidateMatch cm) {
       int v = Double.compare(cm.match_value,match_value);

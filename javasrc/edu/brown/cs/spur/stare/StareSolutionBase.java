@@ -35,6 +35,7 @@ import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -71,7 +72,8 @@ class StareSolutionBase implements StareConstants, StareSolution
 
 private SumpModel       for_model;
 private CoseResult      cose_result;
-private CoseResult      test_result;
+private CoseResult      local_tests;
+private CoseResult      global_tests;
 private Map<String,String> name_map;
 private File            work_directory;
 private VelocityContext map_context;
@@ -90,13 +92,14 @@ StareSolutionBase(StareCandidateSolution sc)
 {
    for_model = sc.getModel();
    cose_result = sc.getCoseResult();
-   test_result = sc.getTestResult();
+   local_tests = sc.getLocalTestResult();
+   global_tests = sc.getGlobalTestResult();
    name_map = sc.getNameMap();
    random_gen = new Random();
    work_directory = null;
    map_context = null;
 }
-
+ 
 
 
 /********************************************************************************/
@@ -107,7 +110,8 @@ StareSolutionBase(StareCandidateSolution sc)
 
 @Override public SumpModel getModel()                   { return for_model; }
 @Override public CoseResult getCoseResult()             { return cose_result; }
-@Override public CoseResult getTestResult()             { return test_result; }
+@Override public CoseResult getLocalTestResult()        { return local_tests; }
+@Override public CoseResult getGlobalTestResult()       { return global_tests; }
 @Override public Map<String,String> getNameMap()        { return name_map; }
 
 
@@ -170,6 +174,10 @@ private void setup(CompilationUnit cu)
    srcdir = new File(srcdir,"java");
    File testdir = new File(topdir,"test");
    testdir = new File(testdir,"java");
+   File localtestdir = new File(topdir,"localtest");
+   localtestdir = new File(localtestdir,"java");
+   File globaltestdir = new File(topdir,"globaltest");
+   globaltestdir = new File(globaltestdir,"java");
    
    PackageDeclaration pd = cu.getPackage();
    if (pd != null) {
@@ -193,6 +201,10 @@ private void setup(CompilationUnit cu)
    map_context.put("SRCDIR",srcdir);
    testdir.mkdirs();
    map_context.put("TESTDIR",testdir);
+   localtestdir.mkdirs();
+   map_context.put("LOCALTESTDIR",localtestdir);
+   globaltestdir.mkdirs();
+   map_context.put("GLOBALTESTDIR",globaltestdir);
    resdir.mkdirs();
    map_context.put("RESOURCEDIR",resdir);
    File f = new File(dir,"bin");
@@ -242,14 +254,23 @@ private void setup(CompilationUnit cu)
     }
    map_context.put("IMPORTS",buf.toString());
    
-   if (test_result != null) {
-      CompilationUnit tcu = (CompilationUnit) test_result.getStructure();
+   if (local_tests != null) {
+      CompilationUnit tcu = (CompilationUnit) local_tests.getStructure();
       StringBuffer tbuf = new StringBuffer();
       for (Object o : tcu.imports()) {
          ImportDeclaration id = (ImportDeclaration) o;
          tbuf.append(id.toString());
        }
-      map_context.put("TESTIMPORTS",tbuf.toString());
+      map_context.put("LOCALTESTIMPORTS",tbuf.toString());
+    }
+   if (global_tests != null) {
+      CompilationUnit tcu = (CompilationUnit) global_tests.getStructure();
+      StringBuffer tbuf = new StringBuffer();
+      for (Object o : tcu.imports()) {
+         ImportDeclaration id = (ImportDeclaration) o;
+         tbuf.append(id.toString());
+       }
+      map_context.put("GLOBALTESTIMPORTS",tbuf.toString());
     }
    
    generateReadme();
@@ -330,25 +351,59 @@ private void producePackageFiles(CompilationUnit cu)
 
 private void produceTestFiles()
 {
-   if (test_result == null) return;
-   
-   CompilationUnit cu = (CompilationUnit) test_result.getStructure(); 
-   File dir = (File) map_context.get("TESTDIR");
-   
-   for (Object o : cu.types()) {
-      AbstractTypeDeclaration td = (AbstractTypeDeclaration) o;
-      String cnm = td.getName().getIdentifier();
-      File f = new File(dir,cnm + ".java");
-      try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {
-         pw.println(map_context.get("PACKAGESTMT"));
-         pw.println(map_context.get("TESTIMPORTS"));
-         pw.println();
-         pw.write(td.toString());
-         pw.println();
-         pw.println("// end of " + cnm + ".java");
+   Collection<File> tests = for_model.getModelData().getTestFiles();
+   if (tests != null && tests.size() > 0) {
+      File dir = (File) map_context.get("TESTDIR");
+      for (File f : tests) {
+         File f1 = new File(dir,f.getName());
+         try {
+            IvyFile.copyFile(f,f1);
+          }
+         catch (IOException e) {
+            IvyLog.logE("Problem copying test file " + f,e);
+          }
        }
-      catch (IOException e) {
-         IvyLog.logE("Problem writing " + cnm,e);
+    }
+   if (local_tests != null) {
+      CompilationUnit cu = (CompilationUnit) local_tests.getStructure(); 
+      File dir = (File) map_context.get("LOCALTESTDIR");
+      
+      for (Object o : cu.types()) {
+         AbstractTypeDeclaration td = (AbstractTypeDeclaration) o;
+         String cnm = td.getName().getIdentifier();
+         File f = new File(dir,cnm + ".java");
+         try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {
+            pw.println(map_context.get("PACKAGESTMT"));
+            pw.println(map_context.get("LOCALTESTIMPORTS"));
+            pw.println();
+            pw.write(td.toString());
+            pw.println();
+            pw.println("// end of " + cnm + ".java");
+          }
+         catch (IOException e) {
+            IvyLog.logE("Problem writing " + cnm,e);
+          }
+       }
+    }
+   if (global_tests != null) {
+      CompilationUnit cu = (CompilationUnit) local_tests.getStructure(); 
+      File dir = (File) map_context.get("GLOBALTESTDIR");
+      
+      for (Object o : cu.types()) {
+         AbstractTypeDeclaration td = (AbstractTypeDeclaration) o;
+         String cnm = td.getName().getIdentifier();
+         File f = new File(dir,cnm + ".java");
+         try (PrintWriter pw = new PrintWriter(new FileWriter(f))) {
+            pw.println(map_context.get("PACKAGESTMT"));
+            pw.println(map_context.get("GLOBALTESTIMPORTS"));
+            pw.println();
+            pw.write(td.toString());
+            pw.println();
+            pw.println("// end of " + cnm + ".java");
+          }
+         catch (IOException e) {
+            IvyLog.logE("Problem writing " + cnm,e);
+          }
        }
     }
 }

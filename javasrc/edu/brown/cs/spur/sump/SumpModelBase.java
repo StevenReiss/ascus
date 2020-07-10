@@ -264,7 +264,7 @@ private void createModel(CompilationUnit cu)
       if (idx > 0) nm = nm.substring(idx+1);
       if (nm.equals("Ascus")) handleAscus(an);
       else if (nm.equals("AscusSet")) handleAscusSet(an);
-      else if (nm.equals("AscusTestFile")) handleAscusTestFile(an);
+      else if (nm.equals("AscusTest")) handleAscusTestFile(an);
     }
    
    Map<String,SumpClass> cmap = new HashMap<>();
@@ -467,7 +467,31 @@ private void handleAscusSet(Annotation an)
 
 private void handleAscusTest(Annotation an)
 {
+   Expression ex = null;
+   if (an.isNormalAnnotation()) {
+      NormalAnnotation na = (NormalAnnotation) an;
+      for (Object o : na.values()) {
+         MemberValuePair mvp = (MemberValuePair) o;
+         String nm = mvp.getName().getIdentifier();
+         Expression val = mvp.getValue();
+         switch (nm) {
+            case "file" :
+               ex = val;
+               break;
+            default :
+               break;
+          }
+         if (ex != null) break;
+       }
+    }
+   if (ex != null) {
+      handleAscusTestFile(an);
+      return;
+    }
    
+   AbstractTypeDeclaration atd = (AbstractTypeDeclaration) an.getParent();
+   System.err.println("CREATE TEST FILE FROM " + atd);
+   // model_data.addTestFile(file);
 }
 
 
