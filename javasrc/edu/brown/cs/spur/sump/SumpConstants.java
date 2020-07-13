@@ -87,7 +87,7 @@ interface SumpModel {
   Collection<SumpClass> findUsedClasses(SumpClass cls);
   SumpClass getClassForName(String nm);
   
-  JcompProject resolveModel(JcompControl ctrl,CompilationUnit cu);
+  JcompProject resolveModel(JcompControl ctrl,CompilationUnit cu,CompilationUnit base);
   void accept(SumpVisitor sev);
   
 }

@@ -35,6 +35,8 @@
 
 package edu.brown.cs.spur.scrap;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -49,15 +51,11 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
 
 import edu.brown.cs.cose.cosecommon.CoseConstants;
-import edu.brown.cs.cose.cosecommon.CoseMaster;
 import edu.brown.cs.cose.cosecommon.CoseRequest;
 import edu.brown.cs.cose.cosecommon.CoseResult;
-import edu.brown.cs.cose.cosecommon.CoseConstants.CoseScopeType;
-import edu.brown.cs.cose.cosecommon.CoseConstants.CoseSearchEngine;
-import edu.brown.cs.cose.cosecommon.CoseConstants.CoseSearchType;
+import edu.brown.cs.cose.cosecommon.CoseSource;
 import edu.brown.cs.cose.result.ResultFactory;
 import edu.brown.cs.ivy.file.IvyFile;
-import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompControl;
 import edu.brown.cs.ivy.jcomp.JcompProject;
@@ -83,6 +81,7 @@ private List<CoseResult>        all_results;
 private JcompControl            jcomp_control;
 private CoseRequest             original_request;
 private SumpParameters          search_params;
+private CoseResult              global_tests;
 
 
 
@@ -98,6 +97,7 @@ ScrapCandidateBuilder(CoseRequest req,List<CoseResult> ar,SumpParameters sp)
    all_results = ar;
    jcomp_control = new JcompControl();
    search_params = sp;
+   global_tests = null;
 }
 
 
@@ -120,6 +120,7 @@ List<ScrapCandidate> buildCandidates(SumpModel model)
     }
    
    for (CandidateMatch cm : match) {
+      cm.updateGlobalTestResult(global_tests);
       System.err.println("MATCH:\n" + cm.getCoseResult().getEditText());
       Map<String,String> namemap = cm.getNameMap();
       CoseResult cr = cm.getCoseResult();
@@ -202,9 +203,9 @@ private List<CandidateMatch> findInitialMatches(SumpModel model)
 private void addTestCases(CandidateMatch cm,EtchFactory etcher)
 {
    CoseResult cr = cm.getCoseResult();
-   ScrapRequest req = new ScrapRequest();
 
-   ScrapTestFinder finder = new ScrapTestFinder(req,cm.getCoseResult());
+   ScrapTestFinder finder = new ScrapTestFinder(original_request,cm.getCoseResult());
+   CoseRequest testreq = finder.getTestRequest();
    List<CoseResult> rawtests = finder.getTestResults();
 
    Set<String> done = new HashSet<>();
@@ -216,7 +217,7 @@ private void addTestCases(CandidateMatch cm,EtchFactory etcher)
       System.err.println("CONSIDER TEST CODE " + test.getSource().getDisplayName());
       if (!isViableTestCase(test,cm)) continue;
       if (testresult == null) {
-         ResultFactory rf = new ResultFactory(req);
+         ResultFactory rf = new ResultFactory(testreq);
          testresult = rf.createPackageResult(test.getSource());
          for (String s : cr.getPackages()) {
             testresult.addPackage(s);
@@ -224,10 +225,6 @@ private void addTestCases(CandidateMatch cm,EtchFactory etcher)
        }
       CoseResult ftest = test.getParent();
       testresult.addInnerResult(ftest);
-      // ensure that all classes referenced are in the model code
-      // otherwise, prune the model code to only include known classes
-      // ensure that this test class is not in the model code
-      // then add the class to the model code
     }
    if (testresult != null) {
       String pkg = testresult.getBasePackage();
@@ -236,10 +233,11 @@ private void addTestCases(CandidateMatch cm,EtchFactory etcher)
          String top = namemap.get(origpkg);
          namemap.put(pkg,top);
        }
-      CoseResult test1 = etcher.fixTests(testresult,cm.getModel(),namemap);
+      CoseResult test1 = etcher.fixLocalTests(testresult,cr,cm.getModel(),namemap);
       cm.updateLocalTestResult(test1);
-      cm.updateGlobalTestResult(null);
       System.err.println("TEST CODE:\n" + test1.getEditText());
+      CoseResult test2 = etcher.fixGlobalTests(testresult,cr,cm.getModel(),namemap);
+      addToGlobalTests(testreq,cm,test2);
     }
 }
 
@@ -280,6 +278,34 @@ private boolean isViableTestCase(CoseResult cr,CandidateMatch cm)
    return allok || someok;
 }
 
+
+private void addToGlobalTests(CoseRequest req,CandidateMatch cm,CoseResult gt)
+{
+   if (gt == null) return;
+   if (!isViableTestCase(gt,cm)) return;
+   
+   if (global_tests == null) {
+      global_tests = createEmptyGlobalTest(req,gt.getSource(),cm);
+    }
+   global_tests.addInnerResult(gt);
+}
+
+
+
+private CoseResult createEmptyGlobalTest(CoseRequest req,CoseSource src,CandidateMatch cm)
+{
+   String pkg = cm.getModel().getPackage().getFullName();
+   String p1 = cm.getNameMap().get(pkg);
+   if (p1 != null) pkg = p1;
+   
+   StringWriter sw = new StringWriter();
+   PrintWriter pw = new PrintWriter(sw); 
+   pw.println("package " + pkg + ";");
+   ResultFactory rf = new ResultFactory(req);
+   CoseResult r = rf.createFileResult(src,sw.toString());
+   
+   return r;
+}
 
 
 

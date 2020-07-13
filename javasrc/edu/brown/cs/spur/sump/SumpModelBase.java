@@ -215,7 +215,7 @@ public SumpModelBase(SumpData data,CompilationUnit cu)
 
 
 
-@Override public JcompProject resolveModel(JcompControl ctrl,CompilationUnit cu)
+@Override public JcompProject resolveModel(JcompControl ctrl,CompilationUnit cu,CompilationUnit base)
 {
    if (cu == null) return null;
    
@@ -233,7 +233,10 @@ public SumpModelBase(SumpData data,CompilationUnit cu)
    
    if (JcompAst.isResolved(cu)) return null;
    
-   JcompProject proj = JcompAst.getResolvedAst(ctrl,cu,jars);
+   List<ASTNode> srcs = new ArrayList<>();
+   srcs.add(cu);
+   if (base != null) srcs.add(base);
+   JcompProject proj = JcompAst.getResolvedAst(ctrl,srcs,jars);
    JcompAst.setProject(cu,proj);
    
    return proj;
@@ -826,7 +829,7 @@ private void loadJava(JcompControl ctrl,File f)
    try {
       String cnts = IvyFile.loadFile(f);
       CompilationUnit cu = JcompAst.parseSourceFile(cnts);
-      JcompProject proj = resolveModel(ctrl,cu);
+      JcompProject proj = resolveModel(ctrl,cu,null);
       createModel(cu);
       ctrl.freeProject(proj);
     }

@@ -25,6 +25,7 @@
 package edu.brown.cs.spur.scrap;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -50,6 +51,7 @@ class ScrapTestFinder implements ScrapConstants
 
 private List<CoseResult> base_results;
 private CoseRequest     base_request;
+private CoseRequest     test_request;
 
 
 
@@ -61,14 +63,16 @@ private CoseRequest     base_request;
 
 ScrapTestFinder(CoseRequest req,CoseResult base)
 {
-   base_request = req;
-   base_results = Collections.singletonList(base);
+   this(req,Collections.singletonList(base));
+   
 }
 
-ScrapTestFinder(CoseRequest req,List<CoseResult> basis)
+ScrapTestFinder(CoseRequest req,Collection<CoseResult> basis)
 {
    base_request = req;
    base_results = new ArrayList<>(basis);
+   
+   test_request = setupTestRequest();
 }
 
 
@@ -79,7 +83,31 @@ ScrapTestFinder(CoseRequest req,List<CoseResult> basis)
 /*                                                                              */
 /********************************************************************************/
 
+CoseRequest getTestRequest()
+{
+   return test_request;
+}
+
+
+
 List<CoseResult> getTestResults() 
+{
+   
+   CoseMaster master = CoseMaster.createMaster(test_request);
+   ScrapResultSet tests = new ScrapResultSet();
+   try {
+      master.computeSearchResults(tests);
+    }
+   catch (Throwable t) {
+      IvyLog.logE("PROBLEM GETTING TEST RESULTS: " + t,t);
+    }
+   
+   return tests.getResults();
+}
+
+
+
+private CoseRequest setupTestRequest()
 {
    ScrapRequest req = new ScrapRequest();
    for (CoseSearchEngine seng : base_request.getEngines()) {
@@ -102,17 +130,8 @@ List<CoseResult> getTestResults()
    int n = done.size()*50;
    n = Math.min(n,req.getNumberOfResults());
    req.setNumberOfResults(n);
-   
-   CoseMaster master = CoseMaster.createMaster(req);
-   ScrapResultSet tests = new ScrapResultSet();
-   try {
-      master.computeSearchResults(tests);
-    }
-   catch (Throwable t) {
-      IvyLog.logE("PROBLEM GETTING TEST RESULTS: " + t,t);
-    }
-   
-   return tests.getResults();
+ 
+   return req;
 }
 
 

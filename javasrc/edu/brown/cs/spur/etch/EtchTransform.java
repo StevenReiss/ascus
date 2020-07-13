@@ -121,14 +121,16 @@ public String getName()                         { return transform_name; }
 /*                                                                              */
 /********************************************************************************/
 
-public CoseResult transform(CoseResult orig,SumpModel srcmdl,SumpModel target)
+public CoseResult transform(CoseResult orig,CoseResult base,SumpModel srcmdl,SumpModel target)
 {
    CompilationUnit an = (CompilationUnit) orig.getStructure();
    JcompProject proj = null;
+   CompilationUnit baseunit = null;
+   if (base != null) baseunit = (CompilationUnit) base.getStructure();
    
    if (!JcompAst.isResolved(an)) {
       if (jcomp_control == null) jcomp_control = new JcompControl();
-      proj = srcmdl.resolveModel(jcomp_control,an);
+      proj = srcmdl.resolveModel(jcomp_control,an,baseunit);  
       if (proj == null) return orig;
     }
 

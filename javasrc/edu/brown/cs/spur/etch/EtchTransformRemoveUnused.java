@@ -31,6 +31,7 @@ import java.util.Stack;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -148,6 +149,21 @@ private class InitialVisitor extends ASTVisitor {
       if (sa != null || sc != null || so != null) initial_items.add(js);
     }
    
+   @Override public void endVisit(MethodDeclaration md) {
+      JcompSymbol js = JcompAst.getDefinition(md);
+      if (js == null) return;
+      if (initial_items.contains(js)) return;
+      boolean istest = false;
+      for (Object o : md.modifiers()) {
+         if (o instanceof Annotation) {
+            Annotation an = (Annotation) o;
+            String nm = an.getTypeName().getFullyQualifiedName();
+            if (nm.equals("Test") || nm.endsWith(".test")) istest = true;
+          }
+       }
+      // if (md.getName().getIdentifier().startsWith("test")) istest = true;
+      if (istest) initial_items.add(js);
+    }   
 }       // end of inner class InitialVisitor
 
 
