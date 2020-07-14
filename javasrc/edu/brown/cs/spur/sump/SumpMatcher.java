@@ -46,6 +46,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.file.IvyStringDiff;
 import edu.brown.cs.spur.rowel.RowelMatcher;
 
@@ -202,7 +203,7 @@ private double matchClasses(SumpModel base,SumpModel pat,
       Map<SumpClass,SumpClass> nmap = new HashMap<>(cmap);
       nmap.put(ms.getFromClass(),sc);
       double usescore = sccls.getScore();
-      System.err.println("MAP " + fromcls + " ->  " + sc);
+      IvyLog.logD("SUMP","MAP " + fromcls + " ->  " + sc);
       
       Collection<SumpClass> i1 = pat.getInheritedClasses(fromcls);
       Collection<SumpClass> i2 = base.getInheritedClasses(sc);

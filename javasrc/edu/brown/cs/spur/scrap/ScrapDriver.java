@@ -246,12 +246,19 @@ private void badArgs()
 void processAbstractor()
 {
    List<CoseResult> rslts = getSearchResults();
+   long start = System.currentTimeMillis();
+   IvyLog.logS("SCRAP","RETURNED " + rslts.size() + " RESULTS");
+   IvyLog.logS("SCRAP","SKIPPED " + search_result.getResultsRemoved() + " RESULTS");
+   
    rslts = removeOverlaps(rslts);
+   IvyLog.logS("SCRAP","NON-OVERLAPPING " + rslts.size() + " RESULTS");
    
    List<CoseResult> trslts = getFilteredResults(rslts);
-   AbstractionType at = getAbstractionType();
+   IvyLog.logS("SCRAP","FILTERED " + trslts.size() + " RESULTS");
+   IvyLog.logS("SCRAP","Filter time " + (System.currentTimeMillis() - start));
    
    try {
+      AbstractionType at = getAbstractionType();
       findAbstraction(at,trslts,rslts);
     }
    catch (Throwable t) {
@@ -335,8 +342,6 @@ private List<CoseResult> getSearchResults()
     }
    
    List<CoseResult> rslts = search_result.getResults();
-   IvyLog.logI("RETURNED " + rslts.size() + " RESULTS");
-   IvyLog.logI("SKIPPED " + search_result.getResultsRemoved() + " RESULTS");
  
    return rslts;
 }
@@ -386,6 +391,7 @@ private AbstractionType getAbstractionType()
 private void findAbstraction(AbstractionType at,List<CoseResult> rslts,List<CoseResult> all)
 {
    Set<String> done = new HashSet<>();
+   long start = System.currentTimeMillis();
    
    try {
       ScrapAbstractor sa = new ScrapAbstractor(search_request,search_params);
@@ -399,10 +405,16 @@ private void findAbstraction(AbstractionType at,List<CoseResult> rslts,List<Cose
           }
          sa.addToAbstractor(cr);
        }
-      if (dupct > 0) IvyLog.logI("SCRAP","REMOVED " + dupct + " DUPICATE SOLUTIONS");
+      if (dupct > 0) {
+         IvyLog.logS("SCRAP","REMOVED " + dupct + " DUPICATE SOLUTIONS");
+       }
+      long start1 = System.currentTimeMillis();
+      IvyLog.logS("SCRAP","Abstraction time: " + (start1 - start));
       
       sa.orderAndPrune();
       sa.outputAbstractor(at);
+      long start2 = System.currentTimeMillis();
+      IvyLog.logS("SCRAP","Order, Prune, Output Time: " + (start2 - start1));  
       
       computeTextMatches(sa,at,all,false);
       computeTextMatches(sa,at,all,true);

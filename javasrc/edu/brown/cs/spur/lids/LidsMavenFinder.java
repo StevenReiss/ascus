@@ -47,6 +47,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import edu.brown.cs.cose.cosecommon.CoseConstants;
@@ -136,25 +137,30 @@ private List<LidsLibrary> doMavenSearch(String path)
    Set<String> related = new HashSet<>();
    String rslt1 = getMavenResult(q);
    if (rslt1 !=  null) {
-      JSONObject top = new JSONObject(rslt1);
-      JSONObject resp = top.getJSONObject("response");
-      JSONArray arr = resp.getJSONArray("docs");
-      if (arr != null) {
-         for (int i = 0; i < arr.length(); ++i) {
-            JSONObject doc = arr.getJSONObject(i);
-            String type = doc.getString("p");
-            if (type == null || !type.equals("jar")) continue;
-            String art = doc.getString("a");
-            String grp = doc.getString("g");
-            // String ver = doc.getString("v");
-            if (CoseConstants.isRelatedPackage(grp,path)) related.add(grp);
-            Set<String> al = artifacts.get(grp);
-            if (al == null) {
-               al = new HashSet<>();
-               artifacts.put(grp,al);
+      try {
+         JSONObject top = new JSONObject(rslt1);
+         JSONObject resp = top.getJSONObject("response");
+         JSONArray arr = resp.getJSONArray("docs");
+         if (arr != null) {
+            for (int i = 0; i < arr.length(); ++i) {
+               JSONObject doc = arr.getJSONObject(i);
+               String type = doc.getString("p");
+               if (type == null || !type.equals("jar")) continue;
+               String art = doc.getString("a");
+               String grp = doc.getString("g");
+               // String ver = doc.getString("v");
+               if (CoseConstants.isRelatedPackage(grp,path)) related.add(grp);
+               Set<String> al = artifacts.get(grp);
+               if (al == null) {
+                  al = new HashSet<>();
+                  artifacts.put(grp,al);
+                }
+               al.add(art);
              }
-            al.add(art);
           }
+       }
+      catch (JSONException e) {
+         IvyLog.logE("Problem with maven result: " + e);
        }
     } 
    
@@ -235,6 +241,7 @@ private String getMavenResult(String q)
           }
          br.close();
          String rslt = baos.toString("UTF-8");
+         if (rslt.length() == 0) return null;
          if (!rslt.endsWith("\n")) rslt += "\n";
          return rslt;
        }

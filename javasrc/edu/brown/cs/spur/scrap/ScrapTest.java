@@ -138,7 +138,7 @@ public void packageTest01()
 
    sd1.processAbstractor();
 
-   ScrapDriver sd2 = new ScrapDriver("-p","-nr","500","-nt","8",
+   ScrapDriver sd2 = new ScrapDriver("-puembe","-nr","500","-nt","8",
          "-REPO","contact","@management",					"-t","address","name","phone","mail");
    sd2.processAbstractor();
 }

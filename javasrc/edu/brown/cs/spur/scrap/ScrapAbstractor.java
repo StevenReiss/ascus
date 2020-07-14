@@ -54,6 +54,7 @@ import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import edu.brown.cs.cose.cosecommon.CoseRequest;
 import edu.brown.cs.cose.cosecommon.CoseResult;
 import edu.brown.cs.cose.cosecommon.CoseScores;
+import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompControl;
 import edu.brown.cs.ivy.jcomp.JcompProject;
@@ -258,6 +259,9 @@ JcompProject getResolvedAst(ASTNode an)
 
 public void orderAndPrune()
 {
+   IvyLog.logS("SCRAP","Base Abstractions: " + 
+         abstraction_map.get(AbstractionType.PACKAGE).size());
+   
    checkClasses();
    
    int max = 0;
@@ -325,23 +329,12 @@ public void orderAndPrune()
          if (getScore(sa) < thresholds) continue;
          
          sorter.add(sa);
-         // if (aty == AbstractionType.PACKAGE) {
-            // System.err.println("ADD PACKAGE");
-            // for (CoseResult cr : sa.getAllResults()) {
-               // CoseScores cs = cr.getScores(base_request);
-               // double x = cs.getDouble("TERMMATCHES");
-               // x /= cs.getDouble("NODES");
-               // System.err.println("    " + cr.getSource());
-               // System.err.println("    " + cr.getBasePackage());
-               // System.err.println("    " + x + " " + cs.getInt("TERMMATCHES") + " " + cs.getInt("NODES"));
-               // for (Map.Entry<String,Object> ent : cs.entrySet()) {
-                  // System.err.println("\t" + ent.getKey() + " = " + ent.getValue());
-                // }
-             // }
-          // }
        }
       abstraction_map.put(aty,new ArrayList<>(sorter));
     }
+   
+   IvyLog.logS("SCRAP","Pruned Abstractions: " + 
+         abstraction_map.get(AbstractionType.PACKAGE).size());
 }
 
 
