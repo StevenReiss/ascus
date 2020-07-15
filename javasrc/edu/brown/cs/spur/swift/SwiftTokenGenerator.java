@@ -182,7 +182,7 @@ List<SwiftCodeToken> getCTs(ASTNode n)
 {
    ct_list =  new ArrayList<>();
    
-   if (n != null)  n.accept(this);
+   if (n != null) n.accept(this);
    
    return ct_list;
 }

@@ -170,8 +170,8 @@ ScrapPackageAbstraction(ScrapAbstractor abs,CoseResult cr,CompilationUnit cu)
    if (p1.equals(p2)) {
       String t1 = getCoseResult().getEditText();
       String t2 = spa.getCoseResult().getEditText();
-      SwiftScorer scorer = new SwiftScorer(t1,false);
-      double v = scorer.getScore(t2);
+      SwiftScorer scorer = new SwiftScorer(t1,(ASTNode) getCoseResult().getStructure(),false);
+      double v = scorer.getScore(t2,(ASTNode) spa.getCoseResult().getStructure());
       if (v > 0.99) {
          return true;
        }

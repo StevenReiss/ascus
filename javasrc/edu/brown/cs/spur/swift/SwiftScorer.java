@@ -37,6 +37,8 @@ package edu.brown.cs.spur.swift;
 
 import java.util.List;
 
+import org.eclipse.jdt.core.dom.ASTNode;
+
 public class SwiftScorer implements SwiftConstants
 {
 
@@ -65,9 +67,9 @@ static {
 /*                                                                              */
 /********************************************************************************/
 
-public SwiftScorer(String text,boolean kgram)
+public SwiftScorer(String text,ASTNode n,boolean kgram)
 {
-   base_tfidf = idf_builder.getTfIdf(text,kgram);
+   base_tfidf = idf_builder.getTfIdf(text,n,kgram);
    use_kgrams = kgram;
 }
 
@@ -78,9 +80,9 @@ public SwiftScorer(String text,boolean kgram)
 /*                                                                              */
 /********************************************************************************/
 
-public double getScore(String text)
+public double getScore(String text,ASTNode n)
 {
-   SwiftScoredSet ntf = idf_builder.getTfIdf(text,use_kgrams);
+   SwiftScoredSet ntf = idf_builder.getTfIdf(text,n,use_kgrams);
    return getScore(ntf);
 }
 

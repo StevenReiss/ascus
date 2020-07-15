@@ -232,9 +232,9 @@ void computeTextScores(ASTNode n)
 {
    if (n == null) return;
    String text = n.toString();
-   word_data = new SwiftScorer(text,false);
+   word_data = new SwiftScorer(text,n,false); 
    word_data.limit(10);
-   kgram_data = new SwiftScorer(text,true);
+   kgram_data = new SwiftScorer(text,n,true);
    kgram_data.limit(10);
 }
 

@@ -44,6 +44,8 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.TreeSet;
 
+import org.eclipse.jdt.core.dom.ASTNode;
+
 import edu.brown.cs.cose.cosecommon.CoseRequest;
 import edu.brown.cs.cose.cosecommon.CoseResult;
 import edu.brown.cs.cose.cosecommon.CoseSource;
@@ -110,7 +112,7 @@ public SumpData(CoseRequest req,CoseResult rslt,SumpParameters sp)
       idx = nm.lastIndexOf(".");
       if (idx > 0) nm = nm.substring(0,idx);
       model_name = nm;
-      SwiftScorer scorer = new SwiftScorer(rslt.getText(),false);
+      SwiftScorer scorer = new SwiftScorer(rslt.getText(),(ASTNode) rslt.getStructure(),false);
       suggested_words.addAll(scorer.getTopWords());
     }
 }

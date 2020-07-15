@@ -45,6 +45,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
@@ -434,7 +435,8 @@ private void computeTextMatches(ScrapAbstractor sa,AbstractionType at,List<CoseR
    for (ScrapAbstraction pa : sa.getAbstractions(at)) {
       SortedSet<ScoredResult> queue = new TreeSet<>();
       System.err.println("FOR " + (kgram ? "KGRAM " : "TEXT ") + pa.getCoseResult().getSource());
-      SwiftScorer scorer = new SwiftScorer(pa.getCoseResult().getText(),kgram);
+      CoseResult par = pa.getCoseResult();
+      SwiftScorer scorer = new SwiftScorer(par.getText(),(ASTNode) par.getStructure(),kgram);
       if (!kgram) {
          List<String> words = scorer.getTopWords();
          System.err.print("   WORDS: ");
@@ -442,7 +444,7 @@ private void computeTextMatches(ScrapAbstractor sa,AbstractionType at,List<CoseR
          System.err.println();
        }
       for (CoseResult orig : all) {
-         double sc = scorer.getScore(orig.getText());
+         double sc = scorer.getScore(orig.getText(),(ASTNode) orig.getStructure());
          if (sc < 0.4) continue;
          if (sc >= 0.90) {
             if (orig == pa.getCoseResult()) continue;

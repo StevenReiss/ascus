@@ -54,6 +54,7 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.xeustechnologies.jtar.TarEntry;
 import org.xeustechnologies.jtar.TarInputStream;
@@ -164,13 +165,13 @@ public static Set<String> getEnglishWords()
 /*                                                                              */
 /********************************************************************************/
 
-SwiftScoredSet getTfIdf(String text,boolean kgram)
+SwiftScoredSet getTfIdf(String text,ASTNode n,boolean kgram)
 {
    Map<String,Integer> words = null;
    Map<String,Integer> totals = null;
    double tot = 0;
    if (kgram){
-      words = buildKgramCounts(text);
+      words = buildKgramCounts(text,n);
       totals = kgram_counts;
       tot = total_kdocuments;
     }  
@@ -464,8 +465,9 @@ private void handleDocument(String name,InputStream ins)
    
    try {
       String cnts = IvyFile.loadFile(ins);
+      CompilationUnit cu = JcompAst.parseSourceFile(cnts);
       words = handleDocumentText(cnts);
-      kgrams = buildKgramCounts(cnts);
+      kgrams = buildKgramCounts(cnts,cu);
     }
    catch (IOException e) {
       IvyLog.logI("Problem reading document file " + name + ": " + e);
@@ -519,24 +521,18 @@ private Map<String,Integer> handleDocumentText(String cnts)
 }
 
 
-private Map<String,Integer> buildKgramCounts(String cnts)
+private Map<String,Integer> buildKgramCounts(String cnts,ASTNode n)
 {
    Map<String,Integer> kgrams = new HashMap<>(); 
    
    if (jcomp_control == null) jcomp_control = new JcompControl();
    
-   CompilationUnit cu = JcompAst.parseSourceFile(cnts);
-   JcompProject jp = JcompAst.getResolvedAst(jcomp_control,cu);
-   
-   if (jp == null) return kgrams;
    SwiftKgramGenerator kgg = new SwiftKgramGenerator();
-   List<SwiftKGram> kgl = kgg.getTokens(cu);
+   List<SwiftKGram> kgl = kgg.getTokens(n);
    
    for (SwiftKGram kg : kgl) {
       addSingle(kg.getText(),kgrams);
     }
-   
-   jcomp_control.freeProject(jp);
    
    return kgrams;
 }
