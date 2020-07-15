@@ -1185,10 +1185,10 @@ private static class ClassMethod extends ScrapComponent implements RowelMatch {
 
    void addToUmlClass(SumpClass scls,AbstractTypeDeclaration atd) {
       for (MethodDeclaration md : method_decls) {
-	 if (isChild(atd,md)) {
-	    JcompSymbol msym = JcompAst.getDefinition(md);
-	    if (msym != null) scls.addOperation(msym,atd);
-	  }
+         if (isChild(atd,md)) {
+            JcompSymbol msym = JcompAst.getDefinition(md);
+            if (msym != null) scls.addOperation(msym,md);
+          }
        }
     }
 

@@ -85,7 +85,10 @@ SumpElementOperation(SumpModelBase mdl,JcompSymbol js,ASTNode n)
    param_values = null;
    is_constructor = js.isConstructorSymbol();
    is_static = js.isStatic();
+   
    MethodDeclaration md = (MethodDeclaration) js.getDefinitionNode();
+   if (md == null && n != null && n instanceof MethodDeclaration) 
+      md = (MethodDeclaration) n;
    
    if (md != null) {
       param_values = new ArrayList<>();
