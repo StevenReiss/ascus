@@ -343,14 +343,15 @@ private class AbsComparator implements Comparator<ScrapAbstraction> {
 
    @Override public int compare(ScrapAbstraction a1,ScrapAbstraction a2) {
       if (a1 == a2) return 0;
-      int ct1 = a1.getUseCount();
-      int ct2 = a2.getUseCount();
-      if (ct1 > ct2) return -1;
-      if (ct2 > ct1) return 1;
       double cs1 = getScore(a1);
       double cs2 = getScore(a2);
       if (cs1 > cs2) return -1;
       if (cs2 > cs1) return 1;
+      int ct1 = a1.getUseCount();
+      int ct2 = a2.getUseCount();
+      if (ct1 > ct2) return -1;
+      if (ct2 > ct1) return 1;
+      
       return a1.toString().compareTo(a2.toString());
     }
    

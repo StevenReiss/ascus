@@ -159,7 +159,7 @@ public void packageTest03()
 {
    ScrapDriver sd1 = new ScrapDriver("-pu","-nr","500","-nt","8",
          "-source",
-         "GITREPO:https://github.com/shannah/CN1Webserver/blob/a3edc053c14e53dc8640efb85e716ef6ba062c56/native/android/com/codename1/webserver/NativeWebServerImpl.java",
+         "GITREPO:https://github.com/zuojisi/SimpleWebServer/blob/7a5209a86b6c8a13c7d5dc1370c9f16462d5d5b5/SimpleWebServer/src/com/pupfly/SimpleWebServer/SimpleWebServerActivity.java",
          "-REPO","@embedded","@web","server",
 	 "-t","url","uri","application","property","port","http","https","ftp","routing",
 	 "callback","request","response");
