@@ -310,7 +310,7 @@ private class OutputJava extends SumpVisitor {
       outputComment(op);
       
       print_writer.print("   ");
-      if (!getData().isCurrentInterface()) {
+      if (!is_interface.peek()) {
          String acc = "public";
          if (op.getAccess() != null) acc = op.getAccess().toString().toLowerCase();
          print_writer.print(acc + " ");
@@ -319,11 +319,11 @@ private class OutputJava extends SumpVisitor {
       boolean isconst = false;
       String nm = op.getName();
       if (nm.equals("<init>")) {
-         nm = getData().getCurrentType();
+         nm = cur_class.peek();
          isconst = true;
        }   
       else {
-         if (!getData().isCurrentInterface()) print_writer.print("abstract ");
+         if (!is_interface.peek()) print_writer.print("abstract ");
          if (op.getReturnType() != null) {
             op.getReturnType().accept(this);
           }

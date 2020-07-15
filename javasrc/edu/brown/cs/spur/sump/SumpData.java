@@ -41,7 +41,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.Stack;
 import java.util.TreeSet;
 
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -68,8 +67,6 @@ private String          model_source;
 private Set<LidsLibrary> library_set;
 private Set<String>     source_set;
 private Set<String>     import_set;
-private Stack<String>   cur_class;
-private Stack<Boolean>  is_interface;
 private CoseRequest     cose_request;
 private Set<String>     missing_imports;
 private SumpParameters  sump_parameters;
@@ -94,8 +91,6 @@ public SumpData(CoseRequest req,CoseResult rslt,SumpParameters sp)
    source_set = new HashSet<>();
    missing_imports = new HashSet<>();
    import_set = new TreeSet<>();
-   cur_class = new Stack<>();
-   is_interface = new Stack<>();
    cose_request = req;
    sump_parameters = sp;
    if (sp == null) sump_parameters = new SumpParameters();
@@ -238,30 +233,6 @@ public List<String> getSuggestedWords()         { return suggested_words; }
 public Collection<File> getTestFiles()          { return test_files; }
 
 public double getModelScore()                   { return model_score; }
-
-void pushType(String cls,boolean iface) 
-{ 
-   cur_class.push(cls); 
-   is_interface.push(iface);
-}
-
-void popType()                                 
-{ 
-   cur_class.pop();
-   is_interface.pop();
-}
-
-String getCurrentType()         
-{
-   if (cur_class.isEmpty()) return null;
-   return cur_class.peek();
-}
-
-boolean isCurrentInterface()
-{
-   if (is_interface.isEmpty()) return false;
-   return is_interface.peek();
-}
 
 
 
