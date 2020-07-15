@@ -499,10 +499,14 @@ private static class FindUsedTypes extends ASTVisitor {
       for (PackageClass pc : use_classes) {
          pc.addDependencies(spe,cu,cmap);
        }
+      mdl.setupImports(cu);
       mdl.computeLayout();
       uml_models.add(mdl);
     }
 }
+
+
+
 
 
 

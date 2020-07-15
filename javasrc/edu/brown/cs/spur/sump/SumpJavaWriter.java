@@ -34,7 +34,6 @@ import java.util.Stack;
 import edu.brown.cs.cose.cosecommon.CoseRequest;
 import edu.brown.cs.cose.cosecommon.CoseConstants.CoseSearchEngine;
 import edu.brown.cs.cose.cosecommon.CoseRequest.CoseKeywordSet;
-import edu.brown.cs.ivy.jcomp.JcompType;
 import edu.brown.cs.spur.lids.LidsConstants.LidsLibrary;
 
 class SumpJavaWriter implements SumpConstants
@@ -72,9 +71,6 @@ SumpJavaWriter(Writer w)
 
 void generateCode(SumpModel mdl)
 {
-   SetupJava sj = new SetupJava();
-   mdl.accept(sj);
-   
    OutputJava oj = new OutputJava();
    mdl.accept(oj);
 }
@@ -84,50 +80,9 @@ void generateCode(SumpModel mdl)
 
 /********************************************************************************/
 /*                                                                              */
-/*      Visitor to handle setting up for java output                            */
+/*      Visitor to handle java output                                           */
 /*                                                                              */
 /********************************************************************************/
-
-private static class SetupJava extends SumpVisitor {
-
-   SetupJava() { }
-   
-   @Override public boolean visit(SumpDataType dt) {
-      setupJava(dt.getBaseType(),getData());
-      return false;
-    }
-   
-   private void setupJava(JcompType jt,SumpData sd) {
-      if (jt == null) return;
-      if (jt.isPrimitiveType()) return;
-      if (jt.isUndefined()) {
-         // handle imports of undefined names (no library) 
-       }
-      if (jt.isCompiledType()) return;
-      if (jt.isUndefined()) return; 
-      if (jt.isTypeVariable() || jt.isWildcardType()) return;
-      if (jt.isArrayType()) {
-         setupJava(jt.getBaseType(),sd);
-       }
-      else if (jt.isParameterizedType() || jt.isMethodType()) {
-         setupJava(jt.getBaseType(),sd);
-         for (JcompType pt : jt.getComponents()) {
-            setupJava(pt,sd);
-          }
-       }
-      else if (jt.isUnionType() || jt.isIntersectionType()) {
-         for (JcompType pt : jt.getComponents()) {
-            setupJava(pt,sd);
-          }
-       }
-      else {
-         sd.addImport(jt.getName());
-       }
-    }
-   
-}       // end of inner class SetupJava
-
-
 
 private class OutputJava extends SumpVisitor {
 

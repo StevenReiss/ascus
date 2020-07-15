@@ -31,6 +31,7 @@ import org.eclipse.jdt.core.dom.EnumConstantDeclaration;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
+import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.MemberValuePair;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.NormalAnnotation;
@@ -290,6 +291,8 @@ private void createModel(CompilationUnit cu)
       AbstractTypeDeclaration td = tmap.get(s);
       addClassData(cls,td);
     }
+   
+   setupImports(cu);
    
    for (AbstractTypeDeclaration td : tmap.values()) {
       pkg.addDependencies(td,cmap);
@@ -871,6 +874,90 @@ private void loadUxf(JcompControl ctrl,File f)
    
    
 }
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Setup imports from a compilation unit                                   */
+/*                                                                              */
+/********************************************************************************/
+
+@Override public void setupImports(CompilationUnit cu)
+{
+   model_data.beginImport();
+   ImportVisitor iv = new ImportVisitor(cu);
+   accept(iv);
+}
+
+
+
+
+private class ImportVisitor extends SumpVisitor {
+
+   private CompilationUnit comp_unit;
+   
+   ImportVisitor(CompilationUnit cu) {
+      comp_unit = cu;
+    }
+   
+   @Override public boolean visit(SumpDataType dt) {
+      handleJavaType(dt.getBaseType());
+      return false;
+    }
+   
+   private void handleJavaType(JcompType jt) {
+      if (jt == null) return;
+      if (jt.isPrimitiveType()) return;
+      if (jt.isTypeVariable() || jt.isWildcardType()) return;
+      
+      if (jt.isArrayType()) {
+         handleJavaType(jt.getBaseType());
+       }
+      else if (jt.isParameterizedType() || jt.isMethodType()) {
+         handleJavaType(jt.getBaseType());
+         for (JcompType pt : jt.getComponents()) {
+            handleJavaType(pt);
+          }
+       }
+      else if (jt.isUnionType() || jt.isIntersectionType()) {
+         for (JcompType pt : jt.getComponents()) {
+            handleJavaType(pt);
+          }
+       }
+      else if (jt.isUndefined()) {
+         handleImport(jt.getName());
+         return;
+       }
+      else if (jt.isCompiledType()) return;
+      else {
+         handleImport(jt.getName());
+       }
+    }
+   
+   private void handleImport(String nm) {
+      for (Object o : comp_unit.imports()) {
+         ImportDeclaration id = (ImportDeclaration) o;
+         if (id.isStatic()) continue;
+         if (id.isOnDemand()) {
+            String s = id.getName().getFullyQualifiedName() + ".";
+            if (nm.startsWith(s)) {
+               model_data.addImport(nm);
+               return;
+             }
+          }
+         else {
+            String s = id.getName().getFullyQualifiedName();
+            if (nm.equals(s)) {
+               model_data.addImport(nm);
+               return;
+             }
+          }
+       }
+    }
+   
+}       // end of inner class ImportVisitor
+
 
 
 

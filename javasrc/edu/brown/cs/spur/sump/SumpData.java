@@ -242,12 +242,12 @@ public double getModelScore()                   { return model_score; }
 /*                                                                              */
 /********************************************************************************/
 
-void beginImport()
+public void beginImport()
 {
    import_set.clear();
 }
 
-void addImport(String typ)
+public void addImport(String typ)
 {
    // if (CoseConstants.isStandardJavaLibrary(typ)) return;
    int idx = typ.lastIndexOf(".");
