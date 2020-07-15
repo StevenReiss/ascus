@@ -63,7 +63,6 @@ import edu.brown.cs.ivy.file.IvyFile;
 import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompControl;
-import edu.brown.cs.ivy.jcomp.JcompProject;
 
 public class SwiftIdfBuilder implements SwiftConstants
 {

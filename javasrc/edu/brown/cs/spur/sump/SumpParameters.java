@@ -53,7 +53,7 @@ enum ParameterName {
       INTERFACE_FRACTION, ENUM_FRACTION,WORD_FRACTION,
       CONVENTION_TYPE, CONVENTION_LOCAL, CONVENTION_PARAMETER, CONVENTION_FIELD,
       CONVENTION_CONSTANT, CONVENTION_METHOD,
-      REMOVE_UNUSED,
+      REMOVE_UNUSED, TIGHT_FILTER
 }
 
 private Map<ParameterName,Object>      param_values;
@@ -95,6 +95,7 @@ public SumpParameters()
    param_values.put(ParameterName.INTERFACE_FRACTION,0.25);
    param_values.put(ParameterName.ENUM_FRACTION,0.75);
    param_values.put(ParameterName.WORD_FRACTION,0.20);
+   param_values.put(ParameterName.TIGHT_FILTER,true);
 }
 
 
@@ -249,6 +250,11 @@ public boolean getRemoveUnused()
 }
 
 
+public boolean useTightFiltering()
+{
+   return getBoolean(ParameterName.TIGHT_FILTER);
+}
+
 /********************************************************************************/
 /*                                                                              */
 /*      General methods                                                         */
@@ -351,12 +357,11 @@ private boolean getBoolean(ParameterName p)
    Object o = param_values.get(p);
    if (o == null) return false;
    if (o instanceof Boolean) return ((Boolean) o).booleanValue();
-   String sv = o.toString();
-   try {
-      return Boolean.valueOf(sv);
+   if (o instanceof Number) {
+      Number n = (Number) o;
+      return n.doubleValue() != 0;
     }
-   catch (NumberFormatException e) { }
-   sv = sv.toLowerCase();
+   String sv = o.toString().toLowerCase();
    if (sv.startsWith("1") || sv.startsWith("t") || sv.startsWith("y")) return true;
    return false;
 }

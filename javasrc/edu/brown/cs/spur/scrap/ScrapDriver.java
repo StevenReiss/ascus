@@ -183,10 +183,14 @@ private void scanArgs(String [] args)
             search_request.setCoseSearchType(CoseSearchType.PACKAGE);
             search_request.setCoseScopeType(CoseScopeType.PACKAGE);
           } 
-         else if (args[i].startsWith("-s")) {                           // -system
+         else if (args[i].startsWith("-sys")) {                         // -system
             search_request.setCoseSearchType(CoseSearchType.PACKAGE);
             search_request.setCoseScopeType(CoseScopeType.SYSTEM);
           } 
+         else if (args[i].startsWith("-sou")) {
+            String src = args[++i];
+            search_request.addSpecificSource(src);
+          }
          else if (args[i].startsWith("-P") && i+1 < args.length) {      // -P name=value
             String what = args[++i];
             int idx = what.indexOf("=");
@@ -352,7 +356,7 @@ private List<CoseResult> getFilteredResults(List<CoseResult> rslts)
 {
    List<CoseResult> trslts = filterResults(rslts,true);
    IvyLog.logI("RETURNED " + trslts.size() + " TIGHT FILTERED RESULTS");
-   if (trslts.size() <= 4) {
+   if (trslts.size() <= 4 || !search_params.useTightFiltering()) {
       trslts = filterResults(rslts,false);
       IvyLog.logI("RETURNED " + trslts.size() + " FILTERED RESULTS");
     }
