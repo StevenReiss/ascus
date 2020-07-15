@@ -100,6 +100,9 @@ private static class SetupJava extends SumpVisitor {
    private void setupJava(JcompType jt,SumpData sd) {
       if (jt == null) return;
       if (jt.isPrimitiveType()) return;
+      if (jt.isUndefined()) {
+         // handle imports of undefined names (no library) 
+       }
       if (jt.isCompiledType()) return;
       if (jt.isUndefined()) return; 
       if (jt.isTypeVariable() || jt.isWildcardType()) return;
