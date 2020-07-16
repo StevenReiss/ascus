@@ -56,6 +56,7 @@ import edu.brown.cs.cose.cosecommon.CoseResult;
 import edu.brown.cs.cose.cosecommon.CoseSource;
 import edu.brown.cs.cose.result.ResultFactory;
 import edu.brown.cs.ivy.file.IvyFile;
+import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompControl;
 import edu.brown.cs.ivy.jcomp.JcompProject;
@@ -111,14 +112,21 @@ List<ScrapCandidate> buildCandidates(SumpModel model)
 {
    List<CandidateMatch> match = findInitialMatches(model);
    
-   System.err.println("FOUND " + match.size() + " MATCHES");
+   IvyLog.logS("SCRAP","CANDIDATE MATCHES: " + match.size());
+   if (match.size() == 0) return null;
    
    EtchFactory etcher = new EtchFactory(model);
    
+   long start0 = System.currentTimeMillis();
    for (CandidateMatch cm : match) {
       addTestCases(cm,etcher);
     }
    
+   long start1 = System.currentTimeMillis();
+   IvyLog.logS("SCRAP","Test Case Time: " + (start1-start0));
+   if (global_tests == null) IvyLog.logS("SCRAP","No global tests");
+   else IvyLog.logS("SCRAP","Global Test Size: " + global_tests.getInnerResults().size());
+         
    for (CandidateMatch cm : match) {
       cm.updateGlobalTestResult(global_tests);
       System.err.println("MATCH:\n" + cm.getCoseResult().getEditText());
@@ -128,6 +136,9 @@ List<ScrapCandidate> buildCandidates(SumpModel model)
       cm.updateResult(cr1);
     }
    
+   long start2 = System.currentTimeMillis();
+   IvyLog.logS("SCRAP","Average Map Time: " + (start2-start1)/match.size());  
+   
    return new ArrayList<>(match);
 }
 
@@ -136,6 +147,8 @@ List<ScrapCandidate> buildCandidates(SumpModel model)
 
 private List<CandidateMatch> findInitialMatches(SumpModel model)
 {
+   long start0 = System.currentTimeMillis();
+
    SumpData patdata = model.getModelData();
    Map<CoseResult,SumpModel> mmap = new HashMap<>();
    for (CoseResult orig : all_results) {
@@ -163,6 +176,7 @@ private List<CandidateMatch> findInitialMatches(SumpModel model)
             for (String s : missing) {
                System.err.println("MISSING IMPORT " + s + " FROM " + orig.getSource());
              }
+            IvyLog.logD("SCRAP","Missing imports: " + missing.size());
             // continue;
           } 
          
@@ -173,9 +187,13 @@ private List<CandidateMatch> findInitialMatches(SumpModel model)
          if (proj != null) {
             jcomp_control.freeProject(proj);
             JcompAst.setProject(cu,null);
-          }
+          } 
        }
     }
+   
+   long start1 = System.currentTimeMillis();
+   IvyLog.logS("SCRAP","Built Models: " + mmap.size());
+   IvyLog.logS("SCRAP","Average Build Rime: " + (start1-start0)/mmap.size());
    
    Set<CandidateMatch> match = new TreeSet<>(); 
    for (Map.Entry<CoseResult,SumpModel> ent : mmap.entrySet()) {
@@ -187,6 +205,10 @@ private List<CandidateMatch> findInitialMatches(SumpModel model)
          match.add(cm);
        }
     }
+   
+   long start2 = System.currentTimeMillis();
+   IvyLog.logS("SCRAP","Matched models: " + match.size());
+   IvyLog.logS("SCRAP","Avsrage Match Time: " + (start2-start1)/mmap.size());
    
    return new ArrayList<>(match);
 }
@@ -214,7 +236,7 @@ private void addTestCases(CandidateMatch cm,EtchFactory etcher)
    for (CoseResult test : rawtests) {
       String enc = IvyFile.digestString(test.getKeyText());
       if (!done.add(enc)) continue;
-      System.err.println("CONSIDER TEST CODE " + test.getSource().getDisplayName());
+      IvyLog.logD("SCRAP","CONSIDER TEST CODE " + test.getSource().getDisplayName());
       if (!isViableTestCase(test,cm)) continue;
       if (testresult == null) {
          ResultFactory rf = new ResultFactory(testreq);
@@ -238,6 +260,7 @@ private void addTestCases(CandidateMatch cm,EtchFactory etcher)
       System.err.println("TEST CODE:\n" + test1.getEditText());
       CoseResult test2 = etcher.fixGlobalTests(testresult,cr,cm.getModel(),namemap);
       addToGlobalTests(testreq,cm,test2);
+      IvyLog.logD("SCRAP","Merged Tests: " + testresult.getInnerResults().size());
     }
 }
 
