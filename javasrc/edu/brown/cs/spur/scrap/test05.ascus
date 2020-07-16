@@ -1,163 +1,101 @@
-@Ascus(source="GITREPO:https://github.com/d3adspace/mantikor/blob/1f3d549e21ce7491a0b7ca4385c7609f0e6ed27c/file-server/src/main/java/de/d3adspace/mantikor/server/file/MantikorFileServerApp.java")
-@Ascus(library="org.slf4j:slf4j-api:2.0.0-alpha1")
-@Ascus(library="io.sitoolkit.cv:sit-cv-tools:1.0.0-beta.5")
-@Ascus(library="io.github.cloudiator.lance:server:0.1.0")
-@Ascus(library="com.google.appengine:appengine-api-labs:1.9.80")
-@Ascus(library="com.google.errorprone:error_prone_core:2.4.0")
+@Ascus(source="GITREPO:https://github.com/shannah/CN1Webserver/blob/a3edc053c14e53dc8640efb85e716ef6ba062c56/native/and
+roid/com/codename1/webserver/NativeWebServerImpl.java")
 @Ascus(search="PACKAGE,PACKAGE_USED,500,GITREPO")
 @Ascus(keywords={"@embedded","@web","server"})
-@Ascus(keyterms={"server","request","ftp","@web","uri","url","routing","application","port","response","@embedded","property","http","callback","https"})
-package edu.brown.cs.SAMPLE;
+@Ascus(keyterms={"server","request","ftp","@web","uri","url","routing","application","port","response","@embedded","pro
+perty","http","callback","https"})
+@Ascus(suggestedTerms={"server","socket","output","web","native","port"})
+package edu.brown.cs.sample;
 
 import edu.brown.cs.sump.annot.Ascus;
 import edu.brown.cs.sump.annot.AscusPackage;
 import edu.brown.cs.sump.annot.AscusClass;
-import java.io.BufferedReader;
-import java.net.URI;
-import java.util.Map;
+import java.io.File;
 
 @AscusPackage
-public interface MantikorFileServerApp {
+public interface EmbeddedWebServer {
 
 
-@AscusClass(uses={HttpVersion.class,HttpRequestLine.class,HttpMethod.class})
-abstract class HttpRequest extends HttpMessage {
-   public abstract URI getUri();
+/**
+ * Implementation of a very basic HTTP server. The contents are loaded from the assets folder. This server handles one
+request at a time. It only supports GET method.
+ */
+@AscusClass
+abstract class SimpleWebServer implements Runnable {
+/**
+ * True if the server is running.
+ */
+   private boolean mIsRunning;
+/**
+ * WebServer constructor.
+ */
+   public SimpleWebServer(int port,File docRoot) { }
+/**
+ * This method starts the web server listening to the specified port.
+ */
+   public abstract void start();
+/**
+ * This method stops the web server
+ */
+   public abstract void stop();
+   public abstract int getPort();
+   public abstract void run();
 }
 
 /**
- * Wrapper around HTTP headers.
+ * @author shannah
  */
-@AscusClass(uses={HttpResponse_Builder.class})
-class HttpHeaders {
-   private Map<String,String> headers;
-}
-
-@AscusClass(uses={HttpVersion.class,HttpMethod.class})
-class HttpRequestLine {
-   private HttpVersion version;
-   private URI uri;
-   private HttpMethod method;
-}
-
-@AscusClass
-enum HttpStatus {
-OK, FORBIDDEN, NOT_FOUND, INTERNAL_SERVER_ERROR;
-   public HttpStatus(int statusCode,String statusMessage) { }
-}
-
-@AscusClass
-class HttpBody {
-   private char[] content;
-}
-
-@AscusClass(uses={HttpVersion.class,HttpStatusLine.class,HttpStatus.class,HttpResponse_Builder.class})
-class HttpResponse extends HttpMessage {
-}
-
-@AscusClass(uses={HttpResponse.class})
-interface HttpRequestProcessor {
-   HttpResponse processRequest(HttpRequest request);
-}
-
-@AscusClass(uses={HttpVersion.class,HttpStatus.class})
-class HttpStatusLine {
-   private HttpVersion version;
-   private HttpStatus status;
-}
-
-@AscusClass(uses={HttpBody.class,HttpHeaders.class,HeaderPair.class})
-abstract class AbstractHttpMessageFactory {
-   public abstract HttpHeaders parseHeaders(BufferedReader reader);
-   public abstract HttpBody parseBody(HttpHeaders httpHeaders,BufferedReader reader);
-}
-
-@AscusClass
-class HttpResponseEncoder {
-}
-
-@AscusClass(uses={HttpVersion.class,HttpHeaders.class,HttpStatus.class,HttpResponse.class})
-abstract class HttpResponse_Builder {
-   public abstract HttpResponse build();
-   public abstract HttpResponse_Builder withStatus(HttpStatus status);
-   public abstract HttpResponse_Builder withVersion(HttpVersion version);
-}
-
-@AscusClass
-abstract class AbstractHttpComposer {
-   public abstract StringBuffer encodeHeadersAndBody(HttpMessage message);
-}
-
-@AscusClass
-abstract class HttpHeaders_Builder {
-   public abstract HttpHeaders build();
-}
-
-@AscusClass
-class HttpRequestDecoder {
+@AscusClass(uses={NativeWebServer.class})
+abstract class WebServer {
+   private NativeWebServer peer;
+   public WebServer(String docRoot,int port) { }
+   public abstract void start();
+   public abstract void stop();
 }
 
 /**
- * Initializer for all connections.
- * @author Felix 'SasukeKawaii' Klauke
- */
-@AscusClass(uses={HttpRequestProcessor.class})
-class MantikorServerChannelInitializer {
-}
-
-@AscusClass
-abstract class MantikorConfig {
-   public abstract String getServerHost();
-}
-
-@AscusClass(uses={HttpRequestProcessor.class})
-class MantikorConnection {
-}
-
-@AscusClass(uses={HttpBody.class,HttpHeaders.class})
-abstract class HttpMessage {
-   public HttpMessage(HttpHeaders headers,HttpBody body) { }
-   public abstract HttpBody getBody();
-   public abstract HttpHeaders getHeaders();
-}
-
-@AscusClass(uses={AbstractHttpMessageFactory.class})
-abstract class HeaderPair {
-   public abstract String getKey();
-}
-
-@AscusClass
-enum HttpVersion {
-HTTP_VERSION_1_0, HTTP_VERSION_1_1, HTTP_VERSION_2_0;
-   public HttpVersion(String version) { }
-}
-
-@AscusClass
-enum HttpMethod {
-GET, HEAD, POST, PUT, DELETE,
-CONNECT, OPTIONS, TRACE
-}
-
-/**
- * Basic interface for server actions.
- * @author Felix 'SasukeKawaii' Klauke
+ * @author shannah
  */
 @AscusClass
-interface Mantikor {
-/**
- * Basic interface for server actions.
- * @author Felix 'SasukeKawaii' Klauke
- */
+interface NativeWebServer extends NativeInterface {
    boolean isRunning();
-/**
- * Basic interface for server actions.
- * @author Felix 'SasukeKawaii' Klauke
- */
-   void stop();
-/**
- * Basic interface for server actions.
- * @author Felix 'SasukeKawaii' Klauke
- */
-   void start();
+   boolean start(String docRoot,int port);
+   boolean stop();
 }
 
+/**
+ * Invoked to indicate that an exception occurred, it is up to the developer to decide whether to send the device log
+to the server by invoking Log.sendLog(). Notice that sending a log only works for paid accounts. This interface should
+be registered with the Display class. <p>Notice that exceptions will only be reported for threads created by Codename
+One using the API's within the Display class, this will not work for exceptions within threads that are created by the
+new Thread() API.
+ * @author Shai Almog
+ */
+@AscusClass
+interface CrashReport {
+/**
+ * Callback for an exception that was not handled by the developer
+ * @param t the exception
+ */
+   void exception(Throwable t);
+}
+
+@AscusClass(uses={SimpleWebServer.class})
+class SimpleWebServer_TextUtils {
+}
+
+/**
+ * This is a marker interface that should be extended by a user interface in order to indicate that said interface is
+implemented in native code.
+ * @author Shai Almog
+ */
+@AscusClass
+interface NativeInterface {
+/**
+ * Indicates whether this native interface is supported on the current platform
+ * @return true if the native interface is supported on the given platform
+ */
+   boolean isSupported();
+}
+
+}

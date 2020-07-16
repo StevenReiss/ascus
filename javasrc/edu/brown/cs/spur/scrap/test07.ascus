@@ -1,263 +1,58 @@
-@Ascus(source="GITREPO:https://github.com/ssavitzky/pia-server/blob/6c85f928a32f00c01a55c7dd5513676800abff13/src/java/org/w3c/www/http/HttpReplyMessage.java")
+@Ascus(source="GITREPO:https://github.com/zuojisi/SimpleWebServer/blob/7a5209a86b6c8a13c7d5dc1370c9f16462d5d5b5/SimpleW
+ebServer/src/com/pupfly/SimpleWebServer/SimpleWebServerActivity.java")
+@Ascus(library="org.apache.pinot:pinot-thrift:0.3.0")
+@Ascus(library="com.contentful.java:java-sdk:10.4.2")
 @Ascus(search="PACKAGE,PACKAGE_USED,500,GITREPO")
 @Ascus(keywords={"@embedded","@web","server"})
-@Ascus(keyterms={"server","request","ftp","@web","uri","url","routing","application","port","response","@embedded","property","http","callback","https"})
-package edu.brown.cs.sample;
+@Ascus(keyterms={"server","request","ftp","@web","uri","url","routing","application","port","response","@embedded","pro
+perty","http","callback","https"})
+@Ascus(suggestedTerms={"android","server","asset","assets","socket","put"})
+package edu.brown.cs.SAMPLE;
 
 import edu.brown.cs.sump.annot.Ascus;
 import edu.brown.cs.sump.annot.AscusPackage;
 import edu.brown.cs.sump.annot.AscusClass;
-import java.io.InputStream;
-import java.io.OutputStream;
+import android.content.Context;
+import android.os.Bundle;
+import android.widget.CompoundButton;
+import java.io.ByteArrayOutputStream;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpResponse;
+import org.apache.http.protocol.HttpContext;
 
 @AscusPackage
-public interface HttpReplyMessage {
+public interface SimpleWebServerActivity {
 
 
-@AscusClass
-interface HeaderValue {
-   void emit(OutputStream out);
-   void addBytes(byte[] value,int off,int len);
-   void setBytes(byte[] value,int off,int len);
-   Object getValue();
-   String toExternalForm();
-   void appendValue(HttpBuffer buf);
-}
-
-/**
- * A cool StringBuffer like class, for converting header values to String. Note that for good reasons, this class is <em>not</em> public.
- */
-@AscusClass
-abstract class HttpBuffer {
-   public byte[] buf;
-   public int len;
-/**
- * A cool StringBuffer like class, for converting header values to String. Note that for good reasons, this class is <em>not</em> public.
- */
-   public HttpBuffer() { }
-/**
- * A cool StringBuffer like class, for converting header values to String. Note that for good reasons, this class is <em>not</em> public.
- */
-   public abstract void append(byte b);
-/**
- * A cool StringBuffer like class, for converting header values to String. Note that for good reasons, this class is <em>not</em> public.
- */
-   public abstract void append(char ch);
-/**
- * A cool StringBuffer like class, for converting header values to String. Note that for good reasons, this class is <em>not</em> public.
- */
-   public abstract void append(int i);
-/**
- * A cool StringBuffer like class, for converting header values to String. Note that for good reasons, this class is <em>not</em> public.
- */
-   public abstract void appendInt(int i);
-/**
- * A cool StringBuffer like class, for converting header values to String. Note that for good reasons, this class is <em>not</em> public.
- */
-   public abstract void appendInt(int i,int padlen,byte pad);
-/**
- * A cool StringBuffer like class, for converting header values to String. Note that for good reasons, this class is <em>not</em> public.
- */
-   public abstract void ensureCapacity(int sz);
-/**
- * A cool StringBuffer like class, for converting header values to String. Note that for good reasons, this class is <em>not</em> public.
- */
-   public abstract void append(byte[] b,int o,int l);
-/**
- * A cool StringBuffer like class, for converting header values to String. Note that for good reasons, this class is <em>not</em> public.
- */
-   public abstract void append(byte[] b);
-/**
- * A cool StringBuffer like class, for converting header values to String. Note that for good reasons, this class is <em>not</em> public.
- */
-   public abstract void append(String str);
-/**
- * A cool StringBuffer like class, for converting header values to String. Note that for good reasons, this class is <em>not</em> public.
- */
-   public abstract void appendQuoted(String str);
-/**
- * A cool StringBuffer like class, for converting header values to String. Note that for good reasons, this class is <em>not</em> public.
- */
-   public abstract void append(String name,byte sep,String value);
-/**
- * A cool StringBuffer like class, for converting header values to String. Note that for good reasons, this class is <em>not</em> public.
- */
-   public abstract void append(String name,byte sep,int value);
-/**
- * A cool StringBuffer like class, for converting header values to String. Note that for good reasons, this class is <em>not</em> public.
- */
-   public abstract void appendQuoted(String name,byte sep,String value);
-/**
- * A cool StringBuffer like class, for converting header values to String. Note that for good reasons, this class is <em>not</em> public.
- */
-   public abstract void appendQuoted(String name,byte sep,String[] values);
-/**
- * A cool StringBuffer like class, for converting header values to String. Note that for good reasons, this class is <em>not</em> public.
- */
-   public abstract void append(String name,byte sep,String[] values);
-/**
- * A cool StringBuffer like class, for converting header values to String. Note that for good reasons, this class is <em>not</em> public.
- */
-   public abstract void append(double d);
-/**
- * A cool StringBuffer like class, for converting header values to String. Note that for good reasons, this class is <em>not</em> public.
- */
-   public abstract String toString();
-/**
- * A cool StringBuffer like class, for converting header values to String. Note that for good reasons, this class is <em>not</em> public.
- */
-   public abstract byte[] getByteCopy();
-/**
- * A cool StringBuffer like class, for converting header values to String. Note that for good reasons, this class is <em>not</em> public.
- */
-   public abstract void reset();
-/**
- * A cool StringBuffer like class, for converting header values to String. Note that for good reasons, this class is <em>not</em> public.
- */
-   public abstract void emit(OutputStream out);
+@AscusClass(uses={SimpleWebServer_ServerTask.class})
+abstract class SimpleWebServer {
+   private int mServerPort;
+   public SimpleWebServer(Context ctx) { }
+   public SimpleWebServer(Context ctx,int port) { }
+   public abstract String GetServerAddress();
+   public abstract boolean StartServer();
+   public abstract void StopServer();
 }
 
 @AscusClass
-abstract class HttpSetCookie {
-/**
- * This cookie's version.
- */
-   public int version;
-/**
- * The cookie's associated path.
- */
-   public String path;
-   public String value;
-/**
- * The cookie's name.
- */
-   public String name;
-/**
- * The cookie's domain name.
- */
-   public String domain;
-/**
- * Does this cookie requires special security care by client ?
- */
-   public boolean security;
-   public HttpSetCookie(boolean isValid,String name,String value) { }
-   public HttpSetCookie() { }
-   public abstract void setSecurity(boolean onoff);
+abstract class SimpleRequestHandler {
+   public ByteArrayOutputStream mAos;
+   public SimpleRequestHandler(Context ctx) { }
+   public abstract void handle(HttpRequest request,HttpResponse response,HttpContext context);
 }
 
-@AscusClass(uses={HeaderValue.class})
-abstract class HeaderDescription {
-   public String name;
-   public byte[] title;
-   public HeaderDescription(String title,String clsname,int offset) { }
-   public HeaderDescription(String title,String clsname) { }
-   public abstract HeaderValue getHolder();
-   public abstract boolean isHeader(int h);
+@AscusClass(uses={SimpleWebServer.class})
+abstract class SimpleWebServer_ServerTask extends Thread {
+   public abstract void run();
 }
 
-@AscusClass
-interface MimeHeaderHolder {
-   void notifyHeader(String name,byte[] buf,int off,int len);
-   boolean notifyBeginParsing(MimeParser parser);
-   void notifyEndParsing(MimeParser parser);
-}
-
-@AscusClass
-abstract class ParseState {
-   public ParseState(int ioff) { }
-   public ParseState(int ioff,int bufend) { }
-   public ParseState() { }
-   public abstract void prepare();
-   public abstract void prepare(ParseState ps);
-   public abstract String toString(byte[] raw);
-   public abstract String toString(byte[] raw,boolean lower);
-}
-
-@AscusClass
-abstract class HttpCookie {
+@AscusClass(uses={SimpleWebServer.class})
+abstract class SimpleWebServerActivity {
 /**
- * Set this cookie's version.
+ * Called when the activity is first created.
  */
-   public int version;
-/**
- * The path in which this cookie applies.
- */
-   public String path;
-/**
- * This cookie's value.
- */
-   public String value;
-/**
- * This cookie's name.
- */
-   public String name;
-/**
- * The domain in which this cookie applies.
- */
-   public String domain;
-/**
- * Set the security flag
- */
-   public boolean secure;
-   public HttpCookie(boolean isValid,String name,String value) { }
-   public HttpCookie() { }
-   public abstract void setSecurity(boolean secure);
-}
-
-/**
- * The MimeParser class parses an input MIME stream.
- */
-@AscusClass(uses={MimeHeaderHolder.class,MimeParserFactory.class})
-abstract class MimeParser {
-   public InputStream input;
-/**
- * The MimeParser class parses an input MIME stream.
- */
-   public MimeParser(InputStream input,MimeParserFactory factory) { }
-}
-
-/**
- * This class is used by the MimeParser, to create new MIME message holders. Each MIME parse instances is custmozied wit hits own factory, which it will use to create MIME header holders.
- */
-@AscusClass(uses={MimeHeaderHolder.class})
-interface MimeParserFactory {
-}
-
-/**
- * This class is used to represent parsed MIME types.  It creates this representation from a string based representation of the MIME type, as defined in the RFC 1345.
- */
-@AscusClass
-abstract class MimeType implements java.io.Serializable {
-   public String type;
-   public String subtype;
-/**
- * This class is used to represent parsed MIME types.  It creates this representation from a string based representation of the MIME type, as defined in the RFC 1345.
- */
-   public MimeType(String spec) { }
-/**
- * This class is used to represent parsed MIME types.  It creates this representation from a string based representation of the MIME type, as defined in the RFC 1345.
- */
-   public MimeType(String type,String subtype,String[] pnames,String[] pvalues) { }
-/**
- * This class is used to represent parsed MIME types.  It creates this representation from a string based representation of the MIME type, as defined in the RFC 1345.
- */
-   public MimeType(String type,String subtype) { }
-/**
- * This class is used to represent parsed MIME types.  It creates this representation from a string based representation of the MIME type, as defined in the RFC 1345.
- */
-   public abstract int match(MimeType other);
-/**
- * This class is used to represent parsed MIME types.  It creates this representation from a string based representation of the MIME type, as defined in the RFC 1345.
- */
-   public abstract String toString();
-/**
- * This class is used to represent parsed MIME types.  It creates this representation from a string based representation of the MIME type, as defined in the RFC 1345.
- */
-   public abstract boolean hasParameter(String name);
-/**
- * This class is used to represent parsed MIME types.  It creates this representation from a string based representation of the MIME type, as defined in the RFC 1345.
- */
-   public abstract String getParameterValue(String name);
+   public abstract void onCreate(Bundle savedInstanceState);
+   public abstract void onCheckedChanged(CompoundButton buttonView,boolean isChecked);
 }
 
 }

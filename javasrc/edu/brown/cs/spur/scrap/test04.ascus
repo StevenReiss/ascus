@@ -1,118 +1,31 @@
-@Ascus(source="GITREPO:https://github.com/kasra-sh/PicoHTTPd/blob/d1f5426a1cde4857fde7247ed77a680567b1e135/src/main/java/ir/kasra_sh/picohttpd/Test.java")
+@Ascus(source="GITREPO:https://github.com/kasra-sh/PicoHTTPd/blob/d1f5426a1cde4857fde7247ed77a680567b1e135/src/main/jav
+a/ir/kasra_sh/picohttpd/http/response/ResponseString.java")
 @Ascus(search="PACKAGE,PACKAGE_USED,500,GITREPO")
 @Ascus(keywords={"@embedded","@web","server"})
-@Ascus(keyterms={"server","request","ftp","@web","uri","url","routing","application","port","response","@embedded","property","http","callback","https"})
+@Ascus(keyterms={"server","request","ftp","@web","uri","url","routing","application","port","response","@embedded","pro
+perty","http","callback","https"})
+@Ascus(suggestedTerms={"application","case","static","video","audio","string"})
 package edu.brown.cs.sample;
 
 import edu.brown.cs.sump.annot.Ascus;
 import edu.brown.cs.sump.annot.AscusPackage;
 import edu.brown.cs.sump.annot.AscusClass;
 import java.io.InputStream;
-import java.net.SocketAddress;
-import java.nio.ByteBuffer;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
 
 @AscusPackage
-public interface Test {
+public interface EmbeddedWebServer {
 
-
-@AscusClass(uses={Stat.class,HTTPHandler.class})
-abstract class Pico {
-   public abstract Pico setHandler(HTTPHandler handler);
-   public abstract void start(int port);
-}
-
-@AscusClass
-abstract class Cookie {
-   private StringBuilder ck;
-   public abstract Cookie set(String key,String value);
-   public abstract Cookie opt(String op);
-}
-
-@AscusClass(uses={AcceptListener.class})
-abstract class AcceptTask implements java.lang.Runnable {
-   public AcceptTask(AcceptListener listener,ServerSocketChannel serverSocketChannel) { }
-   public abstract void run();
-}
-
-@AscusClass
-interface FailListener {
-   void onFail(SocketChannel s);
-}
-
-@AscusClass
-interface HTTPHandler {
-   void handleRequest(Request r,ResponseWriter w);
-}
-
-@AscusClass
-abstract class WritePair {
-   private SocketChannel socket;
-   private InputStream is;
-   private byte[] bytes;
-   private int len;
-   private boolean stream;
-   public WritePair() { }
-   public WritePair(SocketChannel socket,byte[] bytes) { }
-   public WritePair(SocketChannel socket,byte[] data,InputStream inputStream,int length) { }
-   public abstract void setSocket(SocketChannel socket);
-   public abstract void setBytes(byte[] bytes);
-   public abstract void setStream(boolean stream);
-   public abstract void setInputStream(InputStream is);
-   public abstract void setLen(int len);
-}
-
-@AscusClass
-abstract class StreamBuffer {
-   private boolean finished;
-   public StreamBuffer(InputStream inputStream,int length) { }
-   public abstract ByteBuffer getReadableBuffer();
-}
-
-@AscusClass
-abstract class Request {
-   private SocketAddress address;
-   private String versionStr;
-   private byte[] body;
-   private ConcurrentHashMap<String,String> args;
-   private String url;
-   private HTTPMethod method;
-   private ConcurrentHashMap<String,String> headers;
-   public Request() { }
-   public abstract Request method(HTTPMethod m);
-   public abstract Request setVersion(String ver);
-   public abstract Request putArg(String k,String v);
-   public abstract Request putHeader(String k,String v);
-   public abstract Request putHeader(String k,String[] vs);
-   public abstract Request contentLength(int len);
-   public abstract void setUrl(String url);
-}
-
-@AscusClass
-abstract class DeadWatcher {
-   public abstract void add(SocketChannel s);
-   public abstract boolean shouldRemove(SocketChannel s,int timeout);
-   public abstract void remove(SocketChannel s);
-}
-
-@AscusClass
-interface ReadListener {
-   void onReadFinished(SocketChannel socketChannel,RequestParser parser);
-}
 
 @AscusClass(uses={Cookie.class})
 abstract class Response {
-   private InputStream sBody;
-   private ArrayList<Cookie> cookies;
-   private int status;
-   private boolean streamBody;
-   private int sBodyLen;
    private ArrayList<Entry<String,String>> headers;
+   private int status;
+   private InputStream sBody;
+   private boolean streamBody;
+   private ArrayList<Cookie> cookies;
+   private int sBodyLen;
    public abstract Response type(String mime);
    public abstract Response body(byte[] body);
    public abstract Response body(byte[] body,String mime);
@@ -126,176 +39,12 @@ abstract class Response {
    public abstract Response setMime(String mime);
 }
 
-@AscusClass(uses={RequestParser.class})
-abstract class ReadPair {
-   private RequestParser parser;
-   private SocketChannel socket;
-   public ReadPair(SocketChannel socket,RequestParser parser) { }
-   public abstract void setParser(RequestParser parser);
-}
-
 @AscusClass
-abstract class Stat {
-   private int awaitRead;
-   private int awaitWrite;
-   private float rps;
-   public Stat(int awaitRead,int awaitWrite,float rps) { }
-   public abstract void setRps(float rps);
-}
-
-@AscusClass
-abstract class NIOSocketReader {
-   private boolean finished;
-   public NIOSocketReader(SocketChannel channel) { }
-   public abstract void finish();
-   public abstract String readLine();
-   public abstract boolean readRemaining(byte[] b);
-}
-
-@AscusClass(uses={WriteListener.class})
-abstract class ResponseWriter {
-   public ResponseWriter(WriteListener listener,SocketChannel socketChannel) { }
-   public abstract void write(Response r);
-}
-
-@AscusClass(uses={NIOSocketReader.class,Request.class})
-abstract class RequestParser {
-   private Request req;
-   private boolean hasBody;
-   public RequestParser(NIOSocketReader reader) { }
-   public abstract boolean readBody();
-}
-
-@AscusClass
-enum HTTPMethod {
-NONE, HEAD, GET, POST, OPTIONS,
-DELETE, CONNECT, PUT
-}
-
-@AscusClass
-interface AcceptListener {
-   void onAccept(SocketChannel socketChannel);
-}
-
-@AscusClass(uses={StreamBuffer.class})
-abstract class NIOSocketWriter {
-   public NIOSocketWriter(SocketChannel socketChannel,byte[] bytes) { }
-   public NIOSocketWriter(SocketChannel socketChannel,byte[] bytes,InputStream stream,int len) { }
-   public abstract boolean advance();
-}
-
-@AscusClass(uses={DeadWatcher.class,WriteFinishListener.class,WritePair.class})
-abstract class WriteTask implements java.lang.Runnable {
-   private Selector selector;
-   public WriteTask(WriteFinishListener listener) { }
-   public abstract void addWrite(SocketChannel s,byte[] data);
-   public abstract void addWrite(SocketChannel s,byte[] data,InputStream is,int len);
-   public abstract void run();
-}
-
-@AscusClass
-interface WriteFinishListener {
-   void onWriteFinished(SocketChannel socketChannel);
-}
-
-@AscusClass
-interface WriteListener {
-   void onWrite(SocketChannel s,byte[] b);
-   void onWriteStream(SocketChannel s,byte[] data,InputStream is,int len);
-}
-
-@AscusClass(uses={DeadWatcher.class,ReadListener.class,ReadPair.class})
-abstract class ReadTask implements java.lang.Runnable {
-   private Selector selector;
-   public ReadTask(ReadListener listener) { }
-   public abstract void addSocket(SocketChannel sc,RequestParser parser);
+abstract class Cookie {
+   private StringBuilder ck;
+   public abstract Cookie set(String key,String value);
+   public abstract Cookie opt(String op);
 }
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
