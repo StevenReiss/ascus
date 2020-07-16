@@ -67,6 +67,7 @@ import edu.brown.cs.spur.stare.StareDriver;
 import edu.brown.cs.spur.sump.SumpConstants;
 import edu.brown.cs.spur.sump.SumpData;
 import edu.brown.cs.spur.sump.SumpParameters;
+import edu.brown.cs.spur.sump.SumpVisitor;
 import edu.brown.cs.spur.sump.SumpConstants.SumpModel;
 import edu.brown.cs.spur.swift.SwiftScorer;
 
@@ -421,6 +422,7 @@ private void findAbstraction(AbstractionType at,List<CoseResult> rslts,List<Cose
       long start2 = System.currentTimeMillis();
       IvyLog.logS("SCRAP","Order, Prune, Output Time: " + (start2 - start1));  
       
+      computeSizes(sa,at);
       computeTextMatches(sa,at,all,false);
       computeTextMatches(sa,at,all,true);
       computeTestCases(sa,at);
@@ -433,6 +435,67 @@ private void findAbstraction(AbstractionType at,List<CoseResult> rslts,List<Cose
 }
 
 
+/********************************************************************************/
+/*                                                                              */
+/*      Compute sizes of the result                                             */
+/*                                                                              */
+/********************************************************************************/
+
+private void computeSizes(ScrapAbstractor sa,AbstractionType at)
+{
+   if (at != AbstractionType.PACKAGE) return;
+   
+   SizeVisitor sv = new SizeVisitor();
+   for (ScrapAbstraction abs : sa.getAbstractions(at)) {
+      for (SumpModel mdl : abs.getUmlModels()) {
+         mdl.accept(sv);
+       }
+    }
+   sv.outputSizes();
+}
+
+
+private class SizeVisitor extends SumpVisitor {
+   
+   private double num_abstraction;
+   private double num_class;
+   private double num_operation;
+   private double num_attribute;
+   private double num_dependency;
+   
+   SizeVisitor() {
+      num_abstraction = 0;
+      num_class = 0;
+      num_operation = 0;
+      num_attribute = 0;
+      num_dependency = 0;
+    }
+   
+   void outputSizes() {
+      IvyLog.logS("SCRAP","Total Abstractions: " + num_abstraction);
+      if (num_abstraction == 0) return;
+      IvyLog.logS("SCRAP","Classes/Abstraction: " + num_class / num_abstraction);
+      IvyLog.logS("SCRAP","Depends/Abstraction: " + num_dependency / num_abstraction);
+      if (num_class == 0) return;
+      IvyLog.logS("SCRAP","Operations/Class: " + num_operation / num_class);
+      IvyLog.logS("SCRAP","Attributes/Class: " + num_attribute / num_class);
+    }
+
+   @Override public void endVisit(SumpModel m)          { ++num_abstraction; }
+   @Override public void endVisit(SumpClass c)          { ++num_class; }
+   @Override public void endVisit(SumpOperation o)      { ++num_operation; }
+   @Override public void endVisit(SumpAttribute a)      { ++num_attribute; }
+   @Override public void endVisit(SumpDependency d)     { ++num_dependency; }
+   
+}       // end of inner class SizeVisitor
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Look for text maches                                                    */
+/*                                                                              */
+/********************************************************************************/
 
 private void computeTextMatches(ScrapAbstractor sa,AbstractionType at,List<CoseResult> all,boolean kgram)
 {
@@ -469,6 +532,12 @@ private void computeTextMatches(ScrapAbstractor sa,AbstractionType at,List<CoseR
     }
 }
 
+
+/********************************************************************************/
+/*                                                                              */
+/*      Find test cases                                                         */
+/*                                                                              */
+/********************************************************************************/
 
 private void computeTestCases(ScrapAbstractor sa,AbstractionType at)
 {
