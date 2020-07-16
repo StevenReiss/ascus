@@ -198,6 +198,8 @@ private class DependChecker extends ASTVisitor {
    
    DependChecker(Set<JcompSymbol> used) {
       used_items = used;
+      class_stack = new Stack<>();
+      method_stack = new Stack<>();
       use_class = false;
       use_method = false;
     }
@@ -209,10 +211,14 @@ private class DependChecker extends ASTVisitor {
          use_class = true;
          return true;
        }
+      System.err.println("SKIP " + td.getName());
       return false;
     }
    @Override public void endVisit(TypeDeclaration td) {
-      use_class = class_stack.pop();
+      JcompSymbol js = JcompAst.getDefinition(td);
+      if (used_items.contains(js)) {
+         use_class = class_stack.pop();
+       }   
     }
    
    @Override public boolean visit(EnumDeclaration td) {
@@ -225,7 +231,10 @@ private class DependChecker extends ASTVisitor {
       return false;
     }
    @Override public void endVisit(EnumDeclaration td) {
-      use_class = class_stack.pop();
+      JcompSymbol js = JcompAst.getDefinition(td);
+      if (used_items.contains(js)) {
+         use_class = class_stack.pop();
+       }  
     }
    
    @Override public boolean visit(MethodDeclaration md) {
@@ -238,7 +247,10 @@ private class DependChecker extends ASTVisitor {
       return false;
     }
    @Override public void endVisit(MethodDeclaration md) {
-      use_method = method_stack.pop();
+      JcompSymbol js = JcompAst.getDefinition(md);
+      if (used_items.contains(js)) {
+         use_method = method_stack.pop();
+       }
     }
    
    @Override public boolean visit(VariableDeclarationFragment vdf) {

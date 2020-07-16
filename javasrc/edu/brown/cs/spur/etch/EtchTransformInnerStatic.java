@@ -294,7 +294,7 @@ private class ClassStaticMapper extends EtchMapper {
       vdf.setName(on);
       FieldDeclaration fd = rw.getAST().newFieldDeclaration(vdf);
       fd.setType(styp);
-      if (after == null) declrw.insertAfter(after,fd,null);
+      if (after != null) declrw.insertAfter(after,fd,null);
       else declrw.insertFirst(fd,null);
       after = fd;
       

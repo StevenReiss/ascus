@@ -480,7 +480,7 @@ protected static SumpOperation findOperation(ASTNode n,SumpModel basemodel)
           }
        }
       mnm = mi.getName().getIdentifier();
-      if (ctyp.isErrorType()) ctyp = null;
+      if (ctyp != null && ctyp.isErrorType()) ctyp = null;
     }
    else if (n instanceof ClassInstanceCreation) {
       ClassInstanceCreation ci = (ClassInstanceCreation) n;

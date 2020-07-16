@@ -193,7 +193,7 @@ private List<CandidateMatch> findInitialMatches(SumpModel model)
    
    long start1 = System.currentTimeMillis();
    IvyLog.logS("SCRAP","Built Models: " + mmap.size());
-   IvyLog.logS("SCRAP","Average Build Rime: " + (start1-start0)/mmap.size());
+   IvyLog.logS("SCRAP","Average Build Rime: " + (start1-start0)/all_results.size());
    
    Set<CandidateMatch> match = new TreeSet<>(); 
    for (Map.Entry<CoseResult,SumpModel> ent : mmap.entrySet()) {

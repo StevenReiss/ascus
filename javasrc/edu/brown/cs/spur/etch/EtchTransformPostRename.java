@@ -127,6 +127,8 @@ private class FindChangeVisitor extends ASTVisitor {
   
   FindChangeVisitor(PostNameMapper mapper,SumpModel frmmdl,SumpModel tomdl) {
      name_handler = mapper;
+     from_model = frmmdl;
+     to_model = tomdl;
    }
   
   @Override public boolean visit(PackageDeclaration pd) {

@@ -1,11 +1,9 @@
-@Ascus(source="GITREPO:https://github.com/Priytam/auto/blob/82924424b16b5a67e24ec852727be62af722b431/exampleApp/src/mai
-n/java/com/auto/reqres/operation/GetUserOp.java")
+@Ascus(source="GITREPO:https://github.com/Priytam/auto/blob/82924424b16b5a67e24ec852727be62af722b431/exampleApp/src/main/java/com/auto/reqres/operation/GetUserOp.java")
 @Ascus(library="org.apache.commons:commons-lang3:3.10")
 @Ascus(library="com.google.code.java-allocation-instrumenter:java-allocation-instrumenter:3.2.0")
 @Ascus(search="PACKAGE,PACKAGE_USED,500,GITREPO")
 @Ascus(keywords={"@embedded","@web","server"})
-@Ascus(keyterms={"server","request","ftp","@web","uri","url","routing","application","port","response","@embedded","pro
-perty","http","callback","https"})
+@Ascus(keyterms={"server","request","ftp","@web","uri","url","routing","application","port","response","@embedded","property","http","callback","https"})
 @Ascus(suggestedTerms={"request","mime","time","response","header","builder"})
 package edu.brown.cs.sample;
 

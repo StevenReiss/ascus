@@ -1,9 +1,7 @@
-@Ascus(source="GITREPO:https://github.com/kasra-sh/PicoHTTPd/blob/d1f5426a1cde4857fde7247ed77a680567b1e135/src/main/jav
-a/ir/kasra_sh/picohttpd/http/response/ResponseString.java")
+@Ascus(source="GITREPO:https://github.com/kasra-sh/PicoHTTPd/blob/d1f5426a1cde4857fde7247ed77a680567b1e135/src/main/java/ir/kasra_sh/picohttpd/http/response/ResponseString.java")
 @Ascus(search="PACKAGE,PACKAGE_USED,500,GITREPO")
 @Ascus(keywords={"@embedded","@web","server"})
-@Ascus(keyterms={"server","request","ftp","@web","uri","url","routing","application","port","response","@embedded","pro
-perty","http","callback","https"})
+@Ascus(keyterms={"server","request","ftp","@web","uri","url","routing","application","port","response","@embedded","property","http","callback","https"})
 @Ascus(suggestedTerms={"application","case","static","video","audio","string"})
 package edu.brown.cs.sample;
 

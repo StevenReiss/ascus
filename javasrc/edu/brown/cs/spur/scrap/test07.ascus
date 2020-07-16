@@ -1,11 +1,9 @@
-@Ascus(source="GITREPO:https://github.com/zuojisi/SimpleWebServer/blob/7a5209a86b6c8a13c7d5dc1370c9f16462d5d5b5/SimpleW
-ebServer/src/com/pupfly/SimpleWebServer/SimpleWebServerActivity.java")
+@Ascus(source="GITREPO:https://github.com/zuojisi/SimpleWebServer/blob/7a5209a86b6c8a13c7d5dc1370c9f16462d5d5b5/SimpleWebServer/src/com/pupfly/SimpleWebServer/SimpleWebServerActivity.java")
 @Ascus(library="org.apache.pinot:pinot-thrift:0.3.0")
 @Ascus(library="com.contentful.java:java-sdk:10.4.2")
 @Ascus(search="PACKAGE,PACKAGE_USED,500,GITREPO")
 @Ascus(keywords={"@embedded","@web","server"})
-@Ascus(keyterms={"server","request","ftp","@web","uri","url","routing","application","port","response","@embedded","pro
-perty","http","callback","https"})
+@Ascus(keyterms={"server","request","ftp","@web","uri","url","routing","application","port","response","@embedded","property","http","callback","https"})
 @Ascus(suggestedTerms={"android","server","asset","assets","socket","put"})
 package edu.brown.cs.SAMPLE;
 
