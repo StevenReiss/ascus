@@ -75,6 +75,7 @@ private static String SEARCH_PFX =
 
 
 
+
 /********************************************************************************/
 /*                                                                              */
 /*      Constructors                                                            */
@@ -135,12 +136,20 @@ private List<LidsLibrary> doMavenSearch(String path)
 
    Map<String,Set<String>> artifacts = new HashMap<>();
    Set<String> related = new HashSet<>();
-   String rslt1 = getMavenResult(q);
-   if (rslt1 !=  null) {
+   int nrslt =  1;
+   int start = 0;
+   while (start < nrslt) {
+      String q1 = q;
+      if (start > 0) 
+         q1 = q1 + "&start=" + start;
+      String rslt1 = getMavenResult(q1);
+      if (rslt1 == null) break;
       try {
          JSONObject top = new JSONObject(rslt1);
          JSONObject resp = top.getJSONObject("response");
          JSONArray arr = resp.getJSONArray("docs");
+         if (start == 0) nrslt = resp.getInt("numFound");
+         start += arr.length();
          if (arr != null) {
             for (int i = 0; i < arr.length(); ++i) {
                JSONObject doc = arr.getJSONObject(i);
@@ -162,8 +171,7 @@ private List<LidsLibrary> doMavenSearch(String path)
       catch (JSONException e) {
          IvyLog.logE("Problem with maven result: " + e);
        }
-    } 
-   
+    }
    List<LidsLibrary> rslt = new ArrayList<>();
    
    if (!related.isEmpty()) {
@@ -246,7 +254,7 @@ private String getMavenResult(String q)
          return rslt;
        }
       catch (Exception e) {
-         if (delay < 30000 && e.toString().contains(" 504 ")) {
+         if (delay < 60000 && e.toString().contains(" 504 ")) {
             try {
                Thread.sleep(delay);
              }

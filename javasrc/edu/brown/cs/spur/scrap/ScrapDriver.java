@@ -254,7 +254,7 @@ void processAbstractor()
    List<CoseResult> rslts = getSearchResults();
    long start = System.currentTimeMillis();
    IvyLog.logS("SCRAP","RETURNED " + rslts.size() + " RESULTS");
-   IvyLog.logS("SCRAP","SKIPPED " + search_result.getResultsRemoved() + " RESULTS");
+   IvyLog.logS("SCRAP","SKIPPED " + search_result.getNumberRemoved() + " RESULTS");
    
    rslts = removeOverlaps(rslts);
    IvyLog.logS("SCRAP","NON-OVERLAPPING " + rslts.size() + " RESULTS");

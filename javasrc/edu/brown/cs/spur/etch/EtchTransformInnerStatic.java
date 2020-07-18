@@ -282,7 +282,7 @@ private class ClassStaticMapper extends EtchMapper {
       ListRewrite declrw = rw.getListRewrite(otd,TypeDeclaration.BODY_DECLARATIONS_PROPERTY);
       BodyDeclaration after = null;
       for (Object o : otd.bodyDeclarations()) {
-         if (o instanceof FieldDeclaration) after =(BodyDeclaration) o;
+         if (o instanceof FieldDeclaration) after = (BodyDeclaration) o;
          else break;
        }
       
@@ -294,7 +294,10 @@ private class ClassStaticMapper extends EtchMapper {
       vdf.setName(on);
       FieldDeclaration fd = rw.getAST().newFieldDeclaration(vdf);
       fd.setType(styp);
-      if (after != null) declrw.insertAfter(after,fd,null);
+      List<?> nmods = rw.getAST().newModifiers(Modifier.PRIVATE);
+      fd.modifiers().addAll(nmods);
+      
+      if (after != null) declrw.insertAfter(fd,after,null);
       else declrw.insertFirst(fd,null);
       after = fd;
       

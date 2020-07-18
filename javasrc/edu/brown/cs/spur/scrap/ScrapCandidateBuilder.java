@@ -124,7 +124,8 @@ List<ScrapCandidate> buildCandidates(SumpModel model)
    
    long start1 = System.currentTimeMillis();
    IvyLog.logS("SCRAP","Test Case Time: " + (start1-start0));
-   if (global_tests == null) IvyLog.logS("SCRAP","No global tests");
+   if (global_tests == null || global_tests.getInnerResults() == null) 
+      IvyLog.logS("SCRAP","No global tests");
    else IvyLog.logS("SCRAP","Global Test Size: " + global_tests.getInnerResults().size());
          
    for (CandidateMatch cm : match) {
@@ -147,6 +148,8 @@ List<ScrapCandidate> buildCandidates(SumpModel model)
 
 private List<CandidateMatch> findInitialMatches(SumpModel model)
 {
+   if (all_results.size() == 0) return new ArrayList<>();
+   
    long start0 = System.currentTimeMillis();
 
    SumpData patdata = model.getModelData();
@@ -231,9 +234,12 @@ private void addTestCases(CandidateMatch cm,EtchFactory etcher)
    List<CoseResult> rawtests = finder.getTestResults();
 
    Set<String> done = new HashSet<>();
+   Set<CoseResult> doneresults = new HashSet<>();
    Map<String,String> namemap = cm.getNameMap();
    CoseResult testresult = null;
    for (CoseResult test : rawtests) {
+      CoseResult ftest = test.getParent();
+      if (doneresults.contains(ftest)) continue;
       String enc = IvyFile.digestString(test.getKeyText());
       if (!done.add(enc)) continue;
       IvyLog.logD("SCRAP","CONSIDER TEST CODE " + test.getSource().getDisplayName());
@@ -245,8 +251,8 @@ private void addTestCases(CandidateMatch cm,EtchFactory etcher)
             testresult.addPackage(s);
           }
        }
-      CoseResult ftest = test.getParent();
       testresult.addInnerResult(ftest);
+      doneresults.add(ftest);
     }
    if (testresult != null) {
       String pkg = testresult.getBasePackage();
@@ -326,8 +332,9 @@ private CoseResult createEmptyGlobalTest(CoseRequest req,CoseSource src,Candidat
    pw.println("package " + pkg + ";");
    ResultFactory rf = new ResultFactory(req);
    CoseResult r = rf.createFileResult(src,sw.toString());
-   
-   return r;
+   CoseResult pr = rf.createPackageResult(src);
+   pr.addInnerResult(r);
+   return pr;
 }
 
 

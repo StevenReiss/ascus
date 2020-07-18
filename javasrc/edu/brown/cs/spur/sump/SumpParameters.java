@@ -69,9 +69,6 @@ private Map<ParameterName,Object>      param_values;
 public SumpParameters() 
 {
    param_values = new EnumMap<>(ParameterName.class);
-   for (ParameterName p : ParameterName.values()) {
-      param_values.put(p,0);
-    }
    param_values.put(ParameterName.MIN_FIELDS,5);
    param_values.put(ParameterName.MIN_METHODS,10);
    param_values.put(ParameterName.MIN_TYPES,3);

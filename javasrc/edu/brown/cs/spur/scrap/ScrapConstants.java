@@ -35,6 +35,7 @@
 
 package edu.brown.cs.spur.scrap;
 
+import edu.brown.cs.cose.cosecommon.CoseDefaultResultSet;
 import edu.brown.cs.spur.rowel.RowelConstants.RowelMatchType;
 import edu.brown.cs.spur.stare.StareConstants.StareCandidateSolution;
 
@@ -76,7 +77,7 @@ interface ScrapCandidate extends StareCandidateSolution {
    
 }       // end of inner interface ScrapCandidate
 
-
+class ScrapResultSet extends CoseDefaultResultSet { }
 
 }	// end of interface ScrapConstants
 

@@ -307,7 +307,7 @@ public void candidateTest01()
 @Test
 public void candidateTest02()
 {
-   File f = new File("/research/people/spr/spur/scrap/src/test05.ascus");
+   File f = new File("/research/people/spr/spur/scrap/src/test06.ascus");
    System.err.println("==============================");
    System.err.println("START WORK ON " + f);
    System.err.println("==============================");
@@ -321,10 +321,11 @@ public void candidateTest02()
    cdr.setNumberOfThreads(8);
 
    cdr.setNumberOfThreads(1);
-   // cdr.addSpecificSource(sd.getSources());
+   cdr.addSpecificSource(sd.getSources());
 
-   cdr.addSpecificSource("GITREPO:https://github.com/d3adspace/mantikor/blob/1f3d549e21ce7491a0b7ca4385c7609f0e6ed27c/file-server/src/main/java/de/d3adspace/mantikor/server/file/MantikorFileServerApp.java");
-	
+   // cdr.addSpecificSource(
+         // "GITREPO:https://github.com/kasra-sh/PicoHTTPd/blob/d1f5426a1cde4857fde7247ed77a680567b1e135/src/main/java/ir/kasra_sh/picohttpd/http/response/ResponseString.java");
+
    ScrapDriver driver = new ScrapDriver(sd);
    driver.processBuildCandidates(mdl);
 }
