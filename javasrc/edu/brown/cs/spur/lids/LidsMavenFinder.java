@@ -69,6 +69,8 @@ private static Map<String,MavenLibrary> known_libs = new HashMap<>();
 private static KeySearchCache cose_cache = KeySearchCache.getCache();
 private static Map<String,List<LidsLibrary>> lib_byname = new HashMap<>();
 
+private static final int MAX_RESULTS = 5000;
+
 private static String SEARCH_PFX =
    "https://search.maven.org/solrsearch/select?rows=100&wt=json&q=";  
 
@@ -148,7 +150,10 @@ private List<LidsLibrary> doMavenSearch(String path)
          JSONObject top = new JSONObject(rslt1);
          JSONObject resp = top.getJSONObject("response");
          JSONArray arr = resp.getJSONArray("docs");
-         if (start == 0) nrslt = resp.getInt("numFound");
+         if (start == 0) {
+            nrslt = resp.getInt("numFound");
+            if (nrslt > MAX_RESULTS) nrslt = MAX_RESULTS;
+          }        
          start += arr.length();
          if (arr != null) {
             for (int i = 0; i < arr.length(); ++i) {
@@ -235,11 +240,12 @@ private List<LidsLibrary> getLibraryFromName(String name)
 private String getMavenResult(String q)
 {
    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+   URL url = null;
    
    long delay = 30000;
    for ( ; ; ) {
       try {
-         URL url = new URL(q);
+         url = new URL(q);
          InputStream br = cose_cache.getInputStream(url,true,false);
          byte [] buf = new byte[8192];
          for ( ; ; ) {
@@ -262,6 +268,7 @@ private String getMavenResult(String q)
             delay = 2*delay;
             continue;
           }
+         cose_cache.setCacheContents(url,"\n");
          IvyLog.logI("LIDS","Problem getting MAVEN data: " + e);
          break;
        }
