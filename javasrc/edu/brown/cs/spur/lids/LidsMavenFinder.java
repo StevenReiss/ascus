@@ -70,7 +70,7 @@ private static KeySearchCache cose_cache = KeySearchCache.getCache();
 private static Map<String,List<LidsLibrary>> lib_byname = new HashMap<>();
 
 private static String SEARCH_PFX =
-   "https://search.maven.org/solrsearch/select?rows=1000&wt=json&q=";  
+   "https://search.maven.org/solrsearch/select?rows=100&wt=json&q=";  
 
 
 
@@ -254,7 +254,7 @@ private String getMavenResult(String q)
          return rslt;
        }
       catch (Exception e) {
-         if (delay < 60000 && e.toString().contains(" 504 ")) {
+         if (delay < 30000 && e.toString().contains(" 504 ")) {
             try {
                Thread.sleep(delay);
              }
