@@ -125,12 +125,16 @@ private synchronized List<LidsLibrary> checkLibrary(String path,boolean iscls)
       int idx = path.lastIndexOf(".");
       if (idx > 0) {
 	 String pkg = path.substring(0,idx+1);
+	 String pkg0 = path.substring(0,idx);
+	 if (found_libs.containsKey(pkg0)) return found_libs.get(pkg0);
+
 	 for (Map.Entry<String,List<LidsLibrary>> ent : found_libs.entrySet()) {
 	    String s = ent.getKey();
 	    if (s.startsWith(pkg)) {
 	       int idx1 = s.lastIndexOf(".");
 	       if (idx1 == idx) {
 		  found_libs.put(path,ent.getValue());
+		  found_libs.put(pkg0,ent.getValue());
 		  return ent.getValue();
 		}
 	     }
