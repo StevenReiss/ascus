@@ -119,6 +119,25 @@ List<LidsLibrary> findLibrariesForImport(String imp)
 private synchronized List<LidsLibrary> checkLibrary(String path,boolean iscls)
 {
    if (found_libs.containsKey(path)) return found_libs.get(path);
+   
+   // check for related class path and use it if appropriate
+   if (iscls) {
+      int idx = path.lastIndexOf(".");
+      if (idx > 0) {
+         String pkg = path.substring(0,idx+1);
+         for (Map.Entry<String,List<LidsLibrary>> ent : found_libs.entrySet()) {
+            String s = ent.getKey();
+            if (s.startsWith(pkg)) {
+               int idx1 = s.lastIndexOf(".");
+               if (idx1 == idx) {
+                  found_libs.put(path,ent.getValue());
+                  return ent.getValue();
+                }
+             }
+          }
+       }
+    }
+   
 
    List<LidsLibrary> rslt = doMavenSearch(path);
 
