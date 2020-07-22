@@ -307,7 +307,7 @@ public void candidateTest01()
 @Test
 public void candidateTest02()
 {
-   File f = new File("/research/people/spr/spur/scrap/src/test05.ascus");
+   File f = new File("/research/people/spr/spur/scrap/src/test06.ascus");
    System.err.println("==============================");
    System.err.println("START WORK ON " + f);
    System.err.println("==============================");
@@ -317,6 +317,7 @@ public void candidateTest02()
    cdr.setCoseScopeType(CoseScopeType.PACKAGE_USED);
    cdr.setCoseSearchType(CoseSearchType.PACKAGE);
    cdr.setSearchEngine(CoseSearchEngine.GITREPO);
+   cdr.setMaxPackageFiles(500);
    cdr.setNumberOfResults(500);
    cdr.setNumberOfThreads(8);
 

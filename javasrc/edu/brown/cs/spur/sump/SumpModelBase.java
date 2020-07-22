@@ -102,6 +102,8 @@ public SumpModelBase(JcompControl ctrl,File f)
       if (idx > 0) ext = nm.substring(idx+1);
       switch (ext) {
          case "java" :
+            loadJava(ctrl,f);
+            break;
          case "ascus" :
             loadJava(ctrl,f);
             break;

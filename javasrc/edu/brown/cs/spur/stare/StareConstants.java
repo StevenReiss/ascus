@@ -63,6 +63,7 @@ String TEMPLATE_RESOURCE = "resources/stare.pom.vel";
 interface StareCandidateSolution {
 
    SumpModel getModel();
+   SumpModel getPatternModel();
    CoseResult getCoseResult();
    Map<String,String> getNameMap();
    CoseResult getLocalTestResult();

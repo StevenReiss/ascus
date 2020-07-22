@@ -42,13 +42,14 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.TreeSet;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -93,7 +94,7 @@ private CoseResult      base_result;
 
 public LidsFinder(CoseResult cr)
 {
-   check_imports = new HashSet<>();
+   check_imports = new TreeSet<>();
    done_imports = new HashSet<>();
    missing_imports = new HashSet<>();
    maven_finder = new LidsMavenFinder();
@@ -141,6 +142,7 @@ public List<LidsLibrary> findLibraries()
    else if (l2 != null) l1.addAll(l2);
    
    Map<LidsLibrary,Set<String>> covered = findMavenLibraries();
+   Set<String> done = new HashSet<>();
    
    // next if we have specific libraries, use them and removed from needed set
    
@@ -155,51 +157,103 @@ public List<LidsLibrary> findLibraries()
             Set<String> cov = covered.get(klib);
             it.remove();
             missing.removeAll(cov);
-            done_imports.addAll(cov);
+            done.addAll(cov);
           }
        }
     }
-   for (Iterator<LidsLibrary> it = covered.keySet().iterator(); it.hasNext(); ) {
-      LidsLibrary lib = it.next();
-      Set<String> vals = covered.get(lib);
-      vals.removeAll(done_imports);
-      if (vals.isEmpty()) it.remove();
-    }  
+   cleanLibrarys(covered,done);
+   
+   boolean chng = true;
+   while (chng) {
+      chng = false;
+      for (String s : missing) {
+         int bestct = 10;
+         int i1 = s.indexOf(".");
+         int i2 = s.indexOf(".",i1+1);
+         if (i2 > 0) bestct = i2;
+         LidsLibrary best = null;
+         for (LidsLibrary ll : covered.keySet()) {
+            Set<String> use = covered.get(ll);
+            if (use.contains(s)) {
+               int front = initialMatch(ll.getId(),s);
+               if (front > bestct) {
+                  bestct = front;
+                  best = ll;
+                }
+             }
+          }
+         if (best != null) {
+            Set<String> cov = covered.get(best);
+            done.addAll(cov);
+            missing.removeAll(cov);
+            rslt.add(best);
+            chng = true;
+            break;
+          }
+       }
+      if (chng) cleanLibrarys(covered,done);
+    }
    
    // now choose the smallest covering set -- do it greedily
    
    while (!covered.isEmpty()) {
       LidsLibrary use = null;
       int max = 0;
+      
       // choose set that covers the most elements
       for (Map.Entry<LidsLibrary,Set<String>> ent : covered.entrySet()) {
-         if (use == null || ent.getValue().size() > max) {
+         if (use == null) {
             max = ent.getValue().size();
             use = ent.getKey();
           }
-         else if (ent.getValue().size() == max && 
-               ent.getKey().getName().compareTo(use.getName()) > 0) {
-            use = ent.getKey();
+         else {
+            if (ent.getValue().size() > max) {
+               max = ent.getValue().size();
+               use = ent.getKey();
+             }
+            else if (ent.getValue().size() == max && 
+                  ent.getKey().getName().compareTo(use.getName()) > 0) {
+               use = ent.getKey();
+             }
           }
        }
       if (use == null) break;
       rslt.add(use);
       Set<String> cov = covered.remove(use);
       missing.removeAll(cov);
-      done_imports.addAll(cov);
-      for (Iterator<LidsLibrary> it = covered.keySet().iterator(); it.hasNext(); ) {
-         LidsLibrary lib = it.next();
-         Set<String> vals = covered.get(lib);
-         vals.removeAll(cov);
-         if (vals.isEmpty()) it.remove();
-       }
+      done.addAll(cov);
+      cleanLibrarys(covered,done);
     }
    
    missing_imports.addAll(missing);
    
    check_imports.clear();
+   done_imports.addAll(done);
    
    return rslt;
+}
+
+
+
+private void cleanLibrarys(Map<LidsLibrary,Set<String>> covered,Set<String> done) 
+{
+   for (Iterator<LidsLibrary> it = covered.keySet().iterator(); it.hasNext(); ) {
+      LidsLibrary lib = it.next();
+      Set<String> vals = covered.get(lib);
+      vals.removeAll(done);
+      if (vals.isEmpty()) it.remove();
+    }
+}
+
+
+
+private int initialMatch(String s1,String s2) 
+{
+   int max = Math.min(s1.length(),s2.length());
+   for (int i = 0; i < max; ++i) {
+      if (s1.charAt(i) != s2.charAt(i)) return i;
+    }
+   return max;
 }
 
 
@@ -219,7 +273,7 @@ public Collection<String> getMissingImports()
 private Map<LidsLibrary,Set<String>> findMavenLibraries()
 {
    
-   Map<LidsLibrary,Set<String>> covered = new HashMap<>();
+   Map<LidsLibrary,Set<String>> covered = new LinkedHashMap<>();
    
    for (String s : check_imports) {
       IvyLog.logD("LIDS","Look for library for " + s);

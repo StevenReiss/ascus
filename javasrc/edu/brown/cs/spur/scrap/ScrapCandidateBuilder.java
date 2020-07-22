@@ -204,7 +204,7 @@ private List<CandidateMatch> findInitialMatches(SumpModel model)
       Map<String,String> rmap = new HashMap<>();
       double sv = emdl.matchScore(model,rmap);
       if (sv != 0) {
-         CandidateMatch cm = new CandidateMatch(emdl,ent.getKey(),sv,rmap);
+         CandidateMatch cm = new CandidateMatch(model,emdl,ent.getKey(),sv,rmap);
          match.add(cm);
        }
     }
@@ -348,15 +348,17 @@ private CoseResult createEmptyGlobalTest(CoseRequest req,CoseSource src,Candidat
 private static class CandidateMatch implements Comparable<CandidateMatch>, ScrapCandidate {
  
    private SumpModel for_model;
+   private SumpModel pattern_model;
    private CoseResult for_result;
    private Map<String,String> name_map;
    private double match_value;
    private CoseResult local_tests;
    private CoseResult global_tests;
    
-   CandidateMatch(SumpModel mdl,CoseResult cr,double v,Map<String,String> nmap) {
+   CandidateMatch(SumpModel pat,SumpModel mdl,CoseResult cr,double v,Map<String,String> nmap) {
       for_model = mdl;
-      for_result = cr;
+      pattern_model = pat;
+      for_result = cr; 
       match_value = v;
       name_map = new HashMap<>(nmap);
       local_tests = null;
@@ -365,6 +367,7 @@ private static class CandidateMatch implements Comparable<CandidateMatch>, Scrap
     }
    
    @Override public SumpModel getModel()                        { return for_model; }
+   @Override public SumpModel getPatternModel()                 { return pattern_model; }
    @Override public CoseResult getCoseResult()                  { return for_result; }
    @Override public Map<String,String> getNameMap()             { return name_map; }
    @Override public CoseResult getLocalTestResult()             { return local_tests; }
