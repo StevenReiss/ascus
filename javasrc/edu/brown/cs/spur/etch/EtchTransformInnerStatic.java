@@ -36,11 +36,13 @@
 package edu.brown.cs.spur.etch;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
@@ -61,6 +63,7 @@ import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Statement;
+import org.eclipse.jdt.core.dom.StructuralPropertyDescriptor;
 import org.eclipse.jdt.core.dom.SuperConstructorInvocation;
 import org.eclipse.jdt.core.dom.ThisExpression;
 import org.eclipse.jdt.core.dom.Type;
@@ -106,24 +109,29 @@ EtchTransformInnerStatic(Map<String,String> namemap)
 
 @Override protected EtchMemo applyTransform(ASTNode n,SumpModel src,SumpModel target)
 {
-   List<AbstractTypeDeclaration> todos = findInnerClasses(n);
+   FindInnerClassVisitor ficv = new FindInnerClassVisitor();
+   n.accept(ficv);
+   
+   List<AbstractTypeDeclaration> todos = ficv.getInnerClasses();
+   Collection<JcompSymbol> acc = ficv.getAccessedItems();
+   
    if (todos == null || todos.size() == 0) return null;
    
-   List<TypeDeclaration> stats = new ArrayList<>();
+   List<AbstractTypeDeclaration> stats = new ArrayList<>();
    for (AbstractTypeDeclaration atd : todos) {
       int mods = atd.getModifiers();
       if (atd instanceof TypeDeclaration) {
          TypeDeclaration td = (TypeDeclaration) atd;
          if (td.isInterface()) continue;
-         if (!Modifier.isStatic(mods)) {
-            stats.add(td);
-          }
+       }
+      if (!Modifier.isStatic(mods)) {
+         stats.add(atd);
        }
     }
    
    if (stats.isEmpty()) return null;
    
-   ClassStaticMapper csm = new ClassStaticMapper(stats);
+   ClassStaticMapper csm = new ClassStaticMapper(stats,acc);
    EtchMemo memo = csm.getMapMemo(n);
    
    return memo;
@@ -138,56 +146,85 @@ EtchTransformInnerStatic(Map<String,String> namemap)
 /*                                                                              */
 /********************************************************************************/
 
-private List<AbstractTypeDeclaration> findInnerClasses(ASTNode n)
-{
-   FindInnerClassVisitor ficv = new FindInnerClassVisitor();
-   n.accept(ficv);
-   return ficv.getInnerClasses();
-}
 
 
 private class FindInnerClassVisitor extends ASTVisitor {
 
    private List<AbstractTypeDeclaration> inner_classes;
+   private JcompType in_type;
+   private Stack<JcompType> type_stack;
+   private Set<JcompSymbol> accessed_items;
    
    FindInnerClassVisitor() {
       inner_classes = new ArrayList<>();
+      in_type = null;
+      type_stack = new Stack<>();
+      accessed_items = new HashSet<>();
     }
    
-   List<AbstractTypeDeclaration> getInnerClasses() {
-      return inner_classes;
-    }
+   List<AbstractTypeDeclaration> getInnerClasses()      { return inner_classes; }
    
+   Set<JcompSymbol> getAccessedItems()                  { return accessed_items; }
+   
+   @Override public boolean visit(TypeDeclaration td) {
+      checkType(td);
+      return true;
+    }
    @Override public void endVisit(TypeDeclaration td) {
-      checkType(td);
+      handleEndType();
     }
    
-   @Override public void endVisit(EnumDeclaration td) {
+   @Override public boolean visit(EnumDeclaration td) {
       checkType(td);
+      return true;
+    }
+   @Override public void endVisit(EnumDeclaration td) {
+      handleEndType();
+    }
+   
+   @Override public void endVisit(SimpleName n) {
+      if (in_type != null) {
+         JcompSymbol r = JcompAst.getReference(n);
+         if (r == null) return;
+         if (r.getClassType() == in_type.getOuterType()) {
+            accessed_items.add(r);
+          }
+       }
     }
    
    private void checkType(AbstractTypeDeclaration atd) {
       JcompType jt = JcompAst.getJavaType(atd);
-      checkType(jt);
+      JcompType sts = checkType(jt);
+      type_stack.push(in_type);
+      in_type = sts;
     }
    
-   private void checkType(JcompType jt) {
+   private void handleEndType() {
+      in_type = type_stack.pop();
+    }
+   
+   private JcompType checkType(JcompType jt) {
+      JcompType sts = null;
       if (jt != null && jt.getOuterType() != null && !jt.isInterfaceType()) {
          String nm = jt.getName();
          String tnm = name_map.get(nm);
-         if (tnm == null) return;
+         if (tnm == null) return null;
          int idx1 = nm.lastIndexOf(".");
          int idx2 = nm.lastIndexOf(".",idx1-1);
          int idx3 = tnm.lastIndexOf(".");
          int idx4 = tnm.lastIndexOf(".",idx3-1);
          String n1 = nm.substring(idx2+1);
          String n2 = tnm.substring(idx4+1);
-         if (n1.equals(n2)) return;
+         if (n1.equals(n2)) return null;
          JcompSymbol js = jt.getDefinition();
          AbstractTypeDeclaration atd = (AbstractTypeDeclaration) js.getDefinitionNode();
-         if (atd != null) inner_classes.add(atd);
-         checkType(jt.getSuperType());
+         if (atd != null) {
+            inner_classes.add(atd);
+            sts = jt;
+          }
        }
+      
+      return sts;
     }
    
 }       // end of inner class FindInnerClassVisitor
@@ -200,21 +237,31 @@ private class FindInnerClassVisitor extends ASTVisitor {
 
 private class ClassStaticMapper extends EtchMapper {
 
-   private List<TypeDeclaration> fix_decls;
+   private List<AbstractTypeDeclaration> fix_decls;
    private Set<JcompType> change_types;
+   private Set<JcompSymbol> accessed_items;
+   // need a stack of current items -- push on preVisit, pop on rewriteTree
+   // if inside an item and reference to accessed_items then: if simple name, replace with
+   //           outer_this.<simple_name> for variable/field access
+   //           outer_this.<simple_name(...) for method invocation
    
-   ClassStaticMapper(List<TypeDeclaration> tds) {
+   ClassStaticMapper(List<AbstractTypeDeclaration> tds,Collection<JcompSymbol> acc) {
       super(EtchTransformInnerStatic.this);
       fix_decls = tds;
       change_types = new HashSet<>();
-      for (TypeDeclaration td : fix_decls) {
+      accessed_items = new HashSet<>(acc);
+      for (AbstractTypeDeclaration td : fix_decls) {
          JcompType jt = JcompAst.getJavaType(td);
          if (jt != null) change_types.add(jt);
        }
     }
    
-   void rewriteTree(ASTNode orig,ASTRewrite rw) {
-      if (orig instanceof TypeDeclaration && fix_decls.contains(orig)) {
+   @Override boolean preVisit(ASTNode orig,ASTRewrite rw) {
+      return true;
+    }
+   
+   @Override void rewriteTree(ASTNode orig,ASTRewrite rw) {
+      if (fix_decls.contains(orig)) {
          makeTypeStatic((TypeDeclaration) orig,rw);
        }
       else if (orig instanceof ClassInstanceCreation) {
@@ -232,6 +279,20 @@ private class ClassStaticMapper extends EtchMapper {
                fixConstructor(md,js.getClassType(),rw);
              }
           }
+         JcompSymbol js = JcompAst.getDefinition(md);
+         if (js != null && accessed_items.contains(js)) {
+            removePrivate(rw,md,MethodDeclaration.MODIFIERS2_PROPERTY);
+          }
+       }
+      else if (orig instanceof FieldDeclaration) {
+         FieldDeclaration fd = (FieldDeclaration) orig;
+         boolean affected = false;
+         for (Object o : fd.fragments()) {
+            VariableDeclarationFragment vdf = (VariableDeclarationFragment) o;
+            JcompSymbol js = JcompAst.getDefinition(vdf);
+            if (js != null && accessed_items.contains(js)) affected = true;
+          }
+         if (affected) removePrivate(rw,fd,FieldDeclaration.MODIFIERS2_PROPERTY);   
        }
       else if (orig instanceof ThisExpression) {
          ThisExpression texp = (ThisExpression) orig;
@@ -311,6 +372,7 @@ private class ClassStaticMapper extends EtchMapper {
       if (!hasconst) {
          // add default constructor
          MethodDeclaration md = rw.getAST().newMethodDeclaration();
+         md.setConstructor(true);
          SimpleName n1 = JcompAst.getSimpleName(rw.getAST(),ourname);
          md.setName(n1);
          SimpleName n3 = JcompAst.getSimpleName(rw.getAST(),outname);
@@ -324,6 +386,7 @@ private class ClassStaticMapper extends EtchMapper {
          md.setBody(cnts);
          Statement st = getOuterAssignment(rw);
          cnts.statements().add(st);
+         declrw.insertLast(md,null);
        }
     }
    
@@ -420,6 +483,10 @@ private class ClassStaticMapper extends EtchMapper {
       asg.setRightHandSide(rhs);
       Statement st = rw.getAST().newExpressionStatement(asg);
       return st;
+    }
+   
+   private void removePrivate(ASTRewrite rw,ASTNode n,StructuralPropertyDescriptor spd) {
+      
     }
    
 }	// end of subtype ClassStaticMapper

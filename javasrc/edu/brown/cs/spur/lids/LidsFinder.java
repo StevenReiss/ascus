@@ -44,7 +44,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
+import java.util.LinkedHashMap; 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -141,26 +141,45 @@ public List<LidsLibrary> findLibraries()
    if (l1 == null) l1 = l2;
    else if (l2 != null) l1.addAll(l2);
    
-   Map<LidsLibrary,Set<String>> covered = findMavenLibraries();
+   List<LidsLibrary> rslt = new ArrayList<>();
+   if (l1 != null) {
+      addProjectLibraries(l1,rslt);
+    }
+   
+   Map<LidsLibrary,Set<String>> covered = findMavenLibraries(l1);
    Set<String> done = new HashSet<>();
    
    // next if we have specific libraries, use them and removed from needed set
    
-   List<LidsLibrary> rslt = new ArrayList<>();
    Set<String> missing = new HashSet<>(check_imports);
    
-   for (Iterator<LidsLibrary> it = covered.keySet().iterator(); it.hasNext(); ) {
-      LidsLibrary klib = it.next();
+   if (l1 != null) {
+      for (Iterator<LidsLibrary> it = covered.keySet().iterator(); it.hasNext(); ) {
+         LidsLibrary klib = it.next();
+         for (LidsLibrary mlib : l1) {
+            if (mlib.getId().equals(klib.getId())) {
+               rslt.add(mlib);
+               Set<String> cov = covered.get(klib);
+               it.remove();
+               missing.removeAll(cov);
+               done.addAll(cov);
+               break;
+             }
+          } 
+       }
+      
       for (LidsLibrary mlib : l1) {
-         if (mlib.getId().equals(klib.getId())) {
-            rslt.add(mlib);
-            Set<String> cov = covered.get(klib);
-            it.remove();
-            missing.removeAll(cov);
-            done.addAll(cov);
+         List<LidsLibrary> libs = new ArrayList<>(covered.keySet());
+         for (LidsLibrary klib : libs) {
+            if (mlib.getGroup().equals(klib.getGroup())) {
+               Set<String> cov = covered.remove(klib);
+               klib.setVersion(mlib.getVersion());
+               covered.put(klib,cov);
+             }
           }
        }
     }
+   
    cleanLibrarys(covered,done);
    
    boolean chng = true;
@@ -270,14 +289,22 @@ public Collection<String> getMissingImports()
 /*                                                                              */
 /********************************************************************************/
 
-private Map<LidsLibrary,Set<String>> findMavenLibraries()
+private Map<LidsLibrary,Set<String>> findMavenLibraries(Set<LidsLibrary> userlibs)
 {
-   
    Map<LidsLibrary,Set<String>> covered = new LinkedHashMap<>();
+   Set<String> grps = null;
+   if (userlibs != null) {
+      grps = new HashSet<>();
+      for (LidsLibrary ll : userlibs) {
+         grps.add(ll.getGroup());
+         grps.add(ll.getName());
+         grps.add(ll.getId());
+       }
+    }
    
    for (String s : check_imports) {
       IvyLog.logD("LIDS","Look for library for " + s);
-      List<LidsLibrary> libs = maven_finder.findLibrariesForImport(s);
+      List<LidsLibrary> libs = maven_finder.findLibrariesForImport(s,grps);
       if (libs != null) {
          for (LidsLibrary lib : libs) {
             Set<String> rslt = covered.get(lib);
@@ -395,8 +422,6 @@ private Set<String> getGradleLibraries(String text)
 }
 
 
-
-
 private List<CoseResult> getGithubResult(String ... query) 
 {
    CoseDefaultRequest req = new CoseDefaultRequest();
@@ -414,9 +439,6 @@ private List<CoseResult> getGithubResult(String ... query)
    master.computeSearchResults(rslts);
    return rslts.getResults();
 }
-
-
-
 
 
 
@@ -438,6 +460,32 @@ protected URI convertGithubSearchResults(JSONObject jobj)
 
 
    
+/********************************************************************************/
+/*                                                                              */
+/*      Check project libraries                                                 */
+/*                                                                              */
+/********************************************************************************/
+
+private void addProjectLibraries(Collection<LidsLibrary> chk,List<LidsLibrary> rslt)
+{
+   for (LidsLibrary ll : chk) {
+      Set<String> used = new HashSet<>();
+      for (String s : check_imports) {
+         if (maven_finder.libraryWorksFor(ll,s)) {
+            used.add(s);
+          }
+       }
+      if (!used.isEmpty()) {
+         check_imports.removeAll(used);
+         done_imports.addAll(used);
+         rslt.add(ll);
+       }
+    }
+}
+
+
+
+
 /********************************************************************************/
 /*                                                                              */
 /*      Create a library from a string                                          */
@@ -472,6 +520,10 @@ private static class StringLibrary extends LidsLibrary {
    @Override public String getVersion()         { return lib_version; }
    @Override public String getId()              { return lib_id; }
    @Override public String getFullId()          { return lib_id + ":" + lib_version; }
+   
+   @Override public void setVersion(String s) {
+      lib_version = s;
+    }
    
 }       // end of inner class StringLibrary
 

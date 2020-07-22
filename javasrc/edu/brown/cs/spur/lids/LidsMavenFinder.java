@@ -96,15 +96,15 @@ LidsMavenFinder()
 /*										*/
 /********************************************************************************/
 
-List<LidsLibrary> findLibrariesForImport(String imp)
+List<LidsLibrary> findLibrariesForImport(String imp,Set<String> grps)
 {
    for (int i = 0; ; ++i) {
       if (!imp.contains(".")) break;
       List<LidsLibrary> libs = null;
       if (i == 0) {
-	 if (!imp.endsWith(".*")) libs = checkLibrary(imp,true);
+	 if (!imp.endsWith(".*")) libs = checkLibrary(imp,true,grps);
        }
-      else libs = checkLibrary(imp,false);
+      else libs = checkLibrary(imp,false,grps);
       if (libs != null) return libs;
       int idx = imp.lastIndexOf(".");
       if (idx < 0) break;
@@ -116,7 +116,7 @@ List<LidsLibrary> findLibrariesForImport(String imp)
 
 
 
-private synchronized List<LidsLibrary> checkLibrary(String path,boolean iscls)
+private synchronized List<LidsLibrary> checkLibrary(String path,boolean iscls,Set<String> grps)
 {
    if (found_libs.containsKey(path)) return found_libs.get(path);
 
@@ -142,8 +142,7 @@ private synchronized List<LidsLibrary> checkLibrary(String path,boolean iscls)
        }
     }
 
-
-   List<LidsLibrary> rslt = doMavenSearch(path);
+   List<LidsLibrary> rslt = doMavenSearch(path,grps);
 
    if (rslt != null && rslt.size() == 0) rslt = null;
 
@@ -154,13 +153,14 @@ private synchronized List<LidsLibrary> checkLibrary(String path,boolean iscls)
 
 
 
-private List<LidsLibrary> doMavenSearch(String path)
+private List<LidsLibrary> doMavenSearch(String path,Set<String> grps)
 {
    String q = SEARCH_PFX + "fc:%22" + path + "%22";
    q += "%20AND%20p:%22jar%22";
 
    Map<String,Set<String>> artifacts = new HashMap<>();
    Set<String> related = new HashSet<>();
+   Set<String> userrelated = new HashSet<>();
    int nrslt =	1;
    int start = 0;
    while (start < nrslt) {
@@ -187,6 +187,7 @@ private List<LidsLibrary> doMavenSearch(String path)
 	       String grp = doc.getString("g");
 	       // String ver = doc.getString("v");
 	       if (CoseConstants.isRelatedPackage(grp,path)) related.add(grp);
+               if (grps != null && grps.contains(grp)) userrelated.add(grp);
 	       Set<String> al = artifacts.get(grp);
 	       if (al == null) {
 		  al = new HashSet<>();
@@ -201,7 +202,9 @@ private List<LidsLibrary> doMavenSearch(String path)
        }
     }
    List<LidsLibrary> rslt = new ArrayList<>();
-
+   if (!userrelated.isEmpty()) {
+      related = userrelated;
+    }
    if (!related.isEmpty()) {
       for (Iterator<String> it = artifacts.keySet().iterator(); it.hasNext(); ) {
 	 String art = it.next();
@@ -304,6 +307,59 @@ private String getMavenResult(String q)
 
 
 /********************************************************************************/
+/*                                                                              */
+/*      Check a library for an import                                           */
+/*                                                                              */
+/********************************************************************************/
+
+boolean libraryWorksFor(LidsLibrary ll,String imp)
+{
+   if (imp.endsWith(".*")) {
+      int idx = imp.lastIndexOf(".");
+      imp = imp.substring(0,idx);
+    }
+         
+   for ( ; ; ) {
+      if (!imp.contains(".")) break;
+      boolean rslt = checkWorks(ll,imp);
+      if (rslt) return true;
+      
+      // handle inner class by going to outer class
+      int idx = imp.lastIndexOf(".");
+      if (idx < 0) break;
+      imp = imp.substring(0,idx);
+      int idx1 = imp.lastIndexOf(".");
+      if (idx1 < 0) break;
+      if (!Character.isUpperCase(imp.charAt(idx1+1))) break;
+    }
+   
+   return false;
+}
+
+
+private boolean checkWorks(LidsLibrary ll,String path)
+{
+   String q = SEARCH_PFX + "fc:%22" + path + "%22";
+   q += "%20AND%20p:%22jar%22";
+   q += "%20AND%20g:%22" + ll.getGroup() + "%22";
+   q += "%20AND%20a:%22" + ll.getName() + "%22";
+   q += "%20AND%20v:%22" + ll.getVersion() + "%22"; 
+   String rslt = getMavenResult(q);
+   if (rslt == null) return false;
+   try {
+      JSONObject top = new JSONObject(rslt);
+      JSONObject resp = top.getJSONObject("response");
+      int fnd = resp.getInt("numFound");
+      if (fnd > 0) return true;
+    }
+   catch (JSONException e) {
+      IvyLog.logE("Problem with maven result: " + e);
+    } 
+      
+   return false;
+}
+
+/********************************************************************************/
 /*										*/
 /*	Library implementation for Maven results				*/
 /*										*/
@@ -328,6 +384,8 @@ private static class MavenLibrary extends  LidsLibrary {
    @Override public String getVersion() 	{ return lib_version; }
    @Override public String getId()		{ return lib_id; }
    @Override public String getFullId()		{ return lib_id + ":" + lib_version; }
+   
+   @Override public void setVersion(String v)   { lib_version = v; }
 
    @Override public String toString() {
       return lib_id + "@" + lib_name + "@" + lib_timestamp + "@" + lib_version;

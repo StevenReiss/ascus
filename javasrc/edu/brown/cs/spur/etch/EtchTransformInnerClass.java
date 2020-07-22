@@ -427,10 +427,6 @@ private class InnerClassMapper extends EtchMapper {
        }
     }
    
-   
-   
-   
-   
 }	// end of subtype InnerClassMapper
 
    

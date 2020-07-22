@@ -46,6 +46,7 @@ abstract class LidsLibrary {
    abstract public String getVersion();
    abstract public String getId();
    abstract public String getFullId();
+   abstract public void setVersion(String v);
    
    public String getGroup() {
       String s = getId();
