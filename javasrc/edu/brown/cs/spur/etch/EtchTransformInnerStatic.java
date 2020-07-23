@@ -517,8 +517,11 @@ private class ClassStaticMapper extends EtchMapper {
    private void fixNameReference(ASTRewrite rw,SimpleName sn) {
       switch (sn.getParent().getNodeType()) {
          case ASTNode.METHOD_INVOCATION :
-            fixMethodReference(rw,(MethodInvocation) sn.getParent());
-            return;
+            if (sn.getLocationInParent() == MethodInvocation.NAME_PROPERTY) {
+               fixMethodReference(rw,(MethodInvocation) sn.getParent());
+               return;
+             }
+            break;
          case ASTNode.FIELD_ACCESS :
          case ASTNode.THIS_EXPRESSION :
          case ASTNode.QUALIFIED_NAME :
