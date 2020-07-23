@@ -54,16 +54,17 @@ import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.ConstructorInvocation;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.IExtendedModifier;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Statement;
-import org.eclipse.jdt.core.dom.StructuralPropertyDescriptor;
 import org.eclipse.jdt.core.dom.SuperConstructorInvocation;
 import org.eclipse.jdt.core.dom.ThisExpression;
 import org.eclipse.jdt.core.dom.Type;
@@ -240,16 +241,16 @@ private class ClassStaticMapper extends EtchMapper {
    private List<AbstractTypeDeclaration> fix_decls;
    private Set<JcompType> change_types;
    private Set<JcompSymbol> accessed_items;
-   // need a stack of current items -- push on preVisit, pop on rewriteTree
-   // if inside an item and reference to accessed_items then: if simple name, replace with
-   //           outer_this.<simple_name> for variable/field access
-   //           outer_this.<simple_name(...) for method invocation
+   private Stack<JcompType> type_stack;
+   private JcompType cur_type;
    
    ClassStaticMapper(List<AbstractTypeDeclaration> tds,Collection<JcompSymbol> acc) {
       super(EtchTransformInnerStatic.this);
       fix_decls = tds;
       change_types = new HashSet<>();
       accessed_items = new HashSet<>(acc);
+      type_stack = new Stack<>();
+      cur_type = null;
       for (AbstractTypeDeclaration td : fix_decls) {
          JcompType jt = JcompAst.getJavaType(td);
          if (jt != null) change_types.add(jt);
@@ -257,12 +258,21 @@ private class ClassStaticMapper extends EtchMapper {
     }
    
    @Override boolean preVisit(ASTNode orig,ASTRewrite rw) {
+      if (orig instanceof AbstractTypeDeclaration) {
+         JcompType jt = JcompAst.getJavaType(orig);
+         type_stack.push(cur_type);
+         if (fix_decls.contains(orig)) cur_type = jt;
+         else cur_type = null;
+       }
       return true;
     }
    
    @Override void rewriteTree(ASTNode orig,ASTRewrite rw) {
-      if (fix_decls.contains(orig)) {
-         makeTypeStatic((TypeDeclaration) orig,rw);
+      if (orig instanceof AbstractTypeDeclaration) {
+         if (fix_decls.contains(orig)) {
+            makeTypeStatic((TypeDeclaration) orig,rw);
+          }
+         cur_type = type_stack.pop();
        }
       else if (orig instanceof ClassInstanceCreation) {
          ClassInstanceCreation cic = (ClassInstanceCreation) orig;
@@ -281,7 +291,7 @@ private class ClassStaticMapper extends EtchMapper {
           }
          JcompSymbol js = JcompAst.getDefinition(md);
          if (js != null && accessed_items.contains(js)) {
-            removePrivate(rw,md,MethodDeclaration.MODIFIERS2_PROPERTY);
+            removePrivate(rw,md.modifiers());
           }
        }
       else if (orig instanceof FieldDeclaration) {
@@ -292,7 +302,7 @@ private class ClassStaticMapper extends EtchMapper {
             JcompSymbol js = JcompAst.getDefinition(vdf);
             if (js != null && accessed_items.contains(js)) affected = true;
           }
-         if (affected) removePrivate(rw,fd,FieldDeclaration.MODIFIERS2_PROPERTY);   
+         if (affected) removePrivate(rw,fd.modifiers());   
        }
       else if (orig instanceof ThisExpression) {
          ThisExpression texp = (ThisExpression) orig;
@@ -306,6 +316,13 @@ private class ClassStaticMapper extends EtchMapper {
                   rw.replace(texp,sn,null);
                 }
              }
+          }
+       }
+      else if (orig instanceof SimpleName && cur_type != null) {
+         SimpleName sn = (SimpleName) orig;
+         JcompSymbol js = JcompAst.getReference(sn);
+         if (js != null && accessed_items.contains(js)) {
+            fixNameReference(rw,sn);
           }
        }
     }
@@ -485,8 +502,43 @@ private class ClassStaticMapper extends EtchMapper {
       return st;
     }
    
-   private void removePrivate(ASTRewrite rw,ASTNode n,StructuralPropertyDescriptor spd) {
-      
+   private void removePrivate(ASTRewrite rw,List<?> mods) {
+      for (Object o : mods) {
+         if (o instanceof Modifier) {
+            Modifier m = (Modifier) o;
+            if (m.isPrivate()) {
+               rw.remove(m,null);
+               break;
+             }
+          }
+       }
+    }
+   
+   private void fixNameReference(ASTRewrite rw,SimpleName sn) {
+      switch (sn.getParent().getNodeType()) {
+         case ASTNode.METHOD_INVOCATION :
+            fixMethodReference(rw,(MethodInvocation) sn.getParent());
+            return;
+         case ASTNode.FIELD_ACCESS :
+         case ASTNode.THIS_EXPRESSION :
+         case ASTNode.QUALIFIED_NAME :
+         case ASTNode.SUPER_FIELD_ACCESS :
+            return;
+         default : 
+            break;
+       }
+      FieldAccess fac = rw.getAST().newFieldAccess();
+      SimpleName n = JcompAst.getSimpleName(rw.getAST(),OUTER_NAME);
+      fac.setExpression(n);
+      SimpleName n1 = JcompAst.getSimpleName(rw.getAST(),sn.getIdentifier());
+      fac.setName(n1);
+      rw.replace(sn,fac,null);
+    }
+   
+   private void fixMethodReference(ASTRewrite rw,MethodInvocation mi) {
+      if (mi.getExpression() != null) return;
+      SimpleName n = JcompAst.getSimpleName(rw.getAST(),OUTER_NAME);
+      rw.set(mi,MethodInvocation.EXPRESSION_PROPERTY,n,null);
     }
    
 }	// end of subtype ClassStaticMapper
