@@ -1,99 +1,218 @@
-@Ascus(source="GITREPO:https://github.com/shannah/CN1Webserver/blob/a3edc053c14e53dc8640efb85e716ef6ba062c56/native/android/com/codename1/webserver/NativeWebServerImpl.java")
+@Ascus(source="GITREPO:https://github.com/kasra-sh/MikroServer/blob/e7430270310a5e233711289b37da97d6fb8b2f71/src/main/java/ir/kasra_sh/MikroServer/Server/SocketListener.java")
+@Ascus(library="co.paralleluniverse:quasar-core:0.8.0")
+@Ascus(library="com.google.gerrit:gerrit-extension-api:3.2.0-rc4")
 @Ascus(search="PACKAGE,PACKAGE_USED,500,GITREPO")
 @Ascus(keywords={"@embedded","@web","server"})
 @Ascus(keyterms={"server","request","ftp","@web","uri","url","routing","application","port","response","@embedded","property","http","callback","https"})
-@Ascus(suggestedTerms={"server","socket","output","web","native","port"})
-package edu.brown.cs.sample;
+@Ascus(suggestedTerms={"application","case","static","socket","video","string"})
+package edu.brown.cs.SAMPLE;
 
 import edu.brown.cs.sump.annot.Ascus;
 import edu.brown.cs.sump.annot.AscusPackage;
 import edu.brown.cs.sump.annot.AscusClass;
-import java.io.File;
+import java.net.InetSocketAddress;
+import java.net.Socket;
+import java.util.AbstractMap.SimpleEntry;
+import java.util.HashMap;
+import java.util.Map.Entry;
+import java.util.Properties;
+import java.util.Set;
 
 @AscusPackage
-public interface EmbeddedWebServer {
+public interface SocketListener {
 
 
-/**
- * Implementation of a very basic HTTP server. The contents are loaded from the assets folder. This server handles one
-request at a time. It only supports GET method.
- */
+@AscusClass(uses={MimeTypes.class})
+enum MimeTypes_Model {
+
+}
+
+@AscusClass(uses={SocketListener.class})
+abstract class Mikro {
+   public Mikro() { }
+   public abstract void addHandler(Class<Object> h);
+   public abstract void addFileHandler(String dir,Class<Object> h);
+   public abstract void start(int port,int parallelism,boolean useFibers);
+}
+
+@AscusClass(uses={ResponseWriter.class,Request.class,HTTPConnection.class})
+abstract class HTTPHandler {
+   public String CONTEXT;
+   public abstract void setConnection(HTTPConnection conn);
+}
+
 @AscusClass
-abstract class SimpleWebServer implements Runnable {
-/**
- * True if the server is running.
- */
-   private boolean mIsRunning;
-/**
- * WebServer constructor.
- */
-   public SimpleWebServer(int port,File docRoot) { }
-/**
- * This method starts the web server listening to the specified port.
- */
-   public abstract void start();
-/**
- * This method stops the web server
- */
-   public abstract void stop();
-   public abstract int getPort();
+abstract class ResponseHeader {
+   public ResponseHeader() { }
+   public abstract void setStatus(int responseCode);
+   public abstract void setContentLength(int length);
+   public abstract void setContentTypeByExtension(String ext);
+   public abstract void setContentType(String type);
+   public abstract void setProperty(String name,String value);
+   public abstract String getProperty(String name);
+   public abstract String getFullHeader();
+}
+
+@AscusClass
+interface SocketReceiver {
+   public abstract void onReceive(Socket s);
+}
+
+@AscusClass(uses={HTTPConnection.class})
+abstract class ReverseProxy implements Runnable {
+   public ReverseProxy(InetSocketAddress dest,HTTPConnection conn) { }
    public abstract void run();
 }
 
-/**
- * @author shannah
- */
-@AscusClass(uses={NativeWebServer.class})
-abstract class WebServer {
-   private NativeWebServer peer;
-   public WebServer(String docRoot,int port) { }
-   public abstract void start();
-   public abstract void stop();
+@AscusClass(uses={HTTPConnection.class,HTTPMethod.class})
+abstract class Request {
+   private HTTPConnection conn;
+   public Request(HTTPConnection con) { }
+   public abstract int getContentLength();
+   public abstract String getArg(String name);
+   public abstract String getHeader(String name);
 }
 
-/**
- * @author shannah
- */
+@AscusClass(uses={MimeTypes.class})
+enum MimeTypes_Message {
+
+}
+
 @AscusClass
-interface NativeWebServer extends NativeInterface {
-   boolean isRunning();
-   boolean start(String docRoot,int port);
-   boolean stop();
+class MimeTypes {
 }
 
-/**
- * Invoked to indicate that an exception occurred, it is up to the developer to decide whether to send the device log
-to the server by invoking Log.sendLog(). Notice that sending a log only works for paid accounts. This interface should
-be registered with the Display class. <p>Notice that exceptions will only be reported for threads created by Codename
-One using the API's within the Display class, this will not work for exceptions within threads that are created by the
-new Thread() API.
- * @author Shai Almog
- */
+@AscusClass(uses={MimeTypes.class})
+enum MimeTypes_Image {
+
+}
+
+@AscusClass(uses={MimeTypes.class})
+enum MimeTypes_Chemical {
+
+}
+
+@AscusClass(uses={MimeTypes.class})
+enum MimeTypes_Text {
+
+}
+
+@AscusClass(uses={KSocket.class,ResponseWriter.class,RequestParser.class,Request.class,HTTPMethod.class})
+abstract class HTTPConnection {
+   private StringBuilder rawHeader;
+   private int bodySize;
+   private Properties o;
+   private String filePath;
+   public ResponseWriter writer;
+   public Request req;
+   private KSocket socket;
+   private int headerSize;
+   private String context;
+   private HTTPMethod method;
+   private Properties p;
+   public abstract void setHeader(String name,String value);
+   public abstract String getHeader(String name);
+   public abstract String getOption(String name);
+   public abstract void setMethod(HTTPMethod method);
+   public abstract byte[] getBodyBytes();
+   public abstract String getBody();
+   public abstract HashMap<String,byte[]> getMultiPart();
+   public abstract byte[] getFormData(String name);
+   public abstract String getFormDataString(String name);
+   public abstract void setRequestParser(RequestParser requestParser);
+}
+
+@AscusClass(uses={KSocket.class,RequestParser.class,HTTPHandler.class,HTTPConnection.class})
+abstract class RouterFiber implements Runnable {
+   public RouterFiber(KSocket s,Set<Entry<String,Class<Object>>> routes,Set<Entry<String,SimpleEntry<Class<Object>,String>>> files,Set<Entry<String,InetSocketAddress>> proxies,HashMap<String,HashMap<String,String>> overrides) { }
+   public abstract void run();
+}
+
+@AscusClass(uses={KSocket.class})
+abstract class SocketListener extends Thread {
+   private int workers;
+   public abstract void tryStop();
+   public abstract void run();
+}
+
+@AscusClass(uses={MimeTypes.class})
+enum MimeTypes_Audio {
+
+}
+
+@AscusClass(uses={ResponseHeader.class})
+abstract class ResponseWriter {
+   public boolean rh;
+   public ResponseHeader header;
+   public ResponseHeader(KSocket KSocket) { }
+   public abstract void setLength(int len);
+   public abstract void writeHeader();
+   public abstract void append(String s);
+   public abstract void append(byte[] b,int i,int len);
+   public abstract void appendLine(String s);
+   public abstract void finish();
+   public abstract void write(String s);
+   public abstract void write(byte[] b,int i1,int i2);
+   public abstract void writeAll(String s);
+   public abstract void writeResponse(int responseCode,String s);
+   public abstract void writeResponseCompressed(int responseCode,String s);
+   public abstract void writeResponse(int responseCode,byte[] b,int i,int len);
+   public abstract void writeAll(byte[] b,int i,int len);
+}
+
+@AscusClass(uses={KSocket.class,HTTPConnection.class})
+abstract class RequestParser {
+   private HTTPConnection connection;
+   private int errCode;
+   public RequestParser(KSocket KSocket) { }
+   public abstract String getRoute();
+   public abstract String getStatus();
+   public abstract void parseResponseHeader();
+   public abstract void parseHeader();
+   public abstract void getBody();
+   public abstract void getMultiPartBody();
+}
+
 @AscusClass
-interface CrashReport {
-/**
- * Callback for an exception that was not handled by the developer
- * @param t the exception
- */
-   void exception(Throwable t);
+enum HTTPMethod {
+HEAD, GET, POST, OPTIONS
 }
 
-@AscusClass(uses={SimpleWebServer.class})
-class SimpleWebServer_TextUtils {
+@AscusClass(uses={MimeTypes.class})
+enum MimeTypes_Video {
+
 }
 
-/**
- * This is a marker interface that should be extended by a user interface in order to indicate that said interface is
-implemented in native code.
- * @author Shai Almog
- */
 @AscusClass
-interface NativeInterface {
-/**
- * Indicates whether this native interface is supported on the current platform
- * @return true if the native interface is supported on the given platform
- */
-   boolean isSupported();
+abstract class KSocket {
+   private Socket socket;
+   private String lastLine;
+   private int lastInt;
+   private char lastChar;
+   public KSocket(Socket socket) { }
+   public KSocket(Socket socket,int lineBufferSize) { }
+   public abstract void flush();
+   public abstract void close();
+   public abstract byte readByte(int i);
+   public abstract int readInt(int i);
+   public abstract char readChar();
+   public abstract int readBytes(byte[] b,int start,int len);
+   public abstract int readBytes(byte[] b);
+   public abstract String readLineString(byte[][] endSeq);
+   public abstract int readLineBytes(byte[] b,int limit,byte[][] endSeq);
+   public abstract void writeByte(int b);
+   public abstract void writeInt(int i);
+   public abstract void writeBytes(byte[] bytes,int start,int len);
+   public abstract void writeBytes(byte[] bytes);
+   public abstract void writeString(String s);
+   public abstract void writeChar(int c);
+   public abstract void writeChars(String s);
+   public abstract void setLineBufferSize(int size);
+}
+
+@AscusClass(uses={MimeTypes.class})
+enum MimeTypes_Application {
+
 }
 
 }

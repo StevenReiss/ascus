@@ -279,7 +279,7 @@ private class OutputJava extends SumpVisitor {
       if (nm.equals("<init>")) {
          nm = cur_class.peek();
          isconst = true;
-       }   
+       }  
       else {
          if (!is_interface.peek()) print_writer.print("abstract ");
          if (op.getReturnType() != null) {

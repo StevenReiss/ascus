@@ -631,6 +631,8 @@ private String getNameType(ASTNode n)
       case ASTNode.TYPE_LITERAL :
       case ASTNode.SIMPLE_TYPE :
       case ASTNode.NAME_QUALIFIED_TYPE :
+      case ASTNode.TYPE_DECLARATION :
+      case ASTNode.ENUM_DECLARATION :
          return TID;
       case ASTNode.QUALIFIED_NAME :
          if (spd == QualifiedName.QUALIFIER_PROPERTY) 
@@ -644,6 +646,7 @@ private String getNameType(ASTNode n)
       case ASTNode.SUPER_CONSTRUCTOR_INVOCATION :
       case ASTNode.VARIABLE_DECLARATION_FRAGMENT :
       case ASTNode.ENUM_CONSTANT_DECLARATION :
+      case ASTNode.SINGLE_VARIABLE_DECLARATION :
          return VID;
       default :
          if (par instanceof Expression) return VID;

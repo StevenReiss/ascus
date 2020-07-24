@@ -43,7 +43,7 @@ import edu.brown.cs.spur.sump.SumpConstants.SumpModel;
 public interface StareConstants
 {
 
-String TEST_BASE = "/vol/tmp/ascus";
+String TEST_BASE = "/ws/volfred/tmp/ascus";
 String TEST_DIRECTORY = "Ascus_#";
 
 String TEMPLATE_FILE = "$(SPUR)/resources/stare.pom.vel";

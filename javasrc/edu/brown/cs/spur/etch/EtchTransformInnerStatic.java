@@ -270,7 +270,7 @@ private class ClassStaticMapper extends EtchMapper {
    @Override void rewriteTree(ASTNode orig,ASTRewrite rw) {
       if (orig instanceof AbstractTypeDeclaration) {
          if (fix_decls.contains(orig)) {
-            makeTypeStatic((TypeDeclaration) orig,rw);
+            makeTypeStatic((AbstractTypeDeclaration) orig,rw);
           }
          cur_type = type_stack.pop();
        }
@@ -327,7 +327,7 @@ private class ClassStaticMapper extends EtchMapper {
        }
     }
    
-   @SuppressWarnings("unchecked") private void makeTypeStatic(TypeDeclaration otd,ASTRewrite rw) {
+   @SuppressWarnings("unchecked") private void makeTypeStatic(AbstractTypeDeclaration otd,ASTRewrite rw) {
       JcompType ourtyp = JcompAst.getJavaType(otd);
       String ourname = ourtyp.getName();
       int idx = ourname.lastIndexOf(".");
@@ -357,7 +357,8 @@ private class ClassStaticMapper extends EtchMapper {
           }
        }
       
-      ListRewrite declrw = rw.getListRewrite(otd,TypeDeclaration.BODY_DECLARATIONS_PROPERTY);
+      
+      ListRewrite declrw = rw.getListRewrite(otd,otd.getBodyDeclarationsProperty());
       BodyDeclaration after = null;
       for (Object o : otd.bodyDeclarations()) {
          if (o instanceof FieldDeclaration) after = (BodyDeclaration) o;

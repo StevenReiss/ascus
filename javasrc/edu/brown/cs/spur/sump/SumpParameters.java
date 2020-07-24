@@ -264,6 +264,7 @@ Map<String,Object> getNonDefaults()
    SumpParameters dflt = new SumpParameters();
    
    for (ParameterName p : ParameterName.values()) {
+      if (param_values.get(p) == null) continue;
       if (!param_values.get(p).equals(dflt.param_values.get(p))) {
          rslt.put(p.toString(),param_values.get(p));
        }
