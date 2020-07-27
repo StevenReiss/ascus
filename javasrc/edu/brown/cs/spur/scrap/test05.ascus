@@ -1,6 +1,6 @@
-@Ascus(source="GITREPO:https://github.com/kasra-sh/MikroServer/blob/e7430270310a5e233711289b37da97d6fb8b2f71/src/main/java/ir/kasra_sh/MikroServer/Server/SocketListener.java")
+@Ascus(source="GITREPO:https://github.com/kasra-sh/MikroServer/blob/e7430270310a5e233711289b37da97d6fb8b2f71/src/main/java/ir/kasra_sh/MikroServer/MultiHandler.java")
+@Ascus(library="com.google.zetasketch:zetasketch:0.1.0")
 @Ascus(library="co.paralleluniverse:quasar-core:0.8.0")
-@Ascus(library="com.google.gerrit:gerrit-extension-api:3.2.0-rc4")
 @Ascus(search="PACKAGE,PACKAGE_USED,500,GITREPO")
 @Ascus(keywords={"@embedded","@web","server"})
 @Ascus(keyterms={"server","request","ftp","@web","uri","url","routing","application","port","response","@embedded","property","http","callback","https"})
@@ -19,7 +19,7 @@ import java.util.Properties;
 import java.util.Set;
 
 @AscusPackage
-public interface SocketListener {
+public interface MultiHandler {
 
 
 @AscusClass(uses={MimeTypes.class})
@@ -53,24 +53,19 @@ abstract class ResponseHeader {
    public abstract String getFullHeader();
 }
 
-@AscusClass
-interface SocketReceiver {
-   public abstract void onReceive(Socket s);
-}
-
-@AscusClass(uses={HTTPConnection.class})
-abstract class ReverseProxy implements Runnable {
-   public ReverseProxy(InetSocketAddress dest,HTTPConnection conn) { }
-   public abstract void run();
-}
-
-@AscusClass(uses={HTTPConnection.class,HTTPMethod.class})
+@AscusClass(uses={HTTPMethod.class,HTTPConnection.class})
 abstract class Request {
    private HTTPConnection conn;
    public Request(HTTPConnection con) { }
    public abstract int getContentLength();
    public abstract String getArg(String name);
    public abstract String getHeader(String name);
+}
+
+@AscusClass(uses={HTTPConnection.class})
+abstract class ReverseProxy implements Runnable {
+   public ReverseProxy(InetSocketAddress dest,HTTPConnection conn) { }
+   public abstract void run();
 }
 
 @AscusClass(uses={MimeTypes.class})
@@ -97,19 +92,19 @@ enum MimeTypes_Text {
 
 }
 
-@AscusClass(uses={KSocket.class,ResponseWriter.class,RequestParser.class,Request.class,HTTPMethod.class})
+@AscusClass(uses={ResponseWriter.class,HTTPMethod.class,KSocket.class,Request.class,RequestParser.class})
 abstract class HTTPConnection {
-   private StringBuilder rawHeader;
-   private int bodySize;
-   private Properties o;
    private String filePath;
-   public ResponseWriter writer;
-   public Request req;
-   private KSocket socket;
-   private int headerSize;
+   private int bodySize;
    private String context;
-   private HTTPMethod method;
+   public Request req;
+   private StringBuilder rawHeader;
    private Properties p;
+   public ResponseWriter writer;
+   private int headerSize;
+   private KSocket socket;
+   private HTTPMethod method;
+   private Properties o;
    public abstract void setHeader(String name,String value);
    public abstract String getHeader(String name);
    public abstract String getOption(String name);
@@ -140,11 +135,11 @@ enum MimeTypes_Audio {
 
 }
 
-@AscusClass(uses={ResponseHeader.class})
+@AscusClass(uses={KSocket.class,ResponseHeader.class})
 abstract class ResponseWriter {
    public boolean rh;
    public ResponseHeader header;
-   public ResponseHeader(KSocket KSocket) { }
+   public ResponseWriter(KSocket KSocket) { }
    public abstract void setLength(int len);
    public abstract void writeHeader();
    public abstract void append(String s);
@@ -162,8 +157,8 @@ abstract class ResponseWriter {
 
 @AscusClass(uses={KSocket.class,HTTPConnection.class})
 abstract class RequestParser {
-   private HTTPConnection connection;
    private int errCode;
+   private HTTPConnection connection;
    public RequestParser(KSocket KSocket) { }
    public abstract String getRoute();
    public abstract String getStatus();
@@ -186,9 +181,9 @@ enum MimeTypes_Video {
 @AscusClass
 abstract class KSocket {
    private Socket socket;
+   private char lastChar;
    private String lastLine;
    private int lastInt;
-   private char lastChar;
    public KSocket(Socket socket) { }
    public KSocket(Socket socket,int lineBufferSize) { }
    public abstract void flush();
@@ -216,3 +211,4 @@ enum MimeTypes_Application {
 }
 
 }
+

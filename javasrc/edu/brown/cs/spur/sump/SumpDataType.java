@@ -89,6 +89,11 @@ public JcompType getBaseType()
 public void accept(SumpVisitor sev)
 {
    if (!sev.visit(this)) return;
+   if (base_type != null && base_type.isParameterizedType()) {
+      for (JcompType jt : base_type.getComponents()) {
+         sev.visitTypeName(jt.getName());
+       }
+    }
    sev.endVisit(this);
 }
 

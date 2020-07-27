@@ -53,6 +53,7 @@ import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Name;
+import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.ReturnStatement;
 import org.eclipse.jdt.core.dom.SimpleName;
@@ -432,6 +433,29 @@ protected Type createTypeNode(SumpDataType sdt,AST ast)
       SimpleType st = ast.newSimpleType(sn);
       return st;
     }
+   return createTypeNode(jt,ast);
+}
+
+
+private Type createTypeNode(JcompType jt,AST ast) 
+{
+   if (jt.isCompiledType()) {
+      String s = jt.getName();
+      int idx = s.lastIndexOf(".");
+      if (idx > 0) s = s.substring(idx+1);
+      SimpleName sn = JcompAst.getSimpleName(ast,s);
+      SimpleType st = ast.newSimpleType(sn);
+      return st;
+    }
+   if (jt.isParameterizedType()) {
+      ParameterizedType pt = ast.newParameterizedType(jt.getBaseType().createAstNode(ast));
+      @SuppressWarnings("unchecked") List<ASTNode> l = pt.typeArguments();
+      for (JcompType pjt : jt.getComponents()) {
+         l.add(createTypeNode(pjt,ast));
+       }
+      return pt;
+    }
+
    return jt.createAstNode(ast);
 }
 

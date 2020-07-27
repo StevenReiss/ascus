@@ -54,6 +54,7 @@ import edu.brown.cs.ivy.jcomp.JcompControl;
 import edu.brown.cs.ivy.jcomp.JcompProject;
 import edu.brown.cs.ivy.jcomp.JcompSymbol;
 import edu.brown.cs.ivy.jcomp.JcompType;
+import edu.brown.cs.ivy.jcomp.JcompTyper;
 import edu.brown.cs.ivy.xml.IvyXml;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
 import edu.brown.cs.spur.lids.LidsInstaller;
@@ -906,6 +907,12 @@ private class ImportVisitor extends SumpVisitor {
    @Override public boolean visit(SumpDataType dt) {
       handleJavaType(dt.getBaseType());
       return false;
+    }
+   
+   @Override public void visitTypeName(String s) {
+      JcompTyper typer = JcompAst.getTyper(comp_unit);
+      JcompType jt = typer.findSystemType(s);
+      handleJavaType(jt);
     }
    
    private void handleJavaType(JcompType jt) {

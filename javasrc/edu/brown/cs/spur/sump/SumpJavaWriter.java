@@ -189,7 +189,7 @@ private class OutputJava extends SumpVisitor {
    
    @Override public boolean visit(SumpClass c) {
       print_writer.println();
-      cur_class.push(c.getName());
+      cur_class.push(c.getJavaOutputName());
       is_interface.push(c.isInterface());
       outputComment(c);
       Collection<SumpClass> uses = getModel().findUsedClasses(c);

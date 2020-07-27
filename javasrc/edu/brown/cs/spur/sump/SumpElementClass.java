@@ -312,6 +312,10 @@ private String getSumpTypeName(AbstractTypeDeclaration atd)
 {
    if (!sev.preVisit(this)) return;
    if (!sev.visit(this)) return;
+   
+   visitTypeName(super_name,sev);
+   for (String s : iface_names) visitTypeName(s,sev);
+   
    for (SumpElementAttribute a : attribute_list) {
       a.accept(sev);
     }
@@ -320,6 +324,14 @@ private String getSumpTypeName(AbstractTypeDeclaration atd)
     }
    sev.endVisit(this);
    sev.postVisit(this);
+}
+
+
+
+private void visitTypeName(String typ,SumpVisitor sev) 
+{
+   if (typ == null) return;
+   sev.visitTypeName(typ);
 }
 
 

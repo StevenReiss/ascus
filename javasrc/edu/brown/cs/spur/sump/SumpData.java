@@ -74,6 +74,8 @@ private String          context_path;
 private List<String>    suggested_words;
 private double          model_score;
 private Set<File>       test_files;
+private String          base_package;
+private Set<String>     used_packages;
 
 
 
@@ -98,6 +100,8 @@ public SumpData(CoseRequest req,CoseResult rslt,SumpParameters sp)
    suggested_words = new ArrayList<>();
    model_score = 0;
    test_files = new HashSet<>();
+   base_package = null;
+   used_packages = new HashSet<>();
    
    if (rslt != null) {
       addSource(rslt.getSource());
@@ -107,6 +111,10 @@ public SumpData(CoseRequest req,CoseResult rslt,SumpParameters sp)
       idx = nm.lastIndexOf(".");
       if (idx > 0) nm = nm.substring(0,idx);
       model_name = nm;
+      base_package = rslt.getBasePackage();
+      used_packages.addAll(rslt.getPackages());
+      used_packages.add(base_package);
+      
       SwiftScorer scorer = new SwiftScorer(rslt.getText(),(ASTNode) rslt.getStructure(),false);
       suggested_words.addAll(scorer.getTopWords());
     }
@@ -206,6 +214,13 @@ public void addTestFile(File f)
 }
 
 
+public void setBasePackage(String s)
+{
+   base_package = s;
+}
+
+
+
 /********************************************************************************/
 /*                                                                              */
 /*      Internal access methods                                                 */
@@ -233,6 +248,10 @@ public List<String> getSuggestedWords()         { return suggested_words; }
 public Collection<File> getTestFiles()          { return test_files; }
 
 public double getModelScore()                   { return model_score; }
+
+public String getBasePackage()                  { return base_package; }
+
+public Set<String> getUsedPackages()            { return used_packages; }
 
 
 

@@ -413,16 +413,16 @@ private class InnerClassMapper extends EtchMapper {
       else if (!inside_move) {
          JcompSymbol js = JcompAst.getReference(orig);
          JcompType jt = JcompAst.getJavaType(orig);
-         if (js != null) {
+         if (jt != null) {
+            String newname = sym_mapping.get(jt);
+            rewriteType(orig,rw,newname);
+          }
+         else if (js != null) {
             String newname = sym_mapping.get(js);
             if (newname == null && js.isConstructorSymbol()) {
                newname = sym_mapping.get(jt);
              }
             rewriteName(orig,rw,newname);
-          }
-         else if (jt != null) {
-            String newname = sym_mapping.get(jt);
-            rewriteType(orig,rw,newname);
           }
        }
     }

@@ -101,15 +101,80 @@ protected String getOutputName(String orignm) {
    else {
       int idx1 = nm.indexOf("<");
       if (idx1 < 0) {
-         int idx2 = nm.lastIndexOf(".");
-         if (idx2 > 0) nm = nm.substring(idx2+1);
+         nm = checkImportedName(nm);
        }
       else {
-         int idx2 = nm.lastIndexOf(".",idx1);
-         if (idx2 > 0) nm = nm.substring(idx2+1);
-         // need to fix parameters as well 
+         nm = getParameterizedOutputName(nm);
        }
     }
+   return nm;
+}
+
+
+
+private String getParameterizedOutputName(String nm)
+{
+   nm = nm.trim();
+   StringBuffer buf = new StringBuffer();
+   int idx1 = nm.indexOf("<");
+   if (idx1 < 0) return checkImportedName(nm);
+   String base = nm.substring(0,idx1);
+   buf.append(getOutputName(base));
+   buf.append("<");
+   int idx2 = nm.lastIndexOf(">");
+   String params = nm.substring(idx1+1,idx2);
+   
+   int dep = 0;
+   int ct = 0;
+   idx1 = 0;
+   for (idx2 = 0; idx2 < params.length(); ++idx2) {
+      char c = params.charAt(idx2);
+      if (c == '<') ++dep;
+      else if (c == '>') --dep;
+      else if (c == ',' && dep == 0) {
+         if (ct++ > 0) buf.append(",");
+         buf.append(getParameterizedOutputName(params.substring(idx1,idx2)));
+         idx1 = idx2+1;
+       }
+    }
+   if (idx2 > idx1) {
+      if (ct++ > 0) buf.append(",");
+      buf.append(getParameterizedOutputName(params.substring(idx1,idx2)));
+      idx1 = idx2+1;
+    }
+   buf.append(">");
+   return buf.toString();
+}
+
+
+
+private String checkImportedName(String nm)
+{
+   int idx = nm.lastIndexOf(".");
+   if (idx < 0) return nm;
+   
+   String sfx = nm.substring(idx+1);
+   String pfx = nm.substring(0,idx) + ".*";
+   
+   if (pfx.equals("java.lang.*")) return sfx;
+   
+   for (String s : sump_model.getModelData().getImports()) {
+      if (s.equals(nm)) return sfx;
+      if (s.equals(pfx)) return sfx;
+    }
+   
+   int best = 0;
+   for (String s : sump_model.getModelData().getUsedPackages()) {
+      if (nm.startsWith(s)) {
+         int len = s.length();
+         if (len > best) best = len;
+       }
+    }
+   if (best > 0) {
+      nm = nm.substring(best+1);
+      return nm;
+    }
+   
    return nm;
 }
 
@@ -206,6 +271,8 @@ public void endVisit(SumpDependency d)                  { }
 
 public boolean visit(SumpDataType t)                    { return true; }
 public void endVisit(SumpDataType t)                    { }
+
+public void visitTypeName(String nm)                    { }
 
 public boolean preVisit(SumpElement e)                  { return true; }
 public void postVisit(SumpElement e)                    { }
