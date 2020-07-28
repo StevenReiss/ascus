@@ -389,7 +389,7 @@ private void produceTestFiles()
           }
        }
     }
-   if (global_tests != null) {
+   if (global_tests != null && local_tests != null) {
       CompilationUnit cu = (CompilationUnit) local_tests.getStructure(); 
       File dir = (File) map_context.get("GLOBALTESTDIR");
       

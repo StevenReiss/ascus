@@ -155,6 +155,7 @@ SumpElementPackage(SumpModelBase mdl,String name)
 private void addDependenciesFor(JcompType jt,JcompType ourtyp,Map<String,SumpClass> cmap,
         Set<SumpClass> done)
 {
+   if (jt == null) return;
    if (jt.isPrimitiveType()) return;
    if (jt.isTypeVariable()) return;
    if (jt.isParameterizedType()) {

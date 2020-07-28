@@ -413,6 +413,7 @@ private class InnerClassMapper extends EtchMapper {
       else if (!inside_move) {
          JcompSymbol js = JcompAst.getReference(orig);
          JcompType jt = JcompAst.getJavaType(orig);
+         if (js != null && !js.isTypeSymbol()) jt = null;
          if (jt != null) {
             String newname = sym_mapping.get(jt);
             rewriteType(orig,rw,newname);

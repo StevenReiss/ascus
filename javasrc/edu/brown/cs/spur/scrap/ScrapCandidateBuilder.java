@@ -130,7 +130,8 @@ List<ScrapCandidate> buildCandidates(SumpModel model)
          
    for (CandidateMatch cm : match) {
       cm.updateGlobalTestResult(global_tests);
-      System.err.println("MATCH:\n" + cm.getCoseResult().getEditText());
+      System.err.println("MATCH: " + cm.getCoseResult().getSource() + ":\n" + 
+            cm.getCoseResult().getEditText());
       Map<String,String> namemap = cm.getNameMap();
       CoseResult cr = cm.getCoseResult();
       CoseResult cr1 = etcher.fixCode(cr,cm.getModel(),namemap);
@@ -156,7 +157,7 @@ private List<CandidateMatch> findInitialMatches(SumpModel model)
    Map<CoseResult,SumpModel> mmap = new HashMap<>();
    for (CoseResult orig : all_results) {
       CompilationUnit cu = (CompilationUnit) orig.getStructure();
-      System.err.println("CHECK RESULT:\n" + cu);
+      System.err.println("CHECK RESULT: " + orig.getSource() + ":\n" + cu);
       JcompProject proj = null;
       try { 
          if (!JcompAst.isResolved(cu)) {
@@ -168,10 +169,12 @@ private List<CandidateMatch> findInitialMatches(SumpModel model)
          sdata.setContextPath(patdata.getContextPath());
          for (LidsLibrary ll : patdata.getLibraries()) {
             sdata.addLibrary(ll);
+            System.err.println("ADD LIBRARY PATTERN " + ll);
           }
          LidsFinder lids = ScrapDriver.findLibraries(cu,orig);
          for (LidsLibrary ll : lids.findLibraries()) {
             sdata.addLibrary(ll);
+            System.err.println("ADD LIBRARY " + ll);
           }
          Collection<String> missing = lids.getMissingImports();
          if (missing != null && !missing.isEmpty()) {
@@ -206,12 +209,13 @@ private List<CandidateMatch> findInitialMatches(SumpModel model)
       if (sv != 0) {
          CandidateMatch cm = new CandidateMatch(model,emdl,ent.getKey(),sv,rmap);
          match.add(cm);
+         System.err.println("ADD MATCH " + sv + ": " + ent.getKey().getSource());
        }
     }
    
    long start2 = System.currentTimeMillis();
    IvyLog.logS("SCRAP","Matched models: " + match.size());
-   IvyLog.logS("SCRAP","Avsrage Match Time: " + (start2-start1)/mmap.size());
+   IvyLog.logS("SCRAP","Average Match Time: " + (start2-start1)/mmap.size());
    
    return new ArrayList<>(match);
 }

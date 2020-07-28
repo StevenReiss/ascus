@@ -150,8 +150,8 @@ private class LocalFinder extends ASTVisitor {
    
    @Override public boolean visit(MethodDeclaration md) {
       JcompSymbol js = JcompAst.getDefinition(md);
-      if (local_syms.contains(js)) return false;
       method_stack.push(js);
+      if (local_syms.contains(js)) return false;
       return true;
     }
    @Override public void endVisit(MethodDeclaration md) {

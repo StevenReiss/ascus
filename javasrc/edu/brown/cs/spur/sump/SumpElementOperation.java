@@ -48,6 +48,7 @@ import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import edu.brown.cs.ivy.file.IvyStringDiff;
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompSymbol;
+import edu.brown.cs.ivy.jcomp.JcompType;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
 import edu.brown.cs.spur.rowel.RowelConstants.RowelMatch;
 import edu.brown.cs.spur.rowel.RowelConstants.RowelMatchType;
@@ -81,7 +82,11 @@ SumpElementOperation(SumpModelBase mdl,JcompSymbol js,ASTNode n)
    setAccess(js.getModifiers());
    setName(js.getName());
    setFullName(js.getCompleteName());
-   return_type = new SumpDataType(js.getType().getBaseType(),n);
+   JcompType rty = js.getType().getBaseType();
+   if (rty == null) {
+      return_type = null;
+    }
+   else return_type = new SumpDataType(rty,n);
    param_values = null;
    is_constructor = js.isConstructorSymbol();
    is_static = js.isStatic();
@@ -241,7 +246,7 @@ private boolean matchOperation(SumpElementOperation op)
 {
    if (!sev.preVisit(this)) return;
    if (!sev.visit(this)) return;
-   return_type.accept(sev);
+   if (return_type != null) return_type.accept(sev);
    for (SumpElementParameter p : param_values) {
       p.accept(sev);
     }

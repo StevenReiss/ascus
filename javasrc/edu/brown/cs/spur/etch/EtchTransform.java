@@ -52,6 +52,7 @@ import org.eclipse.jdt.core.dom.ExpressionStatement;
 import org.eclipse.jdt.core.dom.FieldAccess;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.QualifiedName;
@@ -72,6 +73,7 @@ import edu.brown.cs.ivy.jcomp.JcompControl;
 import edu.brown.cs.ivy.jcomp.JcompProject;
 import edu.brown.cs.ivy.jcomp.JcompSymbol;
 import edu.brown.cs.ivy.jcomp.JcompType;
+import edu.brown.cs.ivy.jcomp.JcompTyper;
 import edu.brown.cs.spur.sump.SumpDataType;
 import edu.brown.cs.spur.sump.SumpConstants.SumpAttribute;
 import edu.brown.cs.spur.sump.SumpConstants.SumpClass;
@@ -344,18 +346,24 @@ protected Expression createCastExpr(AST ast,JcompType typ,Expression onm,JcompTy
 /********************************************************************************/
 
 @SuppressWarnings("unchecked")
-protected TypeDeclaration createDummyClass(AST ast,SumpClass sc)
+protected TypeDeclaration createDummyClass(AST ast,SumpClass sc,ASTNode n)
 {
    TypeDeclaration td = ast.newTypeDeclaration();
    if (sc.isInterface()) td.setInterface(true);
+   JcompTyper typer = JcompAst.getTyper(n);
    
    td.setName(JcompAst.getSimpleName(ast,sc.getName()));
-   if (sc.getSuperClassName() != null) {
-      // add super class
-    }
+   
+   Type st = getTypeFromName(ast,typer,sc.getSuperClassName());
+   if (st != null) td.setSuperclassType(st);
    Collection<String> ints = sc.getInterfaceNames();
    if (ints != null && !ints.isEmpty()) {
-      // add interfaces
+      for (String ifn : ints) {
+         Type it = getTypeFromName(ast,typer,ifn);
+         if (it != null) {
+            td.superInterfaceTypes().add(it); 
+          }
+       }
     }
    
    for (SumpOperation op : sc.getOperations()) {
@@ -366,6 +374,25 @@ protected TypeDeclaration createDummyClass(AST ast,SumpClass sc)
    return td;
 }
 
+
+private Type getTypeFromName(AST ast,JcompTyper typer,String nm)
+{
+   if (nm == null) return null;
+   
+   JcompType jt = typer.findType(nm);
+   if (jt != null) return createTypeNode(jt,ast);
+  
+   Name nnm = null;
+   if (nm.contains(".")) {
+      nnm = JcompAst.getQualifiedName(ast,nm);
+    }
+   else {
+      nnm = JcompAst.getSimpleName(ast,nm);
+    }
+   SimpleType st = ast.newSimpleType(nnm);
+   return st;
+}
+
 @SuppressWarnings("unchecked")
 protected MethodDeclaration createDummyMethod(AST ast,SumpOperation op)
 {
@@ -373,7 +400,10 @@ protected MethodDeclaration createDummyMethod(AST ast,SumpOperation op)
    
    MethodDeclaration md = ast.newMethodDeclaration();
    md.setBody(ast.newBlock());
-   if (op.getName().equals("<init>")) {
+   Modifier mod = ast.newModifier(Modifier.ModifierKeyword.PUBLIC_KEYWORD);
+   md.modifiers().add(mod);
+   
+   if (op.getName().equals("<init>") || sdt == null) {
       md.setConstructor(true);
       String fnm = op.getFullName();
       int idx = fnm.lastIndexOf(".");
@@ -384,8 +414,10 @@ protected MethodDeclaration createDummyMethod(AST ast,SumpOperation op)
     }
    else {
       md.setName(JcompAst.getSimpleName(ast,op.getName()));
-      Type t = createTypeNode(sdt,ast);
-      md.setReturnType2(t);
+      if (sdt != null) {
+         Type t = createTypeNode(sdt,ast);
+         md.setReturnType2(t);
+       }
     }
    
    for (SumpParameter sp : op.getParameters()) {
@@ -429,8 +461,14 @@ protected Type createTypeNode(SumpDataType sdt,AST ast)
    JcompType jt = sdt.getBaseType();
    if (jt.isCompiledType()) {
       String s = sdt.getName();
-      SimpleName sn = JcompAst.getSimpleName(ast,s);
-      SimpleType st = ast.newSimpleType(sn);
+      Name nm = null;
+      if (s.contains(".")) {
+         nm = JcompAst.getQualifiedName(ast,s);
+       }
+      else {
+         nm = JcompAst.getSimpleName(ast,s);
+       }
+      SimpleType st = ast.newSimpleType(nm);
       return st;
     }
    return createTypeNode(jt,ast);

@@ -135,7 +135,6 @@ public void packageTest01()
 	 "-REPO","@embedded","@web","server",
 	 "-t","url","uri","application","property","port","http","https","ftp","routing",
 	 "callback","request","response");
-
    sd1.processAbstractor();
 
    ScrapDriver sd2 = new ScrapDriver("-puembe","-nr","500","-nt","8",
@@ -235,7 +234,7 @@ public void candidateTest01()
 @Test
 public void candidateTest02()
 {
-   File f = new File("/research/people/spr/spur/scrap/src/test14.ascus");
+   File f = new File("/research/people/spr/spur/scrap/src/test16.ascus");
    System.err.println("==============================");
    System.err.println("START WORK ON " + f);
    System.err.println("==============================");
@@ -257,6 +256,14 @@ public void candidateTest02()
 
    ScrapDriver driver = new ScrapDriver(sd);
    driver.processBuildCandidates(mdl);
+}
+
+
+@Test
+public void candidateTest03()
+{
+   String f = "test05.ascus";
+   candidateTest(f);
 }
 
 

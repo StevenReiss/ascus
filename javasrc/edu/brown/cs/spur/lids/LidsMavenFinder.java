@@ -84,9 +84,7 @@ private static String SEARCH_PFX =
 /*										*/
 /********************************************************************************/
 
-LidsMavenFinder()
-{
-}
+LidsMavenFinder()               { }
 
 
 
@@ -262,6 +260,11 @@ private List<LidsLibrary> getLibraryFromName(String name)
 }
 
 
+/********************************************************************************/
+/*                                                                              */
+/*      Issue maven query                                                       */
+/*                                                                              */
+/********************************************************************************/
 
 private String getMavenResult(String q)
 {
@@ -358,6 +361,34 @@ private boolean checkWorks(LidsLibrary ll,String path)
       
    return false;
 }
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Check if library exists                                                 */
+/*                                                                              */
+/********************************************************************************/
+
+boolean checkLibraryExists(LidsLibrary ll,String version)
+{
+   if (version == null) version = ll.getVersion();
+   
+   String q = SEARCH_PFX;
+   q += "p:%22jar%22";
+   q += "%20AND%20g:%22" + ll.getGroup() + "%22";
+   q += "%20AND%20a:%22" + ll.getName() + "%22";
+   q += "%20AND%20v:%22" + version + "%22"; 
+   String rslt = getMavenResult(q);
+   if (rslt == null) return false;
+   
+   JSONObject top = new JSONObject(rslt);
+   JSONObject resp = top.getJSONObject("response");
+   int fnd = resp.getInt("numFound");
+   if (fnd > 0) return true;
+   
+   return false;
+}
+
 
 /********************************************************************************/
 /*										*/

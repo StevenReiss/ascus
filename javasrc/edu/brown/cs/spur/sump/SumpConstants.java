@@ -104,6 +104,7 @@ interface SumpElement {
    String getComment();
    double getWordScore(SumpElement se);
    void accept(SumpVisitor sev);
+   SumpModel getModel();
 }       // end of inner interface SumpElement
 
 

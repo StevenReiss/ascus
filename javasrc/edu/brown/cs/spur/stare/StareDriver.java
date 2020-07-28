@@ -83,7 +83,8 @@ public void addInitialSolutions(Collection<? extends StareCandidateSolution> scs
 public void process()
 {
    for (StareSolution sc : solution_set) {
-      System.err.println("MATCH: \n" + sc.getCoseResult().getEditText());
+      System.err.println("MATCH: " + sc.getCoseResult().getSource() + "\n" + 
+            sc.getCoseResult().getEditText());
       sc.generateCode();
     }
 }

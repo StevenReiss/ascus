@@ -153,7 +153,7 @@ public List<LidsLibrary> findLibraries()
    
    Set<String> missing = new HashSet<>(check_imports);
    
-   if (l1 != null) {
+   if (l1 != null & !l1.isEmpty()) {
       for (Iterator<LidsLibrary> it = covered.keySet().iterator(); it.hasNext(); ) {
          LidsLibrary klib = it.next();
          for (LidsLibrary mlib : l1) {
@@ -172,9 +172,11 @@ public List<LidsLibrary> findLibraries()
          List<LidsLibrary> libs = new ArrayList<>(covered.keySet());
          for (LidsLibrary klib : libs) {
             if (mlib.getGroup().equals(klib.getGroup())) {
-               Set<String> cov = covered.remove(klib);
-               klib.setVersion(mlib.getVersion());
-               covered.put(klib,cov);
+               if (maven_finder.checkLibraryExists(klib,mlib.getVersion())) {
+                  Set<String> cov = covered.remove(klib);
+                  klib.setVersion(mlib.getVersion());
+                  covered.put(klib,cov);
+                }
              }
           }
        }
@@ -194,7 +196,11 @@ public List<LidsLibrary> findLibraries()
          for (LidsLibrary ll : covered.keySet()) {
             Set<String> use = covered.get(ll);
             if (use.contains(s)) {
-               int front = initialMatch(ll.getId(),s);
+               String pfx = ll.getId();
+               if (pfx.startsWith("com.google.android") && s.startsWith("android")) {
+                  pfx = pfx.substring(11);
+                }
+               int front = initialMatch(pfx,s);
                if (front > bestct) {
                   bestct = front;
                   best = ll;

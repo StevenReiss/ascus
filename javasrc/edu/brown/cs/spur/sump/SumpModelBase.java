@@ -308,7 +308,6 @@ private void createModel(CompilationUnit cu)
 private void addTypes(AbstractTypeDeclaration td,SumpPackage pkg,Map<String,SumpClass> cmap,
         Map<String,AbstractTypeDeclaration> tmap)
 {
-   
    boolean skip = false;
    for (Object o : td.modifiers()) {
       if (o instanceof Annotation) {

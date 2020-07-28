@@ -107,6 +107,8 @@ public SwiftScorer getWordScores()              { return word_data; }
 
 public SwiftScorer getKgramScores()             { return kgram_data; }
 
+public SumpModel getModel()                     { return sump_model; }
+
 @Override public double getWordScore(SumpElement se)
 {
    SumpElementBase seb = (SumpElementBase) se;

@@ -98,7 +98,7 @@ EtchTransformRename(Map<String,String> namemap)
    NameMapper mapper = findMappings(n,target);
    if (mapper == null) return null;
    
-   EtchMemo memo =  mapper.getMapMemo(n);
+   EtchMemo memo =  mapper.getMapMemo(n); 
    
    return memo;
 }

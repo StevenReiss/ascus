@@ -168,7 +168,7 @@ private class AddMissingMapper extends EtchMapper {
          CompilationUnit cu = (CompilationUnit) orig;
          ListRewrite lrw = rw.getListRewrite(cu,CompilationUnit.TYPES_PROPERTY);
          for (SumpClass sc : add_classes) {
-            TypeDeclaration td = createDummyClass(rw.getAST(),sc);
+            TypeDeclaration td = createDummyClass(rw.getAST(),sc,orig);
             lrw.insertLast(td,null);
           }
        }
