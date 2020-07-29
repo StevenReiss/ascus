@@ -112,7 +112,6 @@ List<ScrapCandidate> buildCandidates(SumpModel model)
 {
    List<CandidateMatch> match = findInitialMatches(model);
    
-   IvyLog.logS("SCRAP","CANDIDATE MATCHES: " + match.size());
    if (match.size() == 0) return null;
    
    EtchFactory etcher = new EtchFactory(model);
@@ -123,12 +122,18 @@ List<ScrapCandidate> buildCandidates(SumpModel model)
     }
    
    long start1 = System.currentTimeMillis();
-   IvyLog.logS("SCRAP","Test Case Time: " + (start1-start0));
-   if (global_tests == null || global_tests.getInnerResults() == null) 
+   if (global_tests == null || global_tests.getInnerResults() == null ||
+         global_tests.getInnerResults().size() == 0) {
       IvyLog.logS("SCRAP","Global Test Size: " + 0);
-   else 
-      IvyLog.logS("SCRAP","Global Test Size: " + global_tests.getInnerResults().size());
-         
+      IvyLog.logS("SCRAP","Average Test Time: " + 0);
+    }
+   else {
+      int sz = global_tests.getInnerResults().size();
+      IvyLog.logS("SCRAP","Global Test Size: " + sz);
+      IvyLog.logS("SCRAP","Average Test Time: " + (start1-start0)/sz);
+    }
+   IvyLog.logS("SCRAP","Test Case Time: " + (start1-start0));
+   
    for (CandidateMatch cm : match) {
       cm.updateGlobalTestResult(global_tests);
       System.err.println("MATCH: " + cm.getCoseResult().getSource() + ":\n" + 
@@ -209,7 +214,7 @@ private List<CandidateMatch> findInitialMatches(SumpModel model)
       if (sv != 0) {
          CandidateMatch cm = new CandidateMatch(model,emdl,ent.getKey(),sv,rmap);
          match.add(cm);
-         System.err.println("ADD MATCH " + sv + ": " + ent.getKey().getSource());
+         System.err.println("ADD MATCH " + sv + ": b" + ent.getKey().getSource());
        }
     }
    
