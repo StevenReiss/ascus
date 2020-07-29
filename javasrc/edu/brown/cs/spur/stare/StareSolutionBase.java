@@ -128,6 +128,8 @@ StareSolutionBase(StareCandidateSolution sc)
 
 @Override public boolean generateCode()
 {
+   boolean rsts = false;
+   
    map_context = new VelocityContext();
    
    try {
@@ -145,6 +147,10 @@ StareSolutionBase(StareCandidateSolution sc)
       int sts = ex.waitFor();
       if (sts != 0) {
          IvyLog.logI("Mavan failed");
+         rsts = false;
+       }
+      else {
+         rsts = true;
        }
       // run tests
     }
@@ -152,7 +158,7 @@ StareSolutionBase(StareCandidateSolution sc)
       return false;
     }
    
-   return true;
+   return rsts;
 }
 
 

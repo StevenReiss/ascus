@@ -28,6 +28,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import edu.brown.cs.ivy.file.IvyLog;
+
 public class StareDriver implements StareConstants
 {
 
@@ -82,11 +84,13 @@ public void addInitialSolutions(Collection<? extends StareCandidateSolution> scs
 
 public void process()
 {
+   int ct = 0;
    for (StareSolution sc : solution_set) {
       System.err.println("MATCH: " + sc.getCoseResult().getSource() + "\n" + 
             sc.getCoseResult().getEditText());
-      sc.generateCode();
+      if (sc.generateCode()) ++ct;
     }
+   IvyLog.logS("STARE","Maven compiled " + ct + " / " + solution_set.size());
 }
 
 

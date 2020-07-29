@@ -125,8 +125,9 @@ List<ScrapCandidate> buildCandidates(SumpModel model)
    long start1 = System.currentTimeMillis();
    IvyLog.logS("SCRAP","Test Case Time: " + (start1-start0));
    if (global_tests == null || global_tests.getInnerResults() == null) 
-      IvyLog.logS("SCRAP","No global tests");
-   else IvyLog.logS("SCRAP","Global Test Size: " + global_tests.getInnerResults().size());
+      IvyLog.logS("SCRAP","Global Test Size: " + 0);
+   else 
+      IvyLog.logS("SCRAP","Global Test Size: " + global_tests.getInnerResults().size());
          
    for (CandidateMatch cm : match) {
       cm.updateGlobalTestResult(global_tests);
@@ -182,9 +183,12 @@ private List<CandidateMatch> findInitialMatches(SumpModel model)
             for (String s : missing) {
                System.err.println("MISSING IMPORT " + s + " FROM " + orig.getSource());
              }
-            IvyLog.logD("SCRAP","Missing imports: " + missing.size());
+            IvyLog.logS("SCRAP","Missing imports: " + missing.size());
             // continue;
           } 
+         else {
+            IvyLog.logS("SCRAP","Missing imports: " + 0);
+          }
          
          SumpModel mdl = SumpConstants.SumpFactory.createModel(sdata,cu);
          mmap.put(orig,mdl);
@@ -199,7 +203,7 @@ private List<CandidateMatch> findInitialMatches(SumpModel model)
    
    long start1 = System.currentTimeMillis();
    IvyLog.logS("SCRAP","Built Models: " + mmap.size());
-   IvyLog.logS("SCRAP","Average Build Rime: " + (start1-start0)/all_results.size());
+   IvyLog.logS("SCRAP","Average Build Time: " + (start1-start0)/all_results.size());
    
    Set<CandidateMatch> match = new TreeSet<>(); 
    for (Map.Entry<CoseResult,SumpModel> ent : mmap.entrySet()) {
@@ -270,7 +274,10 @@ private void addTestCases(CandidateMatch cm,EtchFactory etcher)
       System.err.println("TEST CODE:\n" + test1.getEditText());
       CoseResult test2 = etcher.fixGlobalTests(testresult,cr,cm.getModel(),namemap);
       addToGlobalTests(testreq,cm,test2);
-      IvyLog.logD("SCRAP","Merged Tests: " + testresult.getInnerResults().size());
+      IvyLog.logS("SCRAP","Merged Tests: " + testresult.getInnerResults().size());
+    }
+   else {
+      IvyLog.logS("SCRAP","Merged Tests: " + 0);
     }
 }
 

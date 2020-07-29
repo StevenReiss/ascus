@@ -283,7 +283,7 @@ void processBuildCandidates(SumpModel mdl)
    rslts = removeOverlaps(rslts);
    
    long start1 = System.currentTimeMillis();
-   IvyLog.logD("SCRAP","Search Time: " + (start1-start0));
+   IvyLog.logS("SCRAP","Search Time: " + (start1-start0));
    
    List<ScrapCandidate> cands = null;
    ScrapCandidateBuilder scb = new ScrapCandidateBuilder(search_request,rslts,search_params);
@@ -296,8 +296,8 @@ void processBuildCandidates(SumpModel mdl)
     }
    
    long start2 = System.currentTimeMillis();
-   IvyLog.logD("SCRAP","Candidate Time: " + (start2-start1));
-   IvyLog.logD("SCRAP","Candidate Count: " + (cands == null ? 0 : cands.size()));
+   IvyLog.logS("SCRAP","Candidate Time: " + (start2-start1));
+   IvyLog.logS("SCRAP","Candidate Count: " + (cands == null ? 0 : cands.size()));
    
    if (cands == null) return;
    
@@ -306,7 +306,7 @@ void processBuildCandidates(SumpModel mdl)
    stare.process();
    
    long start3 = System.currentTimeMillis();
-   IvyLog.logD("SCRAP","Build/Compile Time:" + (start3-start2));
+   IvyLog.logS("SCRAP","Build/Compile Time:" + (start3-start2));
 }
 
 
