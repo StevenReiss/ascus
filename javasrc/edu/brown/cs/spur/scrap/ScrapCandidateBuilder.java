@@ -183,12 +183,8 @@ private List<CandidateMatch> findInitialMatches(SumpModel model)
             for (String s : missing) {
                System.err.println("MISSING IMPORT " + s + " FROM " + orig.getSource());
              }
-            IvyLog.logS("SCRAP","Missing imports: " + missing.size());
             // continue;
           } 
-         else {
-            IvyLog.logS("SCRAP","Missing imports: " + 0);
-          }
          
          SumpModel mdl = SumpConstants.SumpFactory.createModel(sdata,cu);
          mmap.put(orig,mdl);
@@ -219,6 +215,7 @@ private List<CandidateMatch> findInitialMatches(SumpModel model)
    
    long start2 = System.currentTimeMillis();
    IvyLog.logS("SCRAP","Matched models: " + match.size());
+   IvyLog.logS("SCRAP","Total Match Time: " + (start2-start1));
    IvyLog.logS("SCRAP","Average Match Time: " + (start2-start1)/mmap.size());
    
    return new ArrayList<>(match);
