@@ -75,4 +75,14 @@
       </junit>
    </target>
 
+   <target name='ptest2'>
+      <junit fork='yes' printsummary='true' haltonerror='false' >
+	 <classpath refid='test.classpath' />
+	 <assertions><enable/></assertions>
+	 <formatter type='plain' usefile='true' />
+	 <test name='edu.brown.cs.spur.scrap.ScrapTest' haltonfailure='no'
+	      methods='packageTest02' outfile='test.out' />
+      </junit>
+   </target>
+
 </project>

@@ -43,6 +43,7 @@ import edu.brown.cs.cose.cosecommon.CoseDefaultRequest;
 import edu.brown.cs.cose.cosecommon.CoseConstants.CoseScopeType;
 import edu.brown.cs.cose.cosecommon.CoseConstants.CoseSearchEngine;
 import edu.brown.cs.cose.cosecommon.CoseConstants.CoseSearchType;
+import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
 import edu.brown.cs.spur.sump.SumpData;
 import edu.brown.cs.spur.sump.SumpConstants.SumpFactory;
@@ -285,7 +286,10 @@ private void candidateTest(String name)
       cdr.setNumberOfThreads(8);
       // cdr.setNumberOfThreads(1);
 
+      IvyLog.logS("SCRAP","Start work on " + f);
+      
       ScrapDriver driver = new ScrapDriver(sd);
+      
       driver.processBuildCandidates(mdl);
     }
    catch (Throwable t) {

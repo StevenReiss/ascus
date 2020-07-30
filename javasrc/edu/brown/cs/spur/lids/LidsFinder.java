@@ -153,7 +153,7 @@ public List<LidsLibrary> findLibraries()
    
    Set<String> missing = new HashSet<>(check_imports);
    
-   if (l1 != null & !l1.isEmpty()) {
+   if (l1 != null && !l1.isEmpty()) {
       for (Iterator<LidsLibrary> it = covered.keySet().iterator(); it.hasNext(); ) {
          LidsLibrary klib = it.next();
          for (LidsLibrary mlib : l1) {
