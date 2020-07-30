@@ -306,7 +306,7 @@ void processBuildCandidates(SumpModel mdl)
    stare.process();
    
    long start3 = System.currentTimeMillis();
-   IvyLog.logS("SCRAP","Build/Compile Time:" + (start3-start2));
+   IvyLog.logS("SCRAP","Build/Compile Time: " + (start3-start2));
 }
 
 
