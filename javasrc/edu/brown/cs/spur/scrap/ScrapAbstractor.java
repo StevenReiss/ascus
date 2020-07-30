@@ -209,6 +209,7 @@ private ScrapAbstraction  createAbstraction(CoseResult cr,ASTNode n)
    ScrapAbstraction rslt = null;
    
    if (n == null) n = (ASTNode) cr.getStructure();
+   System.err.println("CREATE: " + n);
    
    switch (n.getNodeType()) {
       case ASTNode.TYPE_DECLARATION :

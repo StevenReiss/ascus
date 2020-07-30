@@ -79,6 +79,9 @@ public CoseResult fixCode(CoseResult orig,SumpModel srcmdl,Map<String,String> na
    CoseResult work = orig;
    SumpParameters sp = target_model.getModelData().getParameters();
    
+   EtchTransformAddMissing fixmissing = new EtchTransformAddMissing(namemap); 
+   fixmissing.updateMappings(work,srcmdl,target_model);
+   
    EtchTransformFixPackage fixpackage = new EtchTransformFixPackage(work,namemap);
    
    work = fixpackage.transform(work,null,srcmdl,target_model);

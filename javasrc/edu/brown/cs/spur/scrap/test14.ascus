@@ -1,0 +1,209 @@
+@Ascus(source="GITREPO:https://github.com/ElegantCloud/appserv/blob/498c1b943eecad3b7fb8345797f489e575ed1349/src/com/ivyinfo/contact/ContactManagerFactory.java")
+@Ascus(library="com.google.android:android:4.1.1.4")
+@Ascus(library="org.json:org.json:chargebee-1.0")
+@Ascus(library="net.oschina.zcx7878:cicada.boot-chinese:2.0.0.2")
+@Ascus(search="PACKAGE,PACKAGE_USED,500,GITREPO")
+@Ascus(keywords={"contact","@management"})
+@Ascus(keyterms={"@management","address","mail","phone","contact","name"})
+@Ascus(suggestedTerms={"contact","contacts","cur","group","phone","groups"})
+package edu.brown.cs.SAMPLE;
+
+import edu.brown.cs.sump.annot.Ascus;
+import edu.brown.cs.sump.annot.AscusPackage;
+import edu.brown.cs.sump.annot.AscusClass;
+import android.content.Context;
+import java.util.List;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import java.io.Serializable;
+
+@AscusPackage
+public interface ContactManagerFactory {
+
+
+@AscusClass(uses={Contact.class})
+abstract class Group implements Serializable {
+   private int summaryCount;
+   private List<Contact> contacts;
+   public abstract void setContacts(List<Contact> contacts);
+}
+
+@AscusClass
+class Hanyu {
+   private List<String> shortPinyins;
+   private List<String> fullPinyins;
+}
+
+@AscusClass
+class R_id {
+}
+
+@AscusClass(uses={Contact.class,Group.class})
+abstract class ContactManager {
+   public ContactManager(Context context) { }
+/**
+ * set the flag if the contacts are modified
+ * @param flag - true: modified, false: not modified
+ */
+   public abstract void setIsModifyFlag(boolean flag);
+/**
+ * get all contacts
+ * @return
+ * @deprecated
+ */
+   public abstract List<Contact> getAllContacts();
+/**
+ * get all contacts with phone number
+ * @return
+ */
+   public abstract List<Contact> getAllContactsWithPhone();
+/**
+ * get all contacts within JSONArray format
+ * @return
+ */
+   public abstract JSONArray getAllContactsJSON();
+/**
+ * get all contacts sorted by name in ascendent
+ * @return
+ */
+   public abstract List<Contact> getAllContactsByNameSort();
+/**
+ * get all contacts sorted by times and name
+ * @return
+ */
+   public abstract List<Contact> getAllContactsByCompoundSort();
+/**
+ * get all contacts sorted by name in ascendent within JSONArray format
+ * @return
+ */
+   public abstract JSONArray getAllContactsByNameSortJSON();
+/**
+ * get all contacts sorted by time_contacted and name in ascendent within JSONArray format
+ * @return
+ */
+   public abstract JSONArray getAllContactsByCompoundSortJSON();
+/**
+ * get contact phone info
+ * @param contactID
+ * @return
+ */
+   public abstract Contact getContactPhones(int contactID);
+/**
+ * get contact groups info
+ * @param contactID
+ * @return
+ */
+   public abstract Contact getContactGroups(Contact contact);
+/**
+ * get contact info by his/her phone number
+ * @param phoneNum
+ * @return only including contact name & contact id
+ */
+   public abstract Contact getContactByPhone(String phoneNum);
+/**
+ * save contact group membership
+ * @param contact
+ */
+   public abstract void saveContactGroups(Contact contact);
+/**
+ * delete contact by raw contact id
+ * @param rawContactID
+ */
+   public abstract void deleteContact(int rawContactID);
+/**
+ * get contacts by group
+ * @param groupID
+ * @return
+ */
+   public abstract List<Contact> getContactsByGroup(int groupID);
+/**
+ * get contacts by group sorted by name in ascendent
+ * @param groupID
+ * @return
+ */
+   public abstract List<Contact> getContactsByGroupByNameSort(int groupID);
+/**
+ * get contacts by group sorted by times and name
+ * @param groupID
+ * @return
+ */
+   public abstract List<Contact> getContactsByGroupByCompoundSort(int groupID);
+/**
+ * get contacts by group sorted by name in ascendent within JSONArray format
+ * @param groupID
+ * @return
+ */
+   public abstract JSONArray getContactsByGroupByNameSortJSON(int groupID);
+   public abstract JSONArray getContactsByGroupByCompoundSortJSON(int groupID);
+/**
+ * for learning only
+ * @return
+ */
+   public abstract List<Contact> getAllFullContacts();
+/**
+ * search contacts with compound searching method, including search by display name, search by pinyin name and search by phone number
+ * @param queryStr
+ * @param contacts
+ * @return
+ */
+   public abstract List<Contact> search(String queryStr,List<Contact> contacts);
+/**
+ * search contacts in the given contact list
+ * @param queryStr
+ * @param contacts
+ * @return
+ */
+   public abstract List<Contact> searchByName(String queryStr,List<Contact> contacts);
+/**
+ * search contacts from current contact list (which is got nearly)
+ * @param queryStr
+ * @return
+ */
+   public abstract List<Contact> searchByNameFromCurrentContactList(String queryStr);
+   public abstract JSONArray searchByNameFromCurrentContactListJSON(String queryStr);
+/**
+ * search contacts by phone number
+ * @param number - phone number
+ * @param contacts - contact list to search
+ * @return
+ */
+   public abstract List<Contact> searchByNumber(String number,List<Contact> contacts);
+/**
+ * search contacts by phone number from current contact list(which is got nearly)
+ * @param number
+ * @return
+ */
+   public abstract List<Contact> searchByNumberFromCurrentContactList(String number);
+/**
+ * search contacts by phone number from current contact list(which is got nearly) within JSONArray format
+ * @param number
+ * @return
+ */
+   public abstract JSONArray searchByNumberFromCurrentContactListJSON(String number);
+}
+
+@AscusClass(uses={Group.class})
+abstract class Contact implements Serializable {
+   private List<String> fullPinyinNames;
+   private boolean selected;
+   private List<String> shortPinyinNames;
+   private List<String> phones;
+   private int id;
+   private String defaultFullPinyinName;
+   private List<Group> groups;
+   private String displayName;
+   private int timesContacted;
+   private int rawContactID;
+   public abstract void setTimesContacted(int timesContacted);
+   public abstract void setRawContactID(int rawContactID);
+   public abstract void setShortPinyinNames(List<String> shortPinyinNames);
+   public abstract void setFullPinyinNames(List<String> fullPinyinNames);
+   public abstract void setDisplayName(String displayName);
+   public abstract void setDefaultFullPinyinName(String fullPinyinName);
+   public abstract void setPhones(List<String> phones);
+   public abstract void addPhone(String number);
+   public abstract JSONObject toJSONObject();
+}
+
+}
+

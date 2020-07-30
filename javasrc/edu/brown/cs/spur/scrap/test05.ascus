@@ -119,7 +119,8 @@ abstract class HTTPConnection {
 
 @AscusClass(uses={KSocket.class,RequestParser.class,HTTPHandler.class,HTTPConnection.class})
 abstract class RouterFiber implements Runnable {
-   public RouterFiber(KSocket s,Set<Entry<String,Class<Object>>> routes,Set<Entry<String,SimpleEntry<Class<Object>,String>>> files,Set<Entry<String,InetSocketAddress>> proxies,HashMap<String,HashMap<String,String>> overrides) { }
+   public RouterFiber(KSocket s,Set<Entry<String,Class<Object>>> routes,Set<Entry<String,SimpleEntry<Class<Object>,String>>> files,Set<Entry<String,InetSocketAddress>>
+proxies,HashMap<String,HashMap<String,String>> overrides) { }
    public abstract void run();
 }
 

@@ -1,0 +1,86 @@
+@Ascus(source="GITREPO:https://github.com/Alysonlv/contact-management/blob/7a78b5eccc58c15cc0d1d68abe2146d427af9d5b/contact-management-service/src/main/java/com/contact/management/service/ContactManageServiceImpl.java")
+@Ascus(library="com.fasterxml.transistore:transistore-server:0.9.8")
+@Ascus(library="org.immutables:value-standalone:1.1.3")
+@Ascus(library="com.fasterxml.jackson.jr:jackson-jr-all:2.11.1")
+@Ascus(library="com.fasterxml.transistore:transistore-commands:0.9.8")
+@Ascus(library="org.projectlombok:lombok.ast:1.18.12")
+@Ascus(library="org.apache.click:click:2.3.0")
+@Ascus(library="com.fasterxml.jackson.datatype:jackson-datatype-hibernate:2.0.0-RC2")
+@Ascus(search="PACKAGE,PACKAGE_USED,500,GITREPO")
+@Ascus(keywords={"contact","@management"})
+@Ascus(keyterms={"@management","address","mail","phone","contact","name"})
+@Ascus(suggestedTerms={"contact","record","management","user","book","address"})
+package edu.brown.cs.SAMPLE;
+
+import edu.brown.cs.sump.annot.Ascus;
+import edu.brown.cs.sump.annot.AscusPackage;
+import edu.brown.cs.sump.annot.AscusClass;
+import java.util.List;
+
+@AscusPackage
+public interface ContactManageServiceImpl {
+
+
+@AscusClass
+abstract class ContactManagerDB {
+   public ContactManagerDB(String path) { }
+}
+
+@AscusClass
+interface Address {
+   String street();
+   String city();
+   String country();
+}
+
+@AscusClass(uses={ContactManagerDB.class,ContactRecord.class})
+abstract class ContactManagerRepository {
+   public ContactManagerRepository(String path) { }
+   public abstract List<ContactRecord> getAllContacts(ContactManagementUser user);
+   public abstract List<ContactRecord> saveContact(ContactManagementUser user,ContactRecord contact);
+   public abstract List<ContactRecord> getContact(ContactManagementUser user,String value);
+   public abstract List<ContactRecord> getContactByFirstName(ContactManagementUser user,String firstName);
+   public abstract List<ContactRecord> getContactByLastName(ContactManagementUser user,String lastName);
+   public abstract List<ContactRecord> getContactByPersonalPhone(ContactManagementUser user,String phone);
+   public abstract List<ContactRecord> getContactByBusinesslPhone(ContactManagementUser user,String phone);
+   public abstract List<ContactRecord> updateContact(ContactManagementUser user,int id,ContactRecord uptadedContact);
+   public abstract List<ContactRecord> deleteContact(ContactManagementUser user,int id);
+   public abstract boolean deleteAddressBook(ContactManagementUser user);
+   public abstract boolean resetAddressBook();
+}
+
+@AscusClass(uses={ContactRecord.class})
+interface ContactManageService {
+   List<ContactRecord> getAllContacts(ContactManagementUser user);
+   List<ContactRecord> saveContact(ContactManagementUser user,ContactRecord contact);
+   List<ContactRecord> getContactByFirstName(ContactManagementUser user,String firstName);
+   List<ContactRecord> getContactByLastName(ContactManagementUser user,String lastName);
+   List<ContactRecord> getContactByPersonalPhone(ContactManagementUser user,String phone);
+   List<ContactRecord> getContactByBusinesslPhone(ContactManagementUser user,String phone);
+   List<ContactRecord> updateContact(ContactManagementUser user,int hashCode,ContactRecord uptadedContact);
+   List<ContactRecord> deleteContact(ContactManagementUser user,int hashCode);
+   List<ContactRecord> getContact(ContactManagementUser user,String value);
+   boolean deleteAddressBook(ContactManagementUser user);
+   boolean resetAddressBook();
+}
+
+@AscusClass
+interface ContactManagementUser {
+   String username();
+   String getUserFileName();
+   String sanitize(String value);
+}
+
+@AscusClass
+interface Contact {
+   String phoneNumber();
+}
+
+@AscusClass(uses={Contact.class,Address.class})
+abstract class ContactRecord {
+   public abstract ContactRecord defineId();
+   public abstract boolean equals(Object o);
+}
+
+}
+

@@ -86,7 +86,7 @@ public void process()
 {
    int ct = 0;
    for (StareSolution sc : solution_set) {
-      System.err.println("MATCH: " + sc.getCoseResult().getSource() + "\n" + 
+      System.err.println("GENERATE MATCH: " + sc.getCoseResult().getSource() + "\n" + 
             sc.getCoseResult().getEditText());
       if (sc.generateCode()) ++ct;
     }

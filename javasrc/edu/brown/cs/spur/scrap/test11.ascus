@@ -1,0 +1,204 @@
+@Ascus(source="GITREPO:https://github.com/AniekanAkai/contactbank/blob/0f664c2e5445c79e8daee058625cd50d702b81f8/src/contactbank/CBController.java")
+@Ascus(search="PACKAGE,PACKAGE_USED,500,GITREPO")
+@Ascus(keywords={"contact","@management"})
+@Ascus(keyterms={"@management","address","mail","phone","contact","name"})
+@Ascus(suggestedTerms={"contacts","contact","socket","project","group","data"})
+package edu.brown.cs.SAMPLE;
+
+import edu.brown.cs.sump.annot.Ascus;
+import edu.brown.cs.sump.annot.AscusPackage;
+import edu.brown.cs.sump.annot.AscusClass;
+import java.io.BufferedReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.sql.Connection;
+import java.sql.Statement;
+import java.util.ArrayList;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.table.AbstractTableModel;
+
+@AscusPackage
+public interface CBController {
+
+
+@AscusClass
+abstract class ContactBankApp {
+   public ContactBankApp() { }
+}
+
+/**
+ * @author Teddy
+ */
+@AscusClass
+abstract class AddView extends JFrame {
+   public JTextField fullName;
+   public AddView(CBController aThis) { }
+   public abstract void addListener(CBController aThis);
+}
+
+@AscusClass
+abstract class ServerStartup {
+   public abstract void startServer();
+}
+
+/**
+ * Contact Bank system model class which updates the view depending on the  user's input or selection in the UI/
+ * @author Teddy
+ */
+@AscusClass(uses={ContactBankView.class,CBController.class,Contact.class})
+abstract class CBModel {
+   private ArrayList<String> columns;
+   private String currentViewGroup;
+   private ArrayList<Contact> currentContacts;
+   private CBController controller;
+   public CBModel(CBController con,ArrayList<String> columnNames,ArrayList<Contact> allContacts,String viewedGroup) { }
+/**
+ * Set the new list of contacts to have on display. When the list of contacts is changed, the new list name/label(titled viewGroup)  should be defined as well. One should not be done without the other.
+ */
+   public abstract void setCurrentContacts(ArrayList<Contact> currentContacts,String listLabel);
+   public abstract void addContact(Contact c);
+   public abstract void updateContact(Contact c);
+   public abstract void removeContact(Contact c);
+   public abstract void search(ArrayList<Contact> results);
+   public abstract void refresh();
+}
+
+@AscusClass(uses={DbControl.class})
+abstract class ServerThread extends Thread {
+   public ServerThread(Socket skt) { }
+   public abstract void run();
+   public abstract void searchTable(String key);
+   public abstract void addContact(String contactDetails);
+   public abstract void updateContact(String contactDetails);
+   public abstract void sendSpecificContacts(String key,String field);
+}
+
+@AscusClass(uses={ContactBankView.class})
+abstract class ContactBankView_MyTableModel extends AbstractTableModel {
+   private String[] columnNames;
+   private Object[][] data;
+   public ContactBankView_MyTableModel() { }
+   public ContactBankView_MyTableModel(ArrayList<Contact> c) { }
+   public abstract String getColumnName(int col);
+}
+
+/**
+ * UI  for the application
+ * @author Teddy
+ */
+@AscusClass(uses={CBModel.class,ContactBankView_MyTableModel.class})
+abstract class ContactBankView extends JFrame {
+   public JScrollPane contactListPane;
+   public JMenuItem aboutItem;
+   public JTextField searchField;
+   public JFrame cbFrame;
+   public JButton showGroupMembers;
+   public JButton showProjectMembers;
+   public JMenu helpMenu;
+   public JMenuItem createNewGroup;
+   private ContactBankView_MyTableModel mtm;
+   public JMenuItem createNewProject;
+   public JMenuBar menuBar;
+   public JMenu settingsMenu;
+   public JTable contactTable;
+   public CBModel cbm;
+   public JButton searchButton;
+   public JPanel orientationPanel;
+   public JMenu editMenu;
+   public JMenuItem removeGroup;
+   public JButton refreshButton;
+   public JMenuItem helpItem;
+   public JMenuItem settingsItem;
+   public JMenuItem advancedSettingsItem;
+   public JButton saveButton;
+   public JMenuItem removeProject;
+   public JButton addContact;
+   public JButton changeViewButton;
+   public JPanel actionPanel;
+   public JButton removeButton;
+   public JMenuItem viewReadmeItem;
+   public ContactBankView(CBModel cbm) { }
+   public abstract void setNewTableModel(ArrayList<Contact> c);
+   public abstract void addListener(CBController cbc);
+}
+
+/**
+ * Controller class that reacts to the actions performed on the UI No main logic performed here Methods present include server requests, to query the DB for particular data, or to change the data in the DB.
+ * @author Teddy
+ */
+@AscusClass(uses={ContactBankView.class,ContactBankApp.class,CBModel.class,Contact.class,AddView.class})
+abstract class CBController implements java.awt.event.ActionListener {
+   public BufferedReader socketInput;
+   public AddView av;
+   public ArrayList<String> columnNames;
+   public PrintWriter socketOutput;
+   public ArrayList<Contact> allContacts;
+   public ContactBankApp cba;
+   public CBModel cbm;
+   public Socket socket;
+   public ContactBankView cbv;
+   public CBController(ContactBankApp cba) { }
+   public abstract ArrayList<Contact> getUpdatedContactList();
+   public abstract void listen(Object o);
+   public abstract void actionPerformed(ActionEvent e);
+   public abstract void addContact(Contact c);
+   public abstract void addContactToGroup(Contact c,String groupName);
+   public abstract void updateContactDetails(Contact newContact);
+   public abstract void createNewGroup(String groupName,ArrayList<Contact> groupMembers);
+   public abstract void createNewProject(String projectName,ArrayList<Contact> projectParticipants);
+   public abstract void removeGroup(String groupName,ArrayList<Contact> groupMembers);
+   public abstract void removeProject(String projectName,ArrayList<Contact> projectParticipants);
+   public abstract void sendEmail(String to,String from,String body);
+   public abstract void removeContact(Contact c);
+   public abstract void removeContactFromGroup(Contact c,String groupName);
+   public abstract void viewGroup(String groupName);
+   public abstract void viewProject(String projectName);
+}
+
+/**
+ * @author anearcan
+ */
+@AscusClass
+abstract class DbControl {
+   public String dBpass;
+   public String dBUrl;
+   public String dBUser;
+   public String dBName;
+   public Statement stmt;
+   public Connection con;
+   public String driver;
+   public DbControl() { }
+   public DbControl(String dburl,String dbname,String dbuser,String dbpass) { }
+   public abstract void connect();
+   public abstract void connectToTable(String tableName);
+}
+
+/**
+ * @author anearcan
+ */
+@AscusClass
+abstract class Contact {
+   private long id;
+   public Contact() { }
+   public Contact(long id,String name,String position,String company,String address,String country,String email,long phone) { }
+   public abstract void setName(String name);
+   public abstract String getName();
+   public abstract void setEmail(String email);
+   public abstract String getEmail();
+   public abstract void setAddress(String address);
+   public abstract String getAddress();
+   public abstract void setPhoneNo(long phone);
+   public abstract Long getPhoneNo();
+   public abstract String stringToDB();
+   public abstract String toString();
+}
+
+}

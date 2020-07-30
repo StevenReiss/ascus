@@ -1,0 +1,58 @@
+@Ascus(source="GITREPO:https://github.com/AhmadVatani/ContactManager/blob/409e9575410a4167d297f91b0b538251e4963d98/app/src/main/java/ir/rayapp/contact_management/Util.java")
+@Ascus(library="com.google.android:android:4.1.1.4")
+@Ascus(search="PACKAGE,PACKAGE_USED,500,GITREPO")
+@Ascus(keywords={"contact","@management"})
+@Ascus(keyterms={"@management","address","mail","phone","contact","name"})
+@Ascus(suggestedTerms={"contacts","android","view","contact","contract","cur"})
+package edu.brown.cs.SAMPLE;
+
+import edu.brown.cs.sump.annot.Ascus;
+import edu.brown.cs.sump.annot.AscusPackage;
+import edu.brown.cs.sump.annot.AscusClass;
+import android.app.Activity;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.TextView;
+import java.util.ArrayList;
+
+@AscusPackage
+public interface Util {
+
+
+@AscusClass(uses={ObjectContact.class})
+abstract class AdapterContactsList {
+   public ArrayList<ObjectContact> contacts;
+   public boolean isSdcardContacts;
+   public AdapterContactsList(Activity activity,boolean isSdcardContacts,ArrayList<ObjectContact> contacts) { }
+   public abstract View getView(int position,View convertView,ViewGroup parent);
+}
+
+@AscusClass(uses={AdapterContactsList.class})
+class AdapterContactsList_ViewHolder {
+   public TextView txtNumber;
+   public TextView txtName;
+   public LinearLayout ll;
+}
+
+@AscusClass(uses={AdapterContactsList.class})
+abstract class ActivityMain {
+   public Button btnInsert;
+   public ListView lv;
+   public Button btnShowSim;
+   public TextView txtNothing;
+   public Button btnshowsdcard;
+   public abstract void onClick(View v);
+}
+
+@AscusClass
+class ObjectContact {
+   public String id;
+   public String name;
+   public String number;
+}
+
+}
+

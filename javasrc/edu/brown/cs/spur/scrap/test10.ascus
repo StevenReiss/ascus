@@ -1,0 +1,75 @@
+@Ascus(source="GITREPO:https://github.com/pschhikara88/Contact-Management/blob/8efa8f4dbdd8d7c6e16c889a56c75ac41ef87b84/src/main/java/uid/contact/manager/service/DataService.java")
+@Ascus(library="javax.validation:validation-api:2.0.1.Final")
+@Ascus(search="PACKAGE,PACKAGE_USED,500,GITREPO")
+@Ascus(keywords={"contact","@management"})
+@Ascus(keyterms={"@management","address","mail","phone","contact","name"})
+@Ascus(suggestedTerms={"person","contact","gender","contacts","phone","seek"})
+package edu.brown.cs.SAMPLE;
+
+import edu.brown.cs.sump.annot.Ascus;
+import edu.brown.cs.sump.annot.AscusPackage;
+import edu.brown.cs.sump.annot.AscusClass;
+import java.util.List;
+import java.util.Map;
+
+@AscusPackage
+public interface DataService {
+
+
+@AscusClass(uses={Person.class})
+interface PersonService {
+   void deleteRecordFromDataBase();
+   void restore(Person person);
+   Person save(Person person);
+   void delete(Person person);
+}
+
+@AscusClass(uses={Person.class})
+interface SearchService {
+   List<Person> searchContactsByName(String searchKey);
+   List<Person> searchContactsByNameWithStartingChar(String searchKey);
+   List<Person> searchContactsByBothName(String firstNameKey,String lastNameKey);
+}
+
+@AscusClass
+abstract class ContactInfo {
+   private String country;
+   private String email;
+   private String zipCode;
+   private String phoneNo;
+   private String addressLine1;
+   private String state;
+   public abstract void setAddressLine2(String addressLine2);
+   public abstract void setPhoneNo(String phoneNo);
+   public abstract void setEmail(String email);
+   public abstract void setAddressLine1(String addressLine1);
+}
+
+@AscusClass(uses={ContactInfo.class})
+abstract class Person {
+   private ContactInfo contactInfo;
+   private String middleName;
+   private String firstName;
+   private String lastActionPerformed;
+   private String lastName;
+   private long seek;
+   private String createdBy;
+   public Person() { }
+   public abstract void setContactInfo(ContactInfo contactInfo);
+   public abstract void setMiddleName(String middleName);
+   public abstract void setFirstName(String firstName);
+   public abstract void setLastName(String lastName);
+}
+
+@AscusClass(uses={Person.class})
+interface DataService {
+   Map<String,Person> getAllContactsForSeekMainData();
+   Map<String,Person> getAllContactsWithNameAsKey();
+   Map<String,Person> getAllRecentContacts();
+   Map<String,Person> getAllContactsByPhone();
+   Map<String,Person> getAllContactsWithPersonIdentifierAsKey();
+   Person getContactByPersonIdentifier(Long personIdentifier);
+}
+
+}
+

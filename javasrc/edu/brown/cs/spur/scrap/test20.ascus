@@ -1,0 +1,169 @@
+@Ascus(source="GITREPO:https://github.com/shawnlefebre/FIAR/blob/a462f0dee4d47418a10a6c9a20d585770b5b64c8/src/FIAR/Players.java")
+@Ascus(search="PACKAGE,PACKAGE_USED,500,GITREPO")
+@Ascus(keywords={"checkers","game","player"})
+@Ascus(keyterms={"red","game","swing","move","heuristics","checkers","king","ai","black","board","player","jump"})
+@Ascus(suggestedTerms={"player","players","moves","board","game","checker"})
+package edu.brown.cs.SAMPLE;
+
+import edu.brown.cs.sump.annot.Ascus;
+import edu.brown.cs.sump.annot.AscusPackage;
+import edu.brown.cs.sump.annot.AscusClass;
+import java.util.ArrayList;
+import java.util.Queue;
+
+@AscusPackage
+public interface Players {
+
+
+/**
+ * A FIAR player
+ */
+@AscusClass
+class Player {
+   public Object checker;
+   public String name;
+}
+
+/**
+ * The game board and state for FIAR.
+ */
+@AscusClass
+abstract class Board {
+   private ArrayList<ArrayList<Object>> board;
+/**
+ * Create a Board with dimensions x by y.
+ * @param x Width dimension - number of columns
+ * @param y Height dimension - number of rows
+ */
+   public Board(int x,int y) { }
+/**
+ * Create a Board with default dimensions.
+ */
+   public Board() { }
+/**
+ * Return a list of the columns that are not full.
+ * @return List of columns that are not full.
+ */
+   public abstract ArrayList<Integer> openColumns();
+/**
+ * If true, the board is full and no more moves may be made.
+ * @return true if board is full, false otherwise.
+ */
+   public abstract boolean boardFull();
+/**
+ * Add a checker to the board.
+ * @param checker The checker/symbol.
+ * @param col The column that the checker is to be added to.
+ */
+   public abstract void addChecker(Object checker,int col);
+/**
+ * Displays the Board including row and column indices and checkers that have been played.
+ * @return String representation of the Board.
+ */
+   public abstract String toString();
+}
+
+/**
+ * Class used to replay game moves.
+ */
+@AscusClass(uses={History.class})
+abstract class History_AutoPlayer extends Player {
+   public Queue<Integer> moves;
+/**
+ * Retrieve the next move from the list of stored moves.
+ * @param board The current Board state.
+ * @return The chosen column to place a checker.
+ * @throws FIARException.NoMoreMoves If there are no more stored moves for this player.
+ */
+   public abstract int nextMove(Board board);
+}
+
+/**
+ * The History class is used to store moves in a game, save them, load them, and to provide a mechanism (though the
+AutoPlayer Player class) to replay games.
+ */
+@AscusClass(uses={Players.class})
+abstract class History {
+   private ArrayList<String> moves;
+/**
+ * If there are valid moves saved, creates AutoPlayers from the current moves and returns them as a Players object to
+allow for replay of moves.
+ * @return Players containing the automated players from the current stored moves, where theplayers are in their correct
+order.
+ */
+   public abstract Players getReplayPlayers();
+/**
+ * Adds a players move to the list of stored moves.
+ * @param player Player object that is making the move.
+ * @param column The column chosen by the player.
+ */
+   public abstract void addMove(Player player,int column);
+/**
+ * Saves the list of players, checker symbols, and moves in the current game.  The save game file format a csv with the
+file name of the current date time stamp in the save games directory (e.g., savegames/2020-05-26--16-39-03.csv).
+ * @return The name of the saved game.
+ */
+   public abstract String saveGame();
+/**
+ * Saves the list of players, checker symbols, and moves in the current game with the provided filename in the save game
+directory (savegames).
+ * @return The name of the saved game.
+ */
+   public abstract String saveGame(String filename);
+/**
+ * Provide the UI to load saved games (if available).  Provides an indexed list of saved games and allows a user to select
+one to load.
+ */
+   public abstract void loadSavedGame();
+}
+
+@AscusClass(uses={Player.class})
+abstract class Players {
+   private ArrayList<Player> players;
+/**
+ * Reset players and get new players from user.
+ */
+   public abstract void initializePlayers();
+/**
+ * Returns the current player.
+ * @return Current player.
+ * @throws FIARException.MissingPlayer If no players are configured.
+ */
+   public abstract Player getCurrentPlayer();
+/**
+ * Advanced the current player to the next player.
+ * @throws FIARException.MissingPlayer If there are no players configured.
+ */
+   public abstract void advancePlayer();
+/**
+ * Advances the current player to the next player and returns that player.
+ * @return The next player.
+ */
+   public abstract Player getNextPlayer();
+/**
+ * Add a Player to the game.
+ * @param newPlayer Player to be added to the game
+ * @throws SizeLimitExceededException If the number of players is already at the maximum(FIARGame.MAX_PLAYERS), this
+exception is thrown.
+ */
+   public abstract void addPlayer(Player newPlayer);
+/**
+ * Print information about the players in the game.
+ */
+   public abstract void playerInfo();
+}
+
+/**
+ * The controlling class for a Four In A Row game.  This class instantiates a game Board, the players, and facilitates
+gameplay.
+ */
+@AscusClass(uses={Players.class,History.class})
+abstract class FIARGame {
+/**
+ * Starting menu and menu between games.
+ */
+   public abstract void mainMenu();
+}
+
+}
+

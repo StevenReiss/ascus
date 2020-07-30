@@ -136,13 +136,17 @@ List<ScrapCandidate> buildCandidates(SumpModel model)
    
    for (CandidateMatch cm : match) {
       cm.updateGlobalTestResult(global_tests);
-      System.err.println("MATCH: " + cm.getCoseResult().getSource() + ":\n" + 
+      System.err.println("WORK ON MATCH: " + cm.getCoseResult().getSource() + ":\n" + 
             cm.getCoseResult().getEditText());
       Map<String,String> namemap = cm.getNameMap();
+      for (Map.Entry<String,String> ent : namemap.entrySet()) {
+         System.err.println("MMAP: " + ent.getKey() + " => " + ent.getValue());
+       }
       CoseResult cr = cm.getCoseResult();
       CoseResult cr1 = etcher.fixCode(cr,cm.getModel(),namemap);
       cm.updateResult(cr1);
-    }
+      System.err.println("MAPPED MATCH: " + cm.getCoseResult().getSource() + ":\n" + 
+            cm.getCoseResult().getEditText());    }
    
    long start2 = System.currentTimeMillis();
    IvyLog.logS("SCRAP","Average Map Time: " + (start2-start1)/match.size());  
@@ -214,7 +218,7 @@ private List<CandidateMatch> findInitialMatches(SumpModel model)
       if (sv != 0) {
          CandidateMatch cm = new CandidateMatch(model,emdl,ent.getKey(),sv,rmap);
          match.add(cm);
-         System.err.println("ADD MATCH " + sv + ": b" + ent.getKey().getSource());
+         System.err.println("ADD MATCH " + sv + ": " + ent.getKey().getSource());
        }
     }
    

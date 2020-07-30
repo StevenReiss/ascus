@@ -321,6 +321,9 @@ private void fixSubtree(ASTNode orig,ASTNode copy,Map<Object,String> names,Set<J
       if (used.contains(js)) {
          removePrivate(md.modifiers());
        }
+      else {
+         removePrivate(md.modifiers());
+       }
     }
    else if (copy.getNodeType() == ASTNode.FIELD_DECLARATION) {
       FieldDeclaration fd = (FieldDeclaration) orig;

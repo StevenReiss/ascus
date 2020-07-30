@@ -26,16 +26,20 @@ package edu.brown.cs.spur.etch;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 
+import edu.brown.cs.cose.cosecommon.CoseResult;
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompSymbol;
 import edu.brown.cs.spur.sump.SumpConstants.SumpClass;
@@ -90,6 +94,34 @@ EtchTransformAddMissing(Map<String,String> namemap)
 
 
 
+void updateMappings(CoseResult cr,SumpModel src,SumpModel target)
+{
+   AddMissingMapper amm = new AddMissingMapper();
+   
+   findMissingItems(amm,target);
+   
+   if (amm.isEmpty()) return;
+   
+   List<SumpClass> toadd = amm.getAddedClasses();
+   
+   Set<String> known = new HashSet<>();
+   CompilationUnit cu = (CompilationUnit) cr.getStructure();
+   for (Object o : cu.types()) {
+      AbstractTypeDeclaration atd = (AbstractTypeDeclaration) o;
+      String nnm = atd.getName().getIdentifier();
+      known.add(nnm);
+    }
+   
+   for (SumpClass sc : toadd) {
+      if (known.contains(sc.getName())) {
+         // add mapping of atd with that name to new name
+       }
+    }
+   
+   
+}
+
+
 /********************************************************************************/
 /*                                                                              */
 /*      Determine what needs to be added                                        */
@@ -134,7 +166,11 @@ private class AddMissingMapper extends EtchMapper {
       add_methods = new HashMap<>();
     }
    
-   void addClass(SumpClass sc)                  { add_classes.add(sc); }
+   void addClass(SumpClass sc) {
+      add_classes.add(sc);
+    }
+   
+   List<SumpClass> getAddedClasses()                    { return add_classes; }
    
    void addMethod(String cls,SumpOperation op) {
       List<SumpOperation> newops = add_methods.get(cls);
