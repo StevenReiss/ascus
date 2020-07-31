@@ -1,0 +1,61 @@
+@Ascus(source="GITREPO:https://github.com/amlanchowdhury99/Checkers-Java-TwoPlayer/blob/cc6540b408f59dec9bb8f6689e3a9c568086b801/Draught-TwoPlayer/src/CommonPackage/MessageFromServer.java")
+@Ascus(search="PACKAGE,PACKAGE_USED,500,GITREPO")
+@Ascus(keywords={"checkers","game","player"})
+@Ascus(keyterms={"red","game","swing","move","heuristics","checkers","king","ai","black","board","player","jump"})
+@Ascus(suggestedTerms={"move","queen","row","chosen","beating","resign"})
+package edu.brown.cs.SAMPLE;
+
+import edu.brown.cs.sump.annot.Ascus;
+import edu.brown.cs.sump.annot.AscusPackage;
+import edu.brown.cs.sump.annot.AscusClass;
+import java.io.Serializable;
+
+@AscusPackage
+public interface MessageFromServer {
+
+
+@AscusClass
+abstract class CheckersMove implements Serializable {
+   private int moveToCol;
+   private boolean movePerformedByQueen;
+   private int moveFromCol;
+   private int moveFromRow;
+   private boolean beatingPerformedByQueen;
+   private int moveToRow;
+   public CheckersMove(int moveFromRow,int moveFromCol,int moveToRow,int moveToCol) { }
+   public abstract void setMovePerformedByQueen(boolean movePerformedByQueen);
+   public abstract boolean isMoveBeating();
+   public abstract void setMoveFromRow(int moveFromRow);
+   public abstract void setMoveFromCol(int moveFromCol);
+   public abstract void setMoveToRow(int moveToRow);
+   public abstract void setMoveToCol(int moveToCol);
+}
+
+@AscusClass
+abstract class MessageFromServer implements Serializable {
+   private int currentPlayer;
+   private int chosenCol;
+   private boolean gameRunning;
+   private int myColor;
+   private int chosenRow;
+   private int[][] board;
+   private int winner;
+   private CheckersMove[] possibleMoves;
+   public abstract void setBoard(int[][] board);
+   public abstract void setGameRunning(boolean gameRunning);
+   public abstract void setCurrentPlayer(int currentPlayer);
+   public abstract void setPossibleMoves(CheckersMove[] possibleMoves);
+}
+
+@AscusClass
+abstract class MessageFromClient implements Serializable {
+   private int col;
+   private int row;
+   private boolean resign;
+   public abstract void setResign(boolean resign);
+   public abstract void setChosenRow(int row);
+   public abstract void setChosenCol(int col);
+}
+
+}
+

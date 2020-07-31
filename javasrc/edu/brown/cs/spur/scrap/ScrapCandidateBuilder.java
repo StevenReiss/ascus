@@ -303,7 +303,7 @@ private boolean isViableTestCase(CoseResult cr,CandidateMatch cm)
       String nm = id.getName().getFullyQualifiedName();
       if (namemap.containsKey(nm)) continue;
       if (id.isOnDemand() && !id.isStatic()) continue;
-      if (id.isStatic()) {
+      if (id.isStatic() && !id.isOnDemand()) {
          int idx = nm.lastIndexOf(".");
          if (idx > 0) nm = nm.substring(0,idx);
          if (namemap.containsKey(nm)) continue;
@@ -312,7 +312,13 @@ private boolean isViableTestCase(CoseResult cr,CandidateMatch cm)
       if (nm.contains("org.hamcrest")) continue;
       if (CoseConstants.isStandardJavaLibrary(nm)) continue;
       int idx = nm.lastIndexOf(".");
-      String pnm = pkg + nm.substring(idx);
+      String pnm = null;
+      if (idx < 0) {
+         pnm = pkg + "." + nm;
+       }
+      else {
+         pnm = pkg + nm.substring(idx);
+       }
       if (namemap.containsKey(pnm)) {
          someok = true;
          continue;

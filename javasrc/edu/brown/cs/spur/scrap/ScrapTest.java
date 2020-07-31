@@ -1,34 +1,34 @@
 /********************************************************************************/
-/*										*/
-/*		ScrapTest.java							*/
-/*										*/
-/*	Test cases for search-based abstraction 				*/
-/*										*/
+/*                                                                              */
+/*              ScrapTest.java                                                  */
+/*                                                                              */
+/*      Test cases for search-based abstraction                                 */
+/*                                                                              */
 /********************************************************************************/
-/*	Copyright 2013 Brown University -- Steven P. Reiss		      */
+/*      Copyright 2013 Brown University -- Steven P. Reiss                    */
 /*********************************************************************************
- *  Copyright 2013, Brown University, Providence, RI.				 *
- *										 *
- *			  All Rights Reserved					 *
- *										 *
- *  Permission to use, copy, modify, and distribute this software and its	 *
- *  documentation for any purpose other than its incorporation into a		 *
- *  commercial product is hereby granted without fee, provided that the 	 *
- *  above copyright notice appear in all copies and that both that		 *
- *  copyright notice and this permission notice appear in supporting		 *
- *  documentation, and that the name of Brown University not be used in 	 *
- *  advertising or publicity pertaining to distribution of the software 	 *
- *  without specific, written prior permission. 				 *
- *										 *
- *  BROWN UNIVERSITY DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS		 *
- *  SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND		 *
- *  FITNESS FOR ANY PARTICULAR PURPOSE.  IN NO EVENT SHALL BROWN UNIVERSITY	 *
- *  BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY 	 *
- *  DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,		 *
- *  WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS		 *
- *  ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 	 *
- *  OF THIS SOFTWARE.								 *
- *										 *
+ *  Copyright 2013, Brown University, Providence, RI.                            *
+ *                                                                               *
+ *                        All Rights Reserved                                    *
+ *                                                                               *
+ *  Permission to use, copy, modify, and distribute this software and its        *
+ *  documentation for any purpose other than its incorporation into a            *
+ *  commercial product is hereby granted without fee, provided that the          *
+ *  above copyright notice appear in all copies and that both that               *
+ *  copyright notice and this permission notice appear in supporting             *
+ *  documentation, and that the name of Brown University not be used in          *
+ *  advertising or publicity pertaining to distribution of the software          *
+ *  without specific, written prior permission.                                  *
+ *                                                                               *
+ *  BROWN UNIVERSITY DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS                *
+ *  SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND            *
+ *  FITNESS FOR ANY PARTICULAR PURPOSE.  IN NO EVENT SHALL BROWN UNIVERSITY      *
+ *  BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY          *
+ *  DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,              *
+ *  WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS               *
+ *  ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE          *
+ *  OF THIS SOFTWARE.                                                            *
+ *                                                                               *
  ********************************************************************************/
 
 
@@ -54,17 +54,17 @@ public class ScrapTest implements ScrapConstants
 
 
 /********************************************************************************/
-/*										*/
-/*	Private Storage 							*/
-/*										*/
+/*                                                                              */
+/*      Private Storage                                                         */
+/*                                                                              */
 /********************************************************************************/
 
 
 
 /********************************************************************************/
-/*										*/
-/*	Constructors								*/
-/*										*/
+/*                                                                              */
+/*      Constructors                                                            */
+/*                                                                              */
 /********************************************************************************/
 
 public ScrapTest()
@@ -73,9 +73,9 @@ public ScrapTest()
 
 
 /********************************************************************************/
-/*										*/
-/*	Basic Method Tests							 */
-/*										*/
+/*                                                                              */
+/*      Basic Method Tests                                                       */
+/*                                                                              */
 /********************************************************************************/
 
 @Test
@@ -92,9 +92,9 @@ public void methodTest01()
 
 
 /********************************************************************************/
-/*										*/
-/*	Basic class tests							*/
-/*										*/
+/*                                                                              */
+/*      Basic class tests                                                       */
+/*                                                                              */
 /********************************************************************************/
 
 @Test
@@ -104,42 +104,42 @@ public void classTest01()
    sd4.processAbstractor();
 
    ScrapDriver sd3 = new ScrapDriver("-c","-nr","500","union","find","disjoint",
-	 "-t","lookup");
+         "-t","lookup");
    sd3.processAbstractor();
 
    ScrapDriver sd1 = new ScrapDriver("-c","-nr","500","web","server","embedded",
-	"-t","url","uri","application","property","port","http","https","ftp","routing",
-	    "callback");
+        "-t","url","uri","application","property","port","http","https","ftp","routing",
+            "callback");
    sd1.processAbstractor();
 
    ScrapDriver sd2 = new ScrapDriver("-c","-nr","500","robots.txt","robots",
-	"-t","url","uri","robots");
+        "-t","url","uri","robots");
    sd2.processAbstractor();
 
    ScrapDriver sd5 = new ScrapDriver("-c","-nr","500","pie","chart","swing",
-	 "-t","graphics","jpanel","jcomponent");
+         "-t","graphics","jpanel","jcomponent");
    sd5.processAbstractor();
 }
 
 
 
 /********************************************************************************/
-/*										*/
-/*	Basic Package Tests							*/
-/*										*/
+/*                                                                              */
+/*      Basic Package Tests                                                     */
+/*                                                                              */
 /********************************************************************************/
 
 @Test
 public void packageTest01()
 {
    ScrapDriver sd1 = new ScrapDriver("-pu","-nr","500","-nt","8",
-	 "-REPO","@embedded","@web","server",
-	 "-t","url","uri","application","property","port","http","https","ftp","routing",
-	 "callback","request","response");
+         "-REPO","@embedded","@web","server",
+         "-t","url","uri","application","property","port","http","https","ftp","routing",
+         "callback","request","response");
    sd1.processAbstractor();
 
    ScrapDriver sd2 = new ScrapDriver("-puembe","-nr","500","-nt","8",
-	 "-REPO","contact","@management",                                       "-t","address","name","phone","mail");
+         "-REPO","contact","@management",                                       "-t","address","name","phone","mail");
    sd2.processAbstractor();
 }
 
@@ -148,7 +148,7 @@ public void packageTest01()
 public void packageTest02()
 {
    ScrapDriver sd3 = new ScrapDriver("-pu","-nr","500","-REPO","checkers","game","player",
-	 "-t","swing","ai","heuristics","board","red","black","king","jump","move");
+         "-t","swing","ai","heuristics","board","red","black","king","jump","move");
 
    sd3.processAbstractor();
 }
@@ -158,11 +158,11 @@ public void packageTest02()
 public void packageTest03()
 {
    ScrapDriver sd1 = new ScrapDriver("-pu","-nr","500","-nt","1",
-	 "-source",
+         "-source",
          "GITREPO:https://github.com/kasra-sh/PicoHTTPd/blob/d1f5426a1cde4857fde7247ed77a680567b1e135/src/main/java/ir/kasra_sh/picohttpd/Test.java",
-	 "-REPO","@embedded","@web","server",
-	 "-t","url","uri","application","property","port","http","https","ftp","routing",
-	 "callback","request","response");
+         "-REPO","@embedded","@web","server",
+         "-t","url","uri","application","property","port","http","https","ftp","routing",
+         "callback","request","response");
 
    sd1.processAbstractor();
 }
@@ -173,9 +173,9 @@ public void packageTest03()
 public void packageTest04()
 {
    ScrapDriver sd1 = new ScrapDriver("-pu","-nr","500","-nt","8",
-	 "-GITHUB","@embedded","@web","server",
-	 "-t","url","uri","application","property","port","http","https","ftp","routing",
-	 "callback","request","response");
+         "-GITHUB","@embedded","@web","server",
+         "-t","url","uri","application","property","port","http","https","ftp","routing",
+         "callback","request","response");
 
    sd1.processAbstractor();
 }
@@ -183,9 +183,9 @@ public void packageTest04()
 
 
 /********************************************************************************/
-/*										*/
-/*	Loading tests								*/
-/*										*/
+/*                                                                              */
+/*      Loading tests                                                           */
+/*                                                                              */
 /********************************************************************************/
 
 @Test
@@ -207,9 +207,9 @@ public void loadTest01()
 
 
 /********************************************************************************/
-/*										*/
-/*	Candidate building tests						*/
-/*										*/
+/*                                                                              */
+/*      Candidate building tests                                                */
+/*                                                                              */
 /********************************************************************************/
 
 @Test
@@ -228,6 +228,7 @@ public void candidateTest01()
    candidateTest("test16.ascus");
    candidateTest("test17.ascus");
    candidateTest("test18.ascus");
+   candidateTest("test20.ascus");
 }
 
 
@@ -235,7 +236,7 @@ public void candidateTest01()
 @Test
 public void candidateTest02()
 {
-   File f = new File("/research/people/spr/spur/scrap/src/test05.ascus");
+   File f = new File("/research/people/spr/spur/scrap/src/test22.ascus");
    System.err.println("==============================");
    System.err.println("START WORK ON " + f);
    System.err.println("==============================");
@@ -253,7 +254,7 @@ public void candidateTest02()
    cdr.addSpecificSource(sd.getSources());
 
    // cdr.addSpecificSource(
-	 // "GITREPO:https://github.com/kasra-sh/PicoHTTPd/blob/d1f5426a1cde4857fde7247ed77a680567b1e135/src/main/java/ir/kasra_sh/picohttpd/http/response/ResponseString.java");
+         // "GITREPO:https://github.com/kasra-sh/PicoHTTPd/blob/d1f5426a1cde4857fde7247ed77a680567b1e135/src/main/java/ir/kasra_sh/picohttpd/http/response/ResponseString.java");
 
    ScrapDriver driver = new ScrapDriver(sd);
    driver.processBuildCandidates(mdl);
@@ -300,7 +301,7 @@ private void candidateTest(String name)
 
 
 
-}	// end of class ScrapTest
+}       // end of class ScrapTest
 
 
 

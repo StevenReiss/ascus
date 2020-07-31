@@ -1,0 +1,61 @@
+@Ascus(source="GITREPO:https://github.com/shruthimayur/Checkers-Game-Java-/blob/16a26fa8cb630d30256cdf8ea6a6744866c33779/Checkers.java")
+@Ascus(search="PACKAGE,PACKAGE_USED,500,GITREPO")
+@Ascus(keywords={"checkers","game","player"})
+@Ascus(keyterms={"red","game","swing","move","heuristics","checkers","king","ai","black","board","player","jump"})
+@Ascus(suggestedTerms={"checkers","row","moves","checkerboard","move","player"})
+package edu.brown.cs.SAMPLE;
+
+import edu.brown.cs.sump.annot.Ascus;
+import edu.brown.cs.sump.annot.AscusPackage;
+import edu.brown.cs.sump.annot.AscusClass;
+
+@AscusPackage
+public interface Checkers {
+
+
+/**
+ * This class holds the data associated with the checkers board the various variables specified below represents the data on the board at any given time
+Also, it has the logic for the various legal moves possible for the current player
+ */
+@AscusClass
+abstract class CheckersData {
+   public int[][] checkerBoard;
+/**
+ * This constructor creates the board and sets all the pieces initially
+ */
+   public CheckersData() { }
+/**
+ * This method sets up the game initially by placing the relevant pieces in its position the pieces are only placed at position where row % 2 == column % 2
+The first three rows would be filled with the black pieces and the last three rows with the red pieces
+ */
+   public abstract void setUpGame();
+/**
+ * This method returns the data on a particular square and this is specified by the row and the column
+ */
+   public abstract int pieceAt(int row,int col);
+/**
+ * Return an array containing all the legal CheckersMoves if there are no moves possible, null is returned
+ */
+   public abstract CheckersMove[] getValidMoves(int player);
+/**
+ * Return a list of the valid jumps that the specified player can make starting from the specified row and column.  If no such jumps are possible, null is
+returned.  The logic is similar to the logic of the getValidMoves() method.
+ */
+   public abstract CheckersMove[] getValidJumpsFrom(int player,int row,int col);
+}
+
+/**
+ * This class takes care of the moves, by keeping track of rows and columns involved from and to in the move Also, checks whether there is a jump involved
+ */
+@AscusClass
+abstract class CheckersMove {
+   public int r2;
+   public int c2;
+   public int r1;
+   public int c1;
+   public CheckersMove(int row1,int col1,int row2,int col2) { }
+   public abstract boolean isJump();
+}
+
+}
+

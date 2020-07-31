@@ -1,0 +1,255 @@
+@Ascus(source="GITREPO:https://github.com/markic/checkers-players/blob/cd402a56b2b383af34e200fa3acd7fcb4b502d25/src/etf/checkers/advanced/ComplexEvaluator.java")
+@Ascus(search="PACKAGE,PACKAGE_USED,500,GITREPO")
+@Ascus(keywords={"checkers","game","player"})
+@Ascus(keyterms={"red","game","swing","move","heuristics","checkers","king","ai","black","board","player","jump"})
+@Ascus(suggestedTerms={"score","checkers","turn","pawn","move","clock"})
+package edu.brown.cs.SAMPLE;
+
+import edu.brown.cs.sump.annot.Ascus;
+import edu.brown.cs.sump.annot.AscusPackage;
+import edu.brown.cs.sump.annot.AscusClass;
+
+@AscusPackage
+public interface ComplexEvaluator {
+
+
+@AscusClass
+abstract class ComplexEvaluator {
+   public abstract int evaluate(int[] bs,int side);
+}
+
+/**
+ * This class provides an easy interface for controlling when a  <code>CheckersPlayer</code> calculates its move. <code>TurnAgent</code>  controls the
+<i>computation thread</i> on which the player computes it  move, and provides methods to retrieve the move once it is selected. <p> Instances of
+<code>TurnAgent</code> are typically commissioned as a helper  by a <code>CheckersController</code>, which may additionally provide a callback	that
+<code>TurnAgent</code> invokes when its player finishes selecting a move.  <p> TurnAgent provides an abstraction of this move acquisition process.  In the
+event that this mechanism is changed, only the implementation of  this class needs to be modified. <p> <code>TurnAgent</code> is not intended to be reused
+across multiple turns, so that a separate instance of TurnAgent must be constructed for each turn.
+ * @see CheckersController CheckersController
+ * @see CheckersPlayer CheckersPlayer
+ */
+@AscusClass(uses={CheckersController.class})
+abstract class TurnAgent {
+/**
+ * Constructs a <code>TurnAgent</code> that will solicit the specified	<code>CheckersPlayer</code> for the best move on the given board state.
+ * @param cp	    the checkers player to solicit for the best move
+ * @param bs	    the board state to compute the move on
+ */
+   public TurnAgent(TurnAgent.CheckersPlayer cp,int[] bs) { }
+/**
+ * Starts the computation thread. The callback, if set, will be invoked when the computation is finished.
+ */
+   public abstract void startCalculate();
+/**
+ * Stops the computation thread.
+ */
+   public abstract void stopCalculate();
+/**
+ * Retrieves the move chosen by the checkers player, or <code>null</code>  if the player has not finished computation.
+ * @return move     the move chosen by the checkers player, or <code>null</code> if the player is still thinking
+ */
+   public abstract TurnAgent.Move getMove();
+/**
+ * Forcefully retrieves the move chosen by the checkers player. If the player has not finished computation, this method returns the best move computed so
+far.
+ * @return move     the move chosen by the checkers player, or the best moveso far if the player is still thinking
+ */
+   public abstract TurnAgent.Move getForcedMove();
+/**
+ * Sets the   {@link CheckersController CheckersController} to notify once the player finishes selecting a move. If <code>ctl</code> is <code>null</code>,
+this callback is disabled. The controller must be set <i>before</i>  <code>startCalculate</code> is invoked in order for the notification to take place.
+ * @param ctl	    the <code>CheckersController</code> to notify when the player selects its move.
+ * @see #startCalculate startCalculate
+ */
+   public abstract void setCallbackController(CheckersController ctl);
+}
+
+/**
+ * This interfaces defines how the alpha-beta grader will interact with each  student's alpha-beta player. This interface provides   {@link #getPruneCount
+getPruneCount} so that each student's alpha-beta player can be compared against a reference implementation.
+ */
+@AscusClass
+interface GradedCheckersPlayer {
+/**
+ * Returns the number of pruned subtrees for the most recent deepening	iteration. This method must not be called while this player is	calculating its move.
+ * @return	the number of pruned subtrees in the most recent deepening iteration
+ */
+   int getPruneCount();
+/**
+ * Returns the score of the last pruned node for the most recent deepening  iteration. This method must not be called while this player is  calculating its
+move.
+ * @return	the score of the last pruned node for the most recent deepening iteration
+ */
+   int getLastPrunedNodeScore();
+}
+
+/**
+ * An interface for static board evaluators. Users who extend this framework  are encouraged, but not required to use this interface.
+ */
+@AscusClass
+interface Evaluator {
+/**
+ * Evaluates the specified board state from RED's position.
+ * @param bs	the board state to evaluate
+ * @return	the value of this board state
+ */
+   int evaluate(int[] bs);
+}
+
+/**
+ * This interface defines the methods of a game clock. <p> A game clock to implement this interface updates its state only when one of	its methods is
+invoked. The game clock will not generate events.  Code which uses the game clock must poll its status periodically.
+ * @see <a href="http://en.wikipedia.org/wiki/Game_clock">Description and
+ * photographs of <i>game clock</i></a>
+ */
+@AscusClass
+interface GameClock {
+/**
+ * Presses the button of the active player. This will stop the clock  against the active player and start the clock against the opposing  player. The
+opposing player then becomes the active player.
+ */
+   void press();
+/**
+ * Pauses this game clock.
+ */
+   void pause();
+/**
+ * Resumes this game clock.
+ */
+   void resume();
+/**
+ * Gets the active side.
+ * @return	    the integer specifying the side that is active
+ */
+   int getSide();
+/**
+ * Gets the state of this game clock.
+ * @return	    the integer specifying the state of this clock
+ */
+   int getState();
+/**
+ * Returns how much time, in milliseconds, the specified side has used so far in the game.
+ * @param side	    the side to query
+ * @return	    how much time <code>side</code> has used so far,in milliseconds
+ */
+   long getGameTime(int side);
+}
+
+/**
+ * This interface defines the methods of a countdown clock. <p> A countdown clock to implement this interface updates its state only when  one of its methods
+is invoked. The countdown clock will not generate events.  Code which uses the game clock must poll its status periodically.
+ */
+@AscusClass
+interface CountdownClock {
+/**
+ * Resets this countdown clock. The remaining time will be cleared to zero.
+ */
+   void reset();
+/**
+ * Pauses this countdown clock.
+ */
+   void pause();
+/**
+ * Resumes this countdown clock.
+ */
+   void resume();
+/**
+ * Returns how much time, in milliseconds, remains in this countdown.
+ * @return	    how much time remains in this countdown, in milliseconds
+ */
+   long getTimeRemain();
+/**
+ * Gets the state of this countdown clock.
+ * @return	    the integer specifying the state of this clock
+ */
+   int getState();
+/**
+ * Gets the time, in milliseconds, that this clock counts down from.
+ * @return	    the time this clock counts down from, in milliseconds
+ */
+   long getDelay();
+/**
+ * Sets the time, in milliseconds, that this clock counts down from.
+ * @param delay     the time this clock counts down from, in milliseconds
+ */
+   void setDelay(long delay);
+}
+
+/**
+ * This controller progresses a checkers game by acting on an instance of   {@link CheckersModel CheckerModel}. The crux of this controller's functionality
+resides in   {@link #step step}, which traverses the state transition table of	<code>CheckersModel</code> one step at a time. <code>step</code> is
+repeatedly called within   {@link #loop loop} until the game can not progress without external stimuli. Examples of external stimuli include a mouse click,
+a timer event, or a move selection. Certain types of external stimuli have  predictable timing - <code>step</code> will indicate in its return code when
+these stimuli are expected to occur. <code>loop</code> will then use this  return value to resume looping at the indicated time.  <p> We briefly describe the
+functionality of <code>step</code>, as well as how this functionality depends on several configurable parameters. <ul> <li> By default, the transition from
+<code>READY</code> to  <code>WAITING</code> occurs after a delay of <code>turnDelayTime</code>	milliseconds. This <i>turn delay</i> serves to improve visual
+clarity for  CheckersUI, since otherwise the transition occurs too rapidly to be noticed. However, if the <code>moveOnClick</code> option is enabled for the
+active	side, this transition will wait for a mouse click before proceeding.  <li> By default, the transition between <code>WAITING</code> to
+<code>READY</code> occurs after the active player selects a move. However,  if the <i>turn limit</i> option <code>turnLimit</code> is non-negative, the
+transition from WAITING to <code>READY</code> will occur after	<code>turnLimit</code> milliseconds, regardless of whether the active player  has finished
+selecting its move.  <li> If the active player is an interactive player (as determined by  {@link CheckersPlayer#isHuman CheckersPlayer.isHuman}), the
+transition from  <code>WAITING</code> to <code>READY</code> will ignore the turn limit. <code>step</code> will never  force a partially selected move from an
+interactive player. </ul> <p> The design of <code>CheckersController</code> follows thread-safety  guidelines.
+ */
+@AscusClass(uses={CountdownClock.class,TurnAgent.class})
+abstract class CheckersController {
+/**
+ * Creates a <code>CheckersController</code> for the given model with  default settings. By default, turn limits are disabled, and  <code>moveOnClick</code>
+is false for both players.
+ * @param model 	the model to control
+ */
+   public CheckersController(CheckersController.CheckersModel model) { }
+/**
+ * Creates a <code>CheckersController</code> for the given model with  the specified turn time controls and <code>moveOnClick</code> settings.
+ * @param model 	the model to control
+ * @param turnLimit	time in milliseconds the sides have to make a move
+ * @param moveOnClick	whether to wait for an interactive click before each move
+ */
+   public CheckersController(CheckersController.CheckersModel model,long[] turnLimit,boolean[] moveOnClick) { }
+/**
+ * Calculates this controller's turn delay based on the turn limit.  Turn delay is a pause between each turn, which helps bring clarity to the CheckersUI.
+Turn delay is activated even when --step is not  specified. It can, however, be overridden by a manual click.  Here, we calculate turnDelayTime. We scale it
+linearly with the  allowed turn time for each player, but clamp to 250ms and 1000ms.
+ */
+   public abstract void calcTurnDelay();
+/**
+ * Starts a timer which invokes <code>loop(false)</code> at <code>delayTime</code> milliseconds in the future.
+ * @param delayTime    the number of milliseconds to wait before calling run.
+ * @see #loop loop
+ */
+   public abstract void loopLater(long delayTime);
+/**
+ * Advances the checkers game by repeatedly calling <code>step</code>  until the game cannot be progressed further from its present state.  If the return
+value of <code>step</code> indicates that the game may progress at a specific time in the future, this method schedules a  timer which calls
+<code>loop(false)</code> at that time. <p> This method is idempotent.
+ * @param isClick	whether this is called from an user click
+ * @see #step step
+ */
+   public abstract void loop(boolean isClick);
+/**
+ * Terminates the checkers game. This method crashes the game if it is ongoing.  Otherwise, this method does nothing. This is called when the UI exits,
+among other situations.
+ */
+   public abstract void terminateGame();
+/**
+ * Sets whether a click is required before each move by the specified side.
+ * @param side		an integer representing the side
+ * @param b		whether a move is required
+ */
+   public abstract void setMoveOnClick(int side,boolean b);
+/**
+ * Gets whether a click is required before each move by the specified side.
+ * @param side		an integer representing the side
+ * @return		whether a move is required
+ */
+   public abstract boolean getMoveOnClick(int side);
+/**
+ * Sets how long the specified side has to select a move each turn, or	<code>-1</code> for no limit.
+ * @param side		an integer representing the side
+ * @param limit 	if non-negative, time, in milliseconds <code>side</code> may use in selecting a move each  turn; if <code>-1</code>, no limit
+ */
+   public abstract void setTurnLimit(int side,long limit);
+}
+
+}
+

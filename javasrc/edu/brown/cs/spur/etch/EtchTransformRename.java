@@ -41,8 +41,10 @@ import java.util.Map;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
+import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
@@ -236,6 +238,10 @@ private class NameMapper extends EtchMapper {
             rw.set(pd,PackageDeclaration.NAME_PROPERTY,n,null);
           }
        }
+      else if (orig instanceof ImportDeclaration) {
+         ImportDeclaration id = (ImportDeclaration) orig;
+         handleImportName(id.getName(),rw);
+       }
     }
    
    private boolean handleName(ASTNode orig,ASTRewrite rw) {
@@ -273,6 +279,21 @@ private class NameMapper extends EtchMapper {
       JcompType jt = JcompAst.getJavaType(orig);
       String newname = type_mapping.get(jt);
       return rewriteType(orig,rw,newname);
+    }
+   
+   private boolean handleImportName(Name n,ASTRewrite rw) {
+      String nm = n.getFullyQualifiedName();
+      if (nm.equals(from_prefix)) {
+         String rnm = target_model.getPackage().getFullName();
+         Name n1 = JcompAst.getQualifiedName(rw.getAST(),rnm);
+         rw.replace(n,n1,null);
+         return true;
+       }
+      else if (n instanceof QualifiedName) {
+         QualifiedName qn = (QualifiedName) n;
+         return handleImportName(qn.getQualifier(),rw);
+       }
+      return false;
     }
    
 }       // end of inner class NameMapper
