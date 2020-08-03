@@ -378,7 +378,6 @@ private void produceTestFiles()
    if (local_tests != null) {
       CompilationUnit cu = (CompilationUnit) local_tests.getStructure();
       File dir = (File) map_context.get("LOCALTESTDIR");
-
       for (Object o : cu.types()) {
 	 AbstractTypeDeclaration td = (AbstractTypeDeclaration) o;
 	 String cnm = td.getName().getIdentifier();
