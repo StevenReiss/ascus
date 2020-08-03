@@ -307,6 +307,17 @@ void processBuildCandidates(SumpModel mdl)
    
    long start3 = System.currentTimeMillis();
    IvyLog.logS("SCRAP","Build/Compile Time: " + (start3-start2));
+   
+   for (ScrapCandidate sc : cands) {
+      CoseResult cr = sc.getCoseResult();
+      CoseScores cs = cr.getScores(search_request,cr.getStructure());
+      if (cs == null) continue;
+      IvyLog.logS("SPUR","SIZE," + (cs.getInt("TYPES") - cs.getInt("INNER")) + "," + 
+            cs.getString("LINES") + "," +
+            cs.getString("TYPES") + "," + cs.getString("INNER") + "," + 
+            cs.getString("INTERFACES") + "," + cs.getString("METHODS") + "," +
+            cs.getString("FIELDS"));
+    }
 }
 
 

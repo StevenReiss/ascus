@@ -146,7 +146,8 @@ List<ScrapCandidate> buildCandidates(SumpModel model)
       CoseResult cr1 = etcher.fixCode(cr,cm.getModel(),namemap);
       cm.updateResult(cr1);
       System.err.println("MAPPED MATCH: " + cm.getCoseResult().getSource() + ":\n" + 
-            cm.getCoseResult().getEditText());    }
+            cm.getCoseResult().getEditText());   
+    }
    
    long start2 = System.currentTimeMillis();
    IvyLog.logS("SCRAP","Average Map Time: " + (start2-start1)/match.size());  
