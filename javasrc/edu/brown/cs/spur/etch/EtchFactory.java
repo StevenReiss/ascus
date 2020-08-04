@@ -117,7 +117,7 @@ public CoseResult fixCode(CoseResult orig,SumpModel srcmdl,Map<String,String> na
    work = addmissing.transform(work,null,srcmdl,target_model);
    
    if (sp.getRemoveUnused()) {
-      EtchTransformRemoveUnused unused = new EtchTransformRemoveUnused(namemap);
+      EtchTransformRemoveUnused unused = new EtchTransformRemoveUnused(namemap,false);
       work = unused.transform(work,null,srcmdl,target_model);    
     }
    
@@ -155,7 +155,7 @@ public CoseResult fixLocalTests(CoseResult test,CoseResult base,
    EtchTransformRemoveUndef undef = new EtchTransformRemoveUndef(namemap);
    work = undef.transform(work,base,srcmdl,target_model);  
    
-   EtchTransformRemoveUnused unused = new EtchTransformRemoveUnused(namemap);
+   EtchTransformRemoveUnused unused = new EtchTransformRemoveUnused(namemap,true);
    work = unused.transform(work,base,srcmdl,target_model);  
    
    EtchTransformConventions conventions = new EtchTransformConventions(namemap);
@@ -189,7 +189,7 @@ public CoseResult fixGlobalTests(CoseResult test,CoseResult base,SumpModel srcmd
    EtchTransformRemoveLocal locals = new EtchTransformRemoveLocal(namemap,base);
    work = locals.transform(work,base,srcmdl,target_model);  
    
-   EtchTransformRemoveUnused unused = new EtchTransformRemoveUnused(namemap);
+   EtchTransformRemoveUnused unused = new EtchTransformRemoveUnused(namemap,true);
    work = unused.transform(work,base,srcmdl,target_model);  
    
    EtchTransformConventions conventions = new EtchTransformConventions(namemap);
