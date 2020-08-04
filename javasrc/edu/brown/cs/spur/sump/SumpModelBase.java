@@ -57,6 +57,7 @@ import edu.brown.cs.ivy.jcomp.JcompType;
 import edu.brown.cs.ivy.jcomp.JcompTyper;
 import edu.brown.cs.ivy.xml.IvyXml;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
+import edu.brown.cs.spur.lids.LidsFinder;
 import edu.brown.cs.spur.lids.LidsInstaller;
 import edu.brown.cs.spur.lids.LidsConstants.LidsLibrary;
 import edu.brown.cs.spur.sump.SumpConstants.SumpModel;
@@ -229,8 +230,37 @@ public SumpModelBase(SumpData data,CompilationUnit cu)
    if (getModelData().getContextPath() != null) {
       jars.add(getModelData().getContextPath());
     }
+   List<LidsLibrary> libs = new ArrayList<>(getModelData().getLibraries());
+   boolean havejunit = false;
+   for (LidsLibrary ll : libs) {
+      if (ll.getGroup().contains("junit")) havejunit = true;
+    }
+   if (!havejunit) {
+      List<LidsLibrary> jlibs = null;
+      boolean fndimp = false;
+      LidsFinder finder = new LidsFinder(null);
+      for (Object o : cu.imports()) {
+         ImportDeclaration id = (ImportDeclaration) o;
+         if (id.isStatic()) continue;
+         String s = id.getName().getFullyQualifiedName();
+         if (!s.contains("junit")) continue;
+         if (id.isOnDemand()) {
+            finder.addImportPath(s);
+            fndimp = true;
+          }
+       }
+      if (fndimp) {
+         jlibs = finder.findLibraries();
+       }
+      if (jlibs == null || jlibs.isEmpty()) {
+         LidsLibrary ju = LidsFinder.createLibrary("junit:junit:4.13");
+         libs.add(ju);
+       }
+      else libs.addAll(jlibs);
+    }
+   
    LidsInstaller inst = LidsInstaller.getInstaller();
-   for (LidsLibrary ll : getModelData().getLibraries()) {
+   for (LidsLibrary ll : libs) {
       String cp = inst.getClassPath(ll);
       if (cp != null) jars.add(cp);
     }
@@ -239,7 +269,9 @@ public SumpModelBase(SumpData data,CompilationUnit cu)
    
    List<ASTNode> srcs = new ArrayList<>();
    srcs.add(cu);
-   if (base != null) srcs.add(base);
+   if (base != null) {
+      srcs.add(base);
+    }
    JcompProject proj = JcompAst.getResolvedAst(ctrl,srcs,jars);
    JcompAst.setProject(cu,proj);
    

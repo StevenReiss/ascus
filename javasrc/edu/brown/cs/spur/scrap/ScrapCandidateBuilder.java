@@ -277,28 +277,15 @@ private void addTestCases(CandidateMatch cm,EtchFactory etcher)
          namemap.put(pkg,top);
        }
       CoseResult test1 = etcher.fixLocalTests(testresult,cr,cm.getModel(),namemap);
-      if (getTestCount(test1) == 0) test1 = null;
       cm.updateLocalTestResult(test1);
-      if (test1 != null) System.err.println("TEST CODE:\n" + test1.getEditText());
+      System.err.println("TEST CODE:\n" + test1.getEditText());
       CoseResult test2 = etcher.fixGlobalTests(testresult,cr,cm.getModel(),namemap);
-      if (getTestCount(test2) == 0) test2 = null;
       addToGlobalTests(testreq,cm,test2);
-      IvyLog.logS("SCRAP","Original Tests: " + testresult.getInnerResults().size());
-      IvyLog.logI("SCRAP","Local Tests: " + getTestCount(test1));
-      IvyLog.logI("SCRAP","Globa; Tests: " + getTestCount(test2));
+      IvyLog.logS("SCRAP","Merged Tests: " + testresult.getInnerResults().size());
     }
    else {
       IvyLog.logS("SCRAP","Merged Tests: " + 0);
     }
-}
-
-
-private int getTestCount(CoseResult test)
-{
-   if (test == null) return 0;
-   CompilationUnit cu = (CompilationUnit) test.getStructure();
-   if (cu == null) return 0;
-   return cu.types().size();
 }
 
 
