@@ -57,6 +57,8 @@ class EtchTransformRemoveUnused extends EtchTransform
 /*                                                                              */
 /********************************************************************************/
 
+private boolean for_testing;
+
 
 
 /********************************************************************************/
@@ -65,9 +67,10 @@ class EtchTransformRemoveUnused extends EtchTransform
 /*                                                                              */
 /********************************************************************************/
 
-EtchTransformRemoveUnused(Map<String,String> namemap)
+EtchTransformRemoveUnused(Map<String,String> namemap,boolean testing)
 {
    super("RemoveUnsed");
+   for_testing = testing;
 }
 
 
@@ -106,7 +109,7 @@ private RemoveMapper findMappings(ASTNode n,SumpModel src,SumpModel tgt)
    
    if (rm.isEmpty()) return null;
    
-   return null;
+   return rm;
 }
 
 
@@ -153,6 +156,7 @@ private class InitialVisitor extends ASTVisitor {
       JcompSymbol js = JcompAst.getDefinition(md);
       if (js == null) return;
       if (initial_items.contains(js)) return;
+      if (!for_testing) return;
       boolean istest = false;
       for (Object o : md.modifiers()) {
          if (o instanceof Annotation) {

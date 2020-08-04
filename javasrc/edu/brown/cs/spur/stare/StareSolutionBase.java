@@ -200,6 +200,8 @@ private void setup(CompilationUnit cu)
 	 String s = tok.nextToken();
 	 srcdir = new File(srcdir,s);
 	 testdir = new File(testdir,s);
+         localtestdir = new File(localtestdir,s);
+         globaltestdir = new File(globaltestdir,s);
        }
     }
    else {
@@ -223,15 +225,29 @@ private void setup(CompilationUnit cu)
 
    try {
       File link = new File(dir,"tosrc");
+      link.delete();
       Path p1 = link.toPath();
       Path p2 = srcdir.toPath();
       Files.createSymbolicLink(p1,p2);
       File tlink = new File(dir,"totest");
+      tlink.delete();
       Path p3 = tlink.toPath();
       Path p4 = testdir.toPath();
       Files.createSymbolicLink(p3,p4);
+      File tllink = new File(dir,"tolocaltest");
+      tllink.delete();
+      Path p5 = tllink.toPath();
+      Path p6 = localtestdir.toPath();
+      Files.createSymbolicLink(p5,p6);
+      File tglink = new File(dir,"toglobaltest");
+      tglink.delete();
+      Path p7 = tglink.toPath();
+      Path p8 = globaltestdir.toPath();
+      Files.createSymbolicLink(p7,p8);
     }
-   catch (IOException e) { }
+   catch (IOException e) { 
+      IvyLog.logE("STARE","Problem creating link",e);
+    }
 
    File pomfile = new File(dir,"pom.xml");
    map_context.put("POMFILE",pomfile);
@@ -395,10 +411,9 @@ private void produceTestFiles()
 	  }
        }
     }
-   if (global_tests != null && local_tests != null) {
-      CompilationUnit cu = (CompilationUnit) local_tests.getStructure();
+   if (global_tests != null) {
+      CompilationUnit cu = (CompilationUnit) global_tests.getStructure();
       File dir = (File) map_context.get("GLOBALTESTDIR");
-
       for (Object o : cu.types()) {
 	 AbstractTypeDeclaration td = (AbstractTypeDeclaration) o;
 	 String cnm = td.getName().getIdentifier();
