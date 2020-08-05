@@ -3,7 +3,7 @@
 @Ascus(library="org.immutables:value-standalone:1.1.3")
 @Ascus(library="com.fasterxml.jackson.jr:jackson-jr-all:2.11.1")
 @Ascus(library="com.fasterxml.transistore:transistore-commands:0.9.8")
-@Ascus(library="org.projectlombok:lombok.ast:1.18.12")
+@Ascus(library="org.projectlombok:lombok.ast:0.2")
 @Ascus(library="org.apache.click:click:2.3.0")
 @Ascus(library="com.fasterxml.jackson.datatype:jackson-datatype-hibernate:2.0.0-RC2")
 @Ascus(search="PACKAGE,PACKAGE_USED,500,GITREPO")

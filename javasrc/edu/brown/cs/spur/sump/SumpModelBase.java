@@ -231,32 +231,33 @@ public SumpModelBase(SumpData data,CompilationUnit cu)
       jars.add(getModelData().getContextPath());
     }
    List<LidsLibrary> libs = new ArrayList<>(getModelData().getLibraries());
-   boolean havejunit = false;
-   for (LidsLibrary ll : libs) {
-      if (ll.getGroup().contains("junit")) havejunit = true;
-    }
-   if (!havejunit) {
-      List<LidsLibrary> jlibs = null;
-      boolean fndimp = false;
-      LidsFinder finder = new LidsFinder(null);
-      for (Object o : cu.imports()) {
-         ImportDeclaration id = (ImportDeclaration) o;
-         if (id.isStatic()) continue;
-         String s = id.getName().getFullyQualifiedName();
-         if (!s.contains("junit")) continue;
-         if (id.isOnDemand()) {
+   
+   if (base != null) {
+      boolean havejunit = false;
+      for (LidsLibrary ll : libs) {
+         if (ll.getGroup().contains("junit")) havejunit = true;
+       }
+      if (!havejunit) {
+         List<LidsLibrary> jlibs = null;
+         boolean fndimp = false;
+         LidsFinder finder = new LidsFinder(null);
+         for (Object o : cu.imports()) {
+            ImportDeclaration id = (ImportDeclaration) o;
+            if (id.isStatic()) continue;
+            String s = id.getName().getFullyQualifiedName();
+            if (!s.contains("junit")) continue;
             finder.addImportPath(s);
             fndimp = true;
           }
+         if (fndimp) {
+            jlibs = finder.findLibraries();
+          }
+         if (jlibs == null || jlibs.isEmpty()) {
+            LidsLibrary ju = LidsFinder.createLibrary("junit:junit:4.13");
+            libs.add(ju);
+          }
+         else libs.addAll(jlibs);
        }
-      if (fndimp) {
-         jlibs = finder.findLibraries();
-       }
-      if (jlibs == null || jlibs.isEmpty()) {
-         LidsLibrary ju = LidsFinder.createLibrary("junit:junit:4.13");
-         libs.add(ju);
-       }
-      else libs.addAll(jlibs);
     }
    
    LidsInstaller inst = LidsInstaller.getInstaller();

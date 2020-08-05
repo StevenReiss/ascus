@@ -144,15 +144,40 @@ List<ScrapCandidate> buildCandidates(SumpModel model)
        }
       CoseResult cr = cm.getCoseResult();
       CoseResult cr1 = etcher.fixCode(cr,cm.getModel(),namemap);
+      Map<String,String> testmap = new HashMap<>(namemap);
       cm.updateResult(cr1);
       System.err.println("MAPPED MATCH: " + cm.getCoseResult().getSource() + ":\n" + 
             cm.getCoseResult().getEditText());   
+      CoseResult tr1 = updateTestResult(cm.getLocalTestResult(),cm,etcher);
+      cm.updateLocalTestResult(tr1);
+      CoseResult tr2 = updateTestResult(cm.getGlobalTestResult(),cm,etcher);
+      cm.updateGlobalTestResult(tr2);
     }
    
    long start2 = System.currentTimeMillis();
    IvyLog.logS("SCRAP","Average Map Time: " + (start2-start1)/match.size());  
    
    return new ArrayList<>(match);
+}
+
+
+
+private CoseResult updateTestResult(CoseResult testresult,CandidateMatch cm,EtchFactory etcher)
+{
+   if (testresult == null) return null;
+   
+   CoseResult base = cm.getCoseResult();
+   Map<String,String> testmap = cm.getNameMap();
+   String pkg = testresult.getBasePackage();
+   String origpkg = base.getBasePackage();
+   if (!origpkg.equals(pkg)) {
+      testmap = new HashMap<>(testmap);
+      String top = testmap.get(origpkg);
+      if (top != null) testmap.put(pkg,top);
+    }
+   
+   CoseResult tr1 = etcher.fixLocalTests(testresult,base,cm.getModel(),testmap);
+   return tr1;
 }
 
 
@@ -250,7 +275,7 @@ private void addTestCases(CandidateMatch cm,EtchFactory etcher)
 
    Set<String> done = new HashSet<>();
    Set<CoseResult> doneresults = new HashSet<>();
-   Map<String,String> namemap = cm.getNameMap();
+   Map<String,String> namemap = new HashMap<>();
    CoseResult testresult = null;
    for (CoseResult test : rawtests) {
       CoseResult ftest = test.getParent();
@@ -274,7 +299,7 @@ private void addTestCases(CandidateMatch cm,EtchFactory etcher)
       String origpkg = cr.getBasePackage();
       if (!origpkg.equals(pkg)) {
          String top = namemap.get(origpkg);
-         namemap.put(pkg,top);
+         if (top != null) namemap.put(pkg,top);
        }
       CoseResult test1 = etcher.fixLocalTests(testresult,cr,cm.getModel(),namemap);
       if (getTestCount(test1) == 0) test1 = null;

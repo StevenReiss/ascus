@@ -30,6 +30,9 @@ import java.util.Map;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.ImportDeclaration;
+import org.eclipse.jdt.core.dom.Name;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
 import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.SimpleName;
@@ -213,11 +216,13 @@ private class FindChangeVisitor extends ASTVisitor {
 
 private class PostNameMapper extends EtchMapper {
 
-   private Map<ASTNode,String>  name_maps;
+   private SumpModel target_model;
+   private Map<ASTNode,String> name_maps;
    
    PostNameMapper(SumpModel frmmdl,SumpModel tomdl) {
       super(EtchTransformPostRename.this);
       name_maps = new HashMap<>();
+      target_model = tomdl;
     }
    
    void addMapping(ASTNode n,String nm) {
@@ -233,7 +238,39 @@ private class PostNameMapper extends EtchMapper {
       else {
          rewriteName(orig,rw,rslt);
        }
+      
+      if (orig instanceof PackageDeclaration) {
+         PackageDeclaration pd = (PackageDeclaration) orig;
+         String rnm = target_model.getPackage().getFullName();
+         if (rnm != null) {
+            Name n = JcompAst.getQualifiedName(rw.getAST(),rnm);
+            rw.set(pd,PackageDeclaration.NAME_PROPERTY,n,null);
+          }
+       }
+      else if (orig instanceof ImportDeclaration) {
+         ImportDeclaration id = (ImportDeclaration) orig;
+         handleImportName(id.getName(),rw);
+       }
     }
+   
+   private boolean handleImportName(Name n,ASTRewrite rw) {
+      CompilationUnit cu = (CompilationUnit) n.getRoot();
+      PackageDeclaration pd = cu.getPackage();
+      String frompfx = pd.getName().getFullyQualifiedName();
+      String nm = n.getFullyQualifiedName();
+      if (nm.equals(frompfx)) {
+         String rnm = target_model.getPackage().getFullName();
+         Name n1 = JcompAst.getQualifiedName(rw.getAST(),rnm);
+         rw.replace(n,n1,null);
+         return true;
+       }
+      else if (n instanceof QualifiedName) {
+         QualifiedName qn = (QualifiedName) n;
+         return handleImportName(qn.getQualifier(),rw);
+       }
+      return false;
+    }
+   
    
 }       // end of inner class PostNameMapper
 

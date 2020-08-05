@@ -80,32 +80,52 @@ public synchronized static LidsInstaller getInstaller()
 
 public String getClassPath(LidsLibrary lib)
 {
-   String path = "https://repo1.maven.org/maven";
-   
+   String path = "https://repo1.maven.org/maven2/";
+   String path1 = "https://search.maven.org/remotecontent?filepath=";
+
    File libpath = repo_directory;
-   String libnm = lib.getFullId();
+   String libnm = lib.getGroup();
    StringTokenizer tok = new StringTokenizer(libnm,".:");
+   int ct = 0;
+   String fpath = "";
    while (tok.hasMoreTokens()) {
       String elt = tok.nextToken();
       libpath = new File(libpath,elt);
-      path += "/" + elt;
+      if (ct++ > 0) fpath += "/"; 
+      fpath += elt;
     }
+   fpath += "/" + lib.getName();
+   libpath = new File(libpath,lib.getName());
+   fpath += "/" + lib.getVersion();
+   libpath = new File(libpath,lib.getVersion());
+   
+   path += fpath;
+   path1 += fpath;
    
    String jarnm = lib.getName() + "-" + lib.getVersion() + ".jar";
    path += "/" + jarnm;
+   path1 += "/" + jarnm;
    File cpath = new File(libpath,jarnm);
    if (cpath.exists()) return cpath.getPath();
+   libpath.mkdirs();
    
    try {
       URL u = new URL(path);
       InputStream ins = u.openStream();
       IvyFile.copyFile(ins,cpath);
+      return cpath.getPath();
     }
-   catch (IOException e) {
-      return null;
-    }
+   catch (IOException e) { }
    
-   return cpath.getPath();
+   try {
+      URL u = new URL(path1);
+      InputStream ins = u.openStream();
+      IvyFile.copyFile(ins,cpath);
+      return cpath.getPath();
+    }
+   catch (IOException e) { } 
+   
+   return null;
 }
 
 

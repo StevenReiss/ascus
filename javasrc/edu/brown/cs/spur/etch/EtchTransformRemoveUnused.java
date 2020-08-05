@@ -161,8 +161,12 @@ private class InitialVisitor extends ASTVisitor {
       for (Object o : md.modifiers()) {
          if (o instanceof Annotation) {
             Annotation an = (Annotation) o;
-            String nm = an.getTypeName().getFullyQualifiedName();
-            if (nm.equals("Test") || nm.endsWith(".test")) istest = true;
+            JcompType jt = JcompAst.getJavaType(an.getTypeName());
+            if (jt != null && jt.getName().contains("junit")) istest = true;
+            else if (jt == null) {
+               String nm = an.getTypeName().getFullyQualifiedName();
+               if (nm.equals("Test") || nm.endsWith(".Test")) istest = true;
+             }
           }
        }
       // if (md.getName().getIdentifier().startsWith("test")) istest = true;

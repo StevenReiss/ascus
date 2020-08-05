@@ -290,10 +290,8 @@ private void candidateTest(String name)
       cdr.setNumberOfThreads(8);
       // cdr.setNumberOfThreads(1);
 
-      IvyLog.logS("SCRAP","Start work on " + f);
-
       ScrapDriver driver = new ScrapDriver(sd);
-
+      IvyLog.logS("SCRAP","Start work on " + f);
       driver.processBuildCandidates(mdl);
     }
    catch (Throwable t) {

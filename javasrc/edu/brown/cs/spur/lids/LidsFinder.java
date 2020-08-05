@@ -347,6 +347,7 @@ private Set<LidsLibrary> findMavenFiles()
             String grp = IvyXml.getTextElement(dep,"groupId");
             String aid = IvyXml.getTextElement(dep,"artifactId");
             String ver = IvyXml.getTextElement(dep,"version");
+            if (ver == null || ver.startsWith("$")) ver = "LATEST";
             String lnm = grp + ":" + aid + ":" + ver;
             LidsLibrary lib = createLibrary(lnm);
             libs.add(lib);
