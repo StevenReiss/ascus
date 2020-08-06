@@ -157,6 +157,8 @@ public List<LidsLibrary> findLibraries()
       for (Iterator<LidsLibrary> it = covered.keySet().iterator(); it.hasNext(); ) {
          LidsLibrary klib = it.next();
          for (LidsLibrary mlib : l1) {
+            mlib = maven_finder.fixLibrary(mlib);
+            if (mlib == null) continue;
             if (mlib.getId().equals(klib.getId())) {
                rslt.add(mlib);
                Set<String> cov = covered.get(klib);
@@ -169,6 +171,8 @@ public List<LidsLibrary> findLibraries()
        }
       
       for (LidsLibrary mlib : l1) {
+         mlib = maven_finder.fixLibrary(mlib);
+         if (mlib == null) continue;
          List<LidsLibrary> libs = new ArrayList<>(covered.keySet());
          for (LidsLibrary klib : libs) {
             if (mlib.getGroup().equals(klib.getGroup())) {
@@ -313,6 +317,8 @@ private Map<LidsLibrary,Set<String>> findMavenLibraries(Set<LidsLibrary> userlib
       List<LidsLibrary> libs = maven_finder.findLibrariesForImport(s,grps);
       if (libs != null) {
          for (LidsLibrary lib : libs) {
+            lib = maven_finder.fixLibrary(lib);
+            if (lib == null) continue;
             Set<String> rslt = covered.get(lib);
             if (rslt == null) {
                rslt = new HashSet<>();
@@ -476,6 +482,8 @@ protected URI convertGithubSearchResults(JSONObject jobj)
 private void addProjectLibraries(Collection<LidsLibrary> chk,List<LidsLibrary> rslt)
 {
    for (LidsLibrary ll : chk) {
+      ll = maven_finder.fixLibrary(ll);
+      if (ll == null) continue;
       Set<String> used = new HashSet<>();
       for (String s : check_imports) {
          if (maven_finder.libraryWorksFor(ll,s)) {

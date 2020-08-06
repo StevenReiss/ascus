@@ -117,7 +117,7 @@ public CoseResult fixCode(CoseResult orig,SumpModel srcmdl,Map<String,String> na
    work = addmissing.transform(work,null,srcmdl,target_model);
    
    if (sp.getRemoveUnused()) {
-      EtchTransformRemoveUnused unused = new EtchTransformRemoveUnused(namemap,false);
+      EtchTransformRemoveUnused unused = new EtchTransformRemoveUnused(namemap);
       work = unused.transform(work,null,srcmdl,target_model);    
     }
    
@@ -135,68 +135,47 @@ public CoseResult fixCode(CoseResult orig,SumpModel srcmdl,Map<String,String> na
 /*                                                                              */
 /********************************************************************************/
 
-public CoseResult fixLocalTests(CoseResult test,CoseResult base,
-      SumpModel srcmdl,Map<String,String> namemap)
+public CoseResult fixTests(CoseResult test,CoseResult base,
+      SumpModel srcmdl,Map<String,String> namemap,boolean global,boolean map)
 {
    CoseResult work = test;
    
-   EtchTransformFixPackage fixpackage = new EtchTransformFixPackage(work,namemap);
-   work = fixpackage.transform(work,base,srcmdl,target_model); 
-  
-   EtchTransformPostRename renamer = new EtchTransformPostRename(namemap);
-   work = renamer.transform(work,base,srcmdl,target_model); 
-   
-   EtchTransformCallFix callfix = new EtchTransformCallFix(namemap);
-   work = callfix.transform(work,base,srcmdl,target_model);
-   
-   EtchTransformFieldUseFix fieldusefix = new EtchTransformFieldUseFix(namemap);
-   work = fieldusefix.transform(work,base,srcmdl,target_model);
+   if (map) {
+      EtchTransformFixPackage fixpackage = new EtchTransformFixPackage(work,namemap);
+      work = fixpackage.transform(work,base,srcmdl,target_model); 
+      
+      EtchTransformPostRename renamer = new EtchTransformPostRename(namemap);
+      work = renamer.transform(work,base,srcmdl,target_model); 
+      
+      EtchTransformCallFix callfix = new EtchTransformCallFix(namemap);
+      work = callfix.transform(work,base,srcmdl,target_model);
+      
+      EtchTransformFieldUseFix fieldusefix = new EtchTransformFieldUseFix(namemap);
+      work = fieldusefix.transform(work,base,srcmdl,target_model);
+    }
    
    EtchTransformRemoveUndef undef = new EtchTransformRemoveUndef(namemap);
    work = undef.transform(work,base,srcmdl,target_model);  
    
-   EtchTransformRemoveUnused unused = new EtchTransformRemoveUnused(namemap,true);
+   if (global) {
+      EtchTransformRemoveLocal locals = new EtchTransformRemoveLocal(namemap,base);
+      work = locals.transform(work,base,srcmdl,target_model);  
+    }
+   
+   EtchTransformRemoveNonTests unused = new EtchTransformRemoveNonTests(namemap);
    work = unused.transform(work,base,srcmdl,target_model);  
    
-   EtchTransformConventions conventions = new EtchTransformConventions(namemap);
-   work = conventions.transform(work,base,srcmdl,target_model); 
+   if (map) {
+      EtchTransformConventions conventions = new EtchTransformConventions(namemap);
+      work = conventions.transform(work,base,srcmdl,target_model); 
+    }
    
    return work;
 }
 
 
 
-public CoseResult fixGlobalTests(CoseResult test,CoseResult base,SumpModel srcmdl,Map<String,String> namemap)
-{
-   CoseResult work = test;
-   
-   EtchTransformFixPackage fixpackage = new EtchTransformFixPackage(work,namemap);
-   
-   work = fixpackage.transform(work,base,srcmdl,target_model); 
-   
-   EtchTransformPostRename renamer = new EtchTransformPostRename(namemap);
-   work = renamer.transform(work,base,srcmdl,target_model); 
-   
-   EtchTransformCallFix callfix = new EtchTransformCallFix(namemap);
-   work = callfix.transform(work,base,srcmdl,target_model);
-   
-   EtchTransformFieldUseFix fieldusefix = new EtchTransformFieldUseFix(namemap);
-   work = fieldusefix.transform(work,base,srcmdl,target_model);
-   
-   EtchTransformRemoveUndef undef = new EtchTransformRemoveUndef(namemap);
-   work = undef.transform(work,base,srcmdl,target_model);  
-   
-   EtchTransformRemoveLocal locals = new EtchTransformRemoveLocal(namemap,base);
-   work = locals.transform(work,base,srcmdl,target_model);  
-   
-   EtchTransformRemoveUnused unused = new EtchTransformRemoveUnused(namemap,true);
-   work = unused.transform(work,base,srcmdl,target_model);  
-   
-   EtchTransformConventions conventions = new EtchTransformConventions(namemap);
-   work = conventions.transform(work,base,srcmdl,target_model); 
-   
-   return work;
-}
+
 
 
 

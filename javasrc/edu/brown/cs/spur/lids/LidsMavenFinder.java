@@ -260,6 +260,40 @@ private List<LidsLibrary> getLibraryFromName(String name)
 }
 
 
+LidsLibrary fixLibrary(LidsLibrary ll) 
+{
+   if (ll.getVersion() != null && !ll.getVersion().equals("LATEST")) return ll;
+   String lid = ll.getId();
+   MavenLibrary known = known_libs.get(lid);
+   if (known != null) return known;
+   
+   String q = SEARCH_PFX + "g:%22" + ll.getGroup() + "%22";
+   q += "%20AND%20a:%22" + ll.getName() + "%22";
+   String s = getMavenResult(q);
+   if (s == null) return  null;
+   
+   JSONObject top = new JSONObject(s);
+   JSONObject resp = top.getJSONObject("response");
+   JSONArray arr = resp.optJSONArray("docs");
+   if (arr != null) { 
+      for (int i = 0; i < arr.length(); ++i) {
+         JSONObject doc = arr.getJSONObject(i);
+         String type = doc.getString("p");
+         if (type == null || !type.equals("jar")) continue;
+         String id = doc.getString("id");
+         MavenLibrary fnd = known_libs.get(id);
+         if (fnd == null) {
+            fnd = new MavenLibrary(doc);
+            known_libs.put(id,fnd);
+          }
+         return fnd;
+       }  
+    }
+      
+   return null;
+}
+
+
 /********************************************************************************/
 /*                                                                              */
 /*      Issue maven query                                                       */

@@ -144,13 +144,12 @@ List<ScrapCandidate> buildCandidates(SumpModel model)
        }
       CoseResult cr = cm.getCoseResult();
       CoseResult cr1 = etcher.fixCode(cr,cm.getModel(),namemap);
-      Map<String,String> testmap = new HashMap<>(namemap);
       cm.updateResult(cr1);
       System.err.println("MAPPED MATCH: " + cm.getCoseResult().getSource() + ":\n" + 
             cm.getCoseResult().getEditText());   
-      CoseResult tr1 = updateTestResult(cm.getLocalTestResult(),cm,etcher);
+      CoseResult tr1 = updateTestResult(cm.getLocalTestResult(),cr,cm,etcher);
       cm.updateLocalTestResult(tr1);
-      CoseResult tr2 = updateTestResult(cm.getGlobalTestResult(),cm,etcher);
+      CoseResult tr2 = updateTestResult(cm.getGlobalTestResult(),cr,cm,etcher);
       cm.updateGlobalTestResult(tr2);
     }
    
@@ -162,11 +161,10 @@ List<ScrapCandidate> buildCandidates(SumpModel model)
 
 
 
-private CoseResult updateTestResult(CoseResult testresult,CandidateMatch cm,EtchFactory etcher)
+private CoseResult updateTestResult(CoseResult testresult,CoseResult base,CandidateMatch cm,EtchFactory etcher)
 {
    if (testresult == null) return null;
    
-   CoseResult base = cm.getCoseResult();
    Map<String,String> testmap = cm.getNameMap();
    String pkg = testresult.getBasePackage();
    String origpkg = base.getBasePackage();
@@ -176,7 +174,7 @@ private CoseResult updateTestResult(CoseResult testresult,CandidateMatch cm,Etch
       if (top != null) testmap.put(pkg,top);
     }
    
-   CoseResult tr1 = etcher.fixLocalTests(testresult,base,cm.getModel(),testmap);
+   CoseResult tr1 = etcher.fixTests(testresult,base,cm.getModel(),testmap,false,true);
    return tr1;
 }
 
@@ -204,11 +202,17 @@ private List<CandidateMatch> findInitialMatches(SumpModel model)
          SumpData sdata = new SumpData(model.getModelData().getCoseRequest(),orig,search_params);
          sdata.setContextPath(patdata.getContextPath());
          for (LidsLibrary ll : patdata.getLibraries()) {
+            if (ll.getVersion() == null || ll.getVersion().equals("LATEST")) {
+               continue;
+             }
             sdata.addLibrary(ll);
             System.err.println("ADD LIBRARY PATTERN " + ll);
           }
          LidsFinder lids = ScrapDriver.findLibraries(cu,orig);
          for (LidsLibrary ll : lids.findLibraries()) {
+            if (ll.getVersion() == null || ll.getVersion().equals("LATEST")) {
+               continue;
+             }
             sdata.addLibrary(ll);
             System.err.println("ADD LIBRARY " + ll);
           }
@@ -275,7 +279,7 @@ private void addTestCases(CandidateMatch cm,EtchFactory etcher)
 
    Set<String> done = new HashSet<>();
    Set<CoseResult> doneresults = new HashSet<>();
-   Map<String,String> namemap = new HashMap<>();
+   Map<String,String> namemap = cm.getNameMap();
    CoseResult testresult = null;
    for (CoseResult test : rawtests) {
       CoseResult ftest = test.getParent();
@@ -298,14 +302,15 @@ private void addTestCases(CandidateMatch cm,EtchFactory etcher)
       String pkg = testresult.getBasePackage();
       String origpkg = cr.getBasePackage();
       if (!origpkg.equals(pkg)) {
+         namemap = new HashMap<>(namemap);
          String top = namemap.get(origpkg);
          if (top != null) namemap.put(pkg,top);
        }
-      CoseResult test1 = etcher.fixLocalTests(testresult,cr,cm.getModel(),namemap);
+      CoseResult test1 = etcher.fixTests(testresult,cr,cm.getModel(),namemap,false,false);
       if (getTestCount(test1) == 0) test1 = null;
       cm.updateLocalTestResult(test1);
       if (test1 != null) System.err.println("TEST CODE:\n" + test1.getEditText());
-      CoseResult test2 = etcher.fixGlobalTests(testresult,cr,cm.getModel(),namemap);
+      CoseResult test2 = etcher.fixTests(testresult,cr,cm.getModel(),namemap,true,false);
       if (getTestCount(test2) == 0) test2 = null;
       addToGlobalTests(testreq,cm,test2);
       IvyLog.logS("SCRAP","Original Tests: " + testresult.getInnerResults().size());

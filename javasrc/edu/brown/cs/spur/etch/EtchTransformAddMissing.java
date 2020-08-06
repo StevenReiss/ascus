@@ -114,8 +114,11 @@ void updateMappings(CoseResult cr,SumpModel src,SumpModel target)
    
    for (SumpClass sc : toadd) {
       if (known.contains(sc.getName())) {
-         System.err.println("CHECK HERE");
-         // add mapping of atd with that name to new name
+         String s1 = sc.getFullName();
+         String s3 = cr.getBasePackage();
+         String s2 = s3 + "." + sc.getName();
+         String s4 = name_map.get(s2);
+         if (s4 == null) name_map.put(s2,s1);
        }
     }
    

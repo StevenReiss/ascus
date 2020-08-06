@@ -51,6 +51,7 @@ class EtchTransformRemoveLocal extends EtchTransform
 /********************************************************************************/
 
 private CompilationUnit         base_ast;
+private Map<String,String>      name_map;
 
 
 /********************************************************************************/
@@ -64,6 +65,7 @@ EtchTransformRemoveLocal(Map<String,String> namemap,CoseResult base)
    super("RemoveLocal");
    
    base_ast = (CompilationUnit) base.getStructure();
+   name_map = namemap;
 }
 
 
@@ -172,8 +174,12 @@ private class LocalFinder extends ASTVisitor {
       ASTNode n = js.getDefinitionNode();
       if (n == null) return false;
       ASTNode root = n.getRoot();
-      if (root == base_ast) return true;
-      return false;
+      if (root != base_ast) return false;
+      String s = js.getFullName();
+      String mapn = name_map.get(s);
+      if (mapn != null) return false;
+      System.err.println("LOCAL: " + s);
+      return true;
     }
    
 }       // end of inner class LocalFinder

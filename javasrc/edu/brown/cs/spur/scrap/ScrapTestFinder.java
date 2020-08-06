@@ -24,10 +24,8 @@
 
 package edu.brown.cs.spur.scrap;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -49,7 +47,7 @@ class ScrapTestFinder implements ScrapConstants
 /*                                                                              */
 /********************************************************************************/
 
-private List<CoseResult> base_results;
+private CoseResult      base_result;
 private CoseRequest     base_request;
 private CoseRequest     test_request;
 
@@ -63,14 +61,8 @@ private CoseRequest     test_request;
 
 ScrapTestFinder(CoseRequest req,CoseResult base)
 {
-   this(req,Collections.singletonList(base));
-   
-}
-
-ScrapTestFinder(CoseRequest req,Collection<CoseResult> basis)
-{
    base_request = req;
-   base_results = new ArrayList<>(basis);
+   base_result = base;
    
    test_request = setupTestRequest();
 }
@@ -102,7 +94,21 @@ List<CoseResult> getTestResults()
       IvyLog.logE("PROBLEM GETTING TEST RESULTS: " + t,t);
     }
    
-   return tests.getResults();
+   List<CoseResult> rslt = tests.getResults();
+   for (Iterator<CoseResult> it = rslt.iterator(); it.hasNext(); ) {
+      CoseResult cr = it.next();
+      String txt = cr.getEditText();
+      boolean match = false;
+      for (String s : base_result.getPackages()) {
+         if (txt.contains("package " + s) || txt.contains("import " + s)) {
+            match = true;
+            break;
+          }
+       }
+      if (!match) it.remove();
+    }
+   
+   return rslt;
 }
 
 
@@ -116,16 +122,15 @@ private CoseRequest setupTestRequest()
     }
    req.setCoseSearchType(CoseSearchType.TESTCLASS);
    req.setCoseScopeType(CoseScopeType.FILE);
+   req.setProjectId(base_result.getSource().getProjectId());
    Set<String> done = new HashSet<>();
-   for (CoseResult coser : base_results) {
-      for (String s : coser.getPackages()) {
-         if (done.add(s)) {
-            req.addKeywordSet("package " + s,"junit","test");
-            req.addKeywordSet("import " + s,"junit","test"); 
-          }
+   for (String s : base_result.getPackages()) {
+      if (done.add(s)) {
+         req.addKeywordSet("package " + s,"junit","test");
+         req.addKeywordSet("import " + s,"junit","test"); 
        }
     }
-   
+  
    req.setDoDebug(true);
    int n = done.size()*50;
    n = Math.min(n,req.getNumberOfResults());

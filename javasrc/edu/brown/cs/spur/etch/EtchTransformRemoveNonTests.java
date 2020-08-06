@@ -1,8 +1,8 @@
 /********************************************************************************/
 /*                                                                              */
-/*              EtchTransformRemoveUnused.java                                  */
+/*              EtchTransformRemoveNonTests.java                                */
 /*                                                                              */
-/*      Remove code that is not needed by target model                          */
+/*      description of class                                                    */
 /*                                                                              */
 /********************************************************************************/
 /*      Copyright 2011 Brown University -- Steven P. Reiss                    */
@@ -31,9 +31,11 @@ import java.util.Stack;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.EnumDeclaration;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.Modifier;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
@@ -46,7 +48,7 @@ import edu.brown.cs.spur.sump.SumpConstants.SumpClass;
 import edu.brown.cs.spur.sump.SumpConstants.SumpModel;
 import edu.brown.cs.spur.sump.SumpConstants.SumpOperation;
 
-class EtchTransformRemoveUnused extends EtchTransform
+class EtchTransformRemoveNonTests extends EtchTransform
 {
 
 
@@ -57,15 +59,16 @@ class EtchTransformRemoveUnused extends EtchTransform
 /********************************************************************************/
 
 
+
 /********************************************************************************/
 /*                                                                              */
 /*      Constructors                                                            */
 /*                                                                              */
 /********************************************************************************/
 
-EtchTransformRemoveUnused(Map<String,String> namemap)
+EtchTransformRemoveNonTests(Map<String,String> namemap)
 {
-   super("RemoveUnused");
+   super("RemoveNonTests");
 }
 
 
@@ -147,6 +150,48 @@ private class InitialVisitor extends ASTVisitor {
       if (sa != null || sc != null || so != null) initial_items.add(js);
     }
    
+   @Override public void endVisit(MethodDeclaration md) {
+      JcompSymbol js = JcompAst.getDefinition(md);
+      if (js == null) return;
+      if (initial_items.contains(js)) return;
+      boolean istest = false;
+      for (Object o : md.modifiers()) {
+         if (o instanceof Annotation) {
+            Annotation an = (Annotation) o;
+            JcompType jt = JcompAst.getJavaType(an.getTypeName());
+            if (jt != null && jt.getName().contains("junit")) istest = true;
+            else if (jt == null) {
+               String nm = an.getTypeName().getFullyQualifiedName();
+               if (nm.equals("Test") || nm.endsWith(".Test")) istest = true;
+             }
+          }
+       }
+      if (istest) {
+         addMethod(js);
+       }
+    }   
+   
+   private void addMethod(JcompSymbol js) {
+      initial_items.add(js);
+      JcompType jt = js.getClassType();
+      addType(jt);
+    }
+   
+   private void addType(JcompType jt) {
+      if (jt == null || !jt.isCompiledType()) return;
+      JcompSymbol cls = jt.getDefinition();
+      if (cls != null) {
+         if (!initial_items.add(cls)) return;
+       }
+      addType(jt.getSuperType());
+      addType(jt.getOuterType());
+      if (jt.getInterfaces() != null) {
+         for (JcompType it : jt.getInterfaces()) {
+            addType(it);
+          }
+       }
+    }
+   
 }       // end of inner class InitialVisitor
 
 
@@ -222,6 +267,9 @@ private class DependChecker extends ASTVisitor {
    
    @Override public boolean visit(MethodDeclaration md) {
       JcompSymbol js = JcompAst.getDefinition(md);
+      if (md.isConstructor() && Modifier.isPublic(md.getModifiers())) {
+         used_items.add(js);
+       }
       if (used_items.contains(js)) {
          method_stack.push(use_method);
          use_method = true;
@@ -281,60 +329,60 @@ private void findUnusedItems(RemoveMapper rm,Set<JcompSymbol> used,ASTNode n)
 
 private class UnusedVisitor extends ASTVisitor {
 
-   private RemoveMapper remove_mapper;
-   private Set<JcompSymbol> used_items;
-   
-   UnusedVisitor(RemoveMapper rm,Set<JcompSymbol> used) {
-      remove_mapper = rm;
-      used_items = used;
+private RemoveMapper remove_mapper;
+private Set<JcompSymbol> used_items;
+
+UnusedVisitor(RemoveMapper rm,Set<JcompSymbol> used) {
+   remove_mapper = rm;
+   used_items = used;
+}
+
+@Override public boolean visit(TypeDeclaration td) {
+   JcompSymbol js = JcompAst.getDefinition(td);
+   if (js == null) return true;
+   if (!used_items.contains(js)) {
+      remove_mapper.addRemove(td);
+      return false;
     }
-   
-   @Override public boolean visit(TypeDeclaration td) {
-      JcompSymbol js = JcompAst.getDefinition(td);
-      if (js == null) return true;
-      if (!used_items.contains(js)) {
-         remove_mapper.addRemove(td);
-         return false;
-       }
-      return true;
+   return true;
+}
+
+@Override public boolean visit(EnumDeclaration td) {
+   JcompSymbol js = JcompAst.getDefinition(td);
+   if (js != null && !used_items.contains(js)) {
+      remove_mapper.addRemove(td);
+      return false;
     }
-   
-   @Override public boolean visit(EnumDeclaration td) {
-      JcompSymbol js = JcompAst.getDefinition(td);
-      if (js != null && !used_items.contains(js)) {
-         remove_mapper.addRemove(td);
-         return false;
-       }
-      return true;
+   return true;
+}
+
+@Override public boolean visit(MethodDeclaration md) {
+   JcompSymbol js = JcompAst.getDefinition(md);
+   if (js != null && !used_items.contains(js)) {
+      remove_mapper.addRemove(md);
+      return false;
     }
-   
-   @Override public boolean visit(MethodDeclaration md) {
-      JcompSymbol js = JcompAst.getDefinition(md);
-      if (js != null && !used_items.contains(js)) {
-         remove_mapper.addRemove(md);
-         return false;
-       }
-      return true;
+   return true;
+}
+
+@Override public boolean visit(FieldDeclaration fd) {
+   boolean keep = false;
+   for (Object o : fd.fragments()) {
+      VariableDeclarationFragment vdf = (VariableDeclarationFragment) o;
+      JcompSymbol js = JcompAst.getDefinition(vdf);
+      if (used_items.contains(js)) keep = true;
+      else remove_mapper.addRemove(vdf);
     }
-   
-   @Override public boolean visit(FieldDeclaration fd) {
-      boolean keep = false;
+   if (!keep) {
+      remove_mapper.addRemove(fd);
       for (Object o : fd.fragments()) {
          VariableDeclarationFragment vdf = (VariableDeclarationFragment) o;
-         JcompSymbol js = JcompAst.getDefinition(vdf);
-         if (used_items.contains(js)) keep = true;
-         else remove_mapper.addRemove(vdf);
+         remove_mapper.removeRemove(vdf);
        }
-      if (!keep) {
-         remove_mapper.addRemove(fd);
-         for (Object o : fd.fragments()) {
-            VariableDeclarationFragment vdf = (VariableDeclarationFragment) o;
-            remove_mapper.removeRemove(vdf);
-          }
-       }
-      return true;
     }
-   
+   return true;
+}
+
 }       // end of inner class UnusedVisitor
 
 
@@ -348,38 +396,37 @@ private class UnusedVisitor extends ASTVisitor {
 
 private class RemoveMapper extends EtchMapper {
 
-   private Set<ASTNode> to_remove;
-   
-   RemoveMapper() {
-      super(EtchTransformRemoveUnused.this);
-      to_remove = new HashSet<>();
+private Set<ASTNode> to_remove;
+
+RemoveMapper() {
+   super(EtchTransformRemoveNonTests.this);
+   to_remove = new HashSet<>();
+}
+
+void addRemove(ASTNode n) {
+   to_remove.add(n);
+}
+
+void removeRemove(ASTNode n) {
+   to_remove.remove(n);
+}
+
+boolean isEmpty()                            { return to_remove.isEmpty(); }
+
+@Override void rewriteTree(ASTNode orig,ASTRewrite rw) {
+   if (to_remove.contains(orig)) {
+      rw.remove(orig,null);
     }
-   
-   void addRemove(ASTNode n) {
-      to_remove.add(n);
-    }
-   
-   void removeRemove(ASTNode n) {
-      to_remove.remove(n);
-    }
-   
-   boolean isEmpty()                            { return to_remove.isEmpty(); }
-   
-   @Override void rewriteTree(ASTNode orig,ASTRewrite rw) {
-      if (to_remove.contains(orig)) {
-         rw.remove(orig,null);
-       }
-    }
-   
+}
+
 }       // end of inner class RemoveMapper
 
 
 
-
-}       // end of class EtchTransformRemoveUnused
-
+}       // end of class EtchTransformRemoveNonTests
 
 
 
-/* end of EtchTransformRemoveUnused.java */
+
+/* end of EtchTransformRemoveNonTests.java */
 

@@ -235,19 +235,21 @@ public void superMergeWith(ScrapAbstraction cr)
 public List<CoseResult> getTestResults()
 {
    if (test_results != null) return test_results;
-  
+   List<CoseResult> totrslts = new ArrayList<>();
+   
    CoseRequest req = scrap_abstractor.getRequest();
    Map<String,CoseResult> found = new HashMap<>();
-   ScrapTestFinder finder = new ScrapTestFinder(req,result_set.values());
-   List<CoseResult> rslts = finder.getTestResults();
-   for (CoseResult cr : rslts) {
-      String src = cr.getSource().getDisplayName();
-      found.put(src,cr);
+   for (CoseResult basecr : result_set.values()) {
+      ScrapTestFinder finder = new ScrapTestFinder(req,basecr);
+      List<CoseResult> rslts = finder.getTestResults();
+      for (CoseResult cr : rslts) {
+         String src = cr.getSource().getDisplayName();
+         found.put(src,cr);
+       }
+      totrslts.addAll(found.values());
     }
    
-   test_results = new ArrayList<>(found.values());
-   
-   return test_results;
+   return totrslts;
 }
 
 
