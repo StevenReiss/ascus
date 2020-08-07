@@ -39,6 +39,7 @@ import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 
+import edu.brown.cs.cose.cosecommon.CoseResult;
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompSymbol;
 import edu.brown.cs.ivy.jcomp.JcompType;
@@ -58,6 +59,7 @@ class EtchTransformPostRename extends EtchTransform
 /********************************************************************************/
 
 private Map<String,String>      name_map;
+private CoseResult              base_result;
 
 
 
@@ -67,10 +69,11 @@ private Map<String,String>      name_map;
 /*                                                                              */
 /********************************************************************************/
 
-EtchTransformPostRename(Map<String,String> namemap)
+EtchTransformPostRename(Map<String,String> namemap,CoseResult base)
 {
    super("PostRename");
    name_map = new HashMap<>(namemap);
+   base_result = base;
    for (Iterator<String> it = name_map.keySet().iterator(); it.hasNext(); ) {
       String k = it.next();
       String v = name_map.get(k);
@@ -231,12 +234,13 @@ private class PostNameMapper extends EtchMapper {
    
    @Override void rewriteTree(ASTNode orig,ASTRewrite rw) {
       String rslt = name_maps.get(orig);
-      if (rslt == null) return;
-      if (orig instanceof SimpleType) {
-         rewriteType(orig,rw,rslt);
-       }
-      else {
-         rewriteName(orig,rw,rslt);
+      if (rslt != null) {
+         if (orig instanceof SimpleType) {
+            rewriteType(orig,rw,rslt);
+          }
+         else {
+            rewriteName(orig,rw,rslt);
+          }
        }
       
       if (orig instanceof PackageDeclaration) {
@@ -249,7 +253,10 @@ private class PostNameMapper extends EtchMapper {
        }
       else if (orig instanceof ImportDeclaration) {
          ImportDeclaration id = (ImportDeclaration) orig;
-         handleImportName(id.getName(),rw);
+         if (checkBaseImport(id,rw)) return;
+         else {
+            handleImportName(id.getName(),rw);
+          }
        }
     }
    
@@ -257,8 +264,12 @@ private class PostNameMapper extends EtchMapper {
       CompilationUnit cu = (CompilationUnit) n.getRoot();
       PackageDeclaration pd = cu.getPackage();
       String frompfx = pd.getName().getFullyQualifiedName();
+      return fixImportName(n,frompfx,rw);
+    }
+   
+   private boolean fixImportName(Name n,String pfx,ASTRewrite rw) {
       String nm = n.getFullyQualifiedName();
-      if (nm.equals(frompfx)) {
+      if (nm.equals(pfx)) {
          String rnm = target_model.getPackage().getFullName();
          Name n1 = JcompAst.getQualifiedName(rw.getAST(),rnm);
          rw.replace(n,n1,null);
@@ -266,10 +277,43 @@ private class PostNameMapper extends EtchMapper {
        }
       else if (n instanceof QualifiedName) {
          QualifiedName qn = (QualifiedName) n;
-         return handleImportName(qn.getQualifier(),rw);
+         return fixImportName(qn.getQualifier(),pfx,rw);
        }
       return false;
     }
+   
+   private boolean checkBaseImport(ImportDeclaration id,ASTRewrite rw)
+   {
+      if (base_result == null) return false;
+      
+      String nm = id.getName().getFullyQualifiedName();
+      
+      String which = null;
+      for (String s : base_result.getPackages()) {
+         if (nm.startsWith(s)) {
+            if (which == null || which.length() < s.length()) which = s;
+          }
+       }
+      if (which == null) return false;
+      
+      if (!id.isStatic()) {
+         String tnm = nm;
+         if (!id.isOnDemand()) {
+            int idx = tnm.lastIndexOf(".");
+            tnm = nm.substring(0,idx);
+          }
+         if (which.equals(tnm)) {
+            rw.remove(id,null);
+            return true;
+          }
+         else {
+            return fixImportName(id.getName(),which,rw);
+          }
+       }
+      else {
+         return fixImportName(id.getName(),which,rw);
+       }
+   }
    
    
 }       // end of inner class PostNameMapper

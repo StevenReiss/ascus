@@ -47,8 +47,11 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
+import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
 
 import edu.brown.cs.cose.cosecommon.CoseConstants;
 import edu.brown.cs.cose.cosecommon.CoseRequest;
@@ -60,6 +63,7 @@ import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompControl;
 import edu.brown.cs.ivy.jcomp.JcompProject;
+import edu.brown.cs.ivy.jcomp.JcompType;
 import edu.brown.cs.spur.etch.EtchFactory;
 import edu.brown.cs.spur.lids.LidsFinder;
 import edu.brown.cs.spur.lids.LidsConstants.LidsLibrary;
@@ -125,11 +129,13 @@ List<ScrapCandidate> buildCandidates(SumpModel model)
    if (global_tests == null || global_tests.getInnerResults() == null ||
          global_tests.getInnerResults().size() == 0) {
       IvyLog.logS("SCRAP","Global Test Size: " + 0);
+      IvyLog.logS("SCRAP","Global Test Count: " + 0);
       IvyLog.logS("SCRAP","Average Test Time: " + 0);
     }
    else {
       int sz = global_tests.getInnerResults().size();
       IvyLog.logS("SCRAP","Global Test Size: " + sz);
+      IvyLog.logS("SCRAP","Global Test Count: " + getTestCount(global_tests));
       IvyLog.logS("SCRAP","Average Test Time: " + (start1-start0)/sz);
     }
    IvyLog.logS("SCRAP","Test Case Time: " + (start1-start0));
@@ -147,10 +153,12 @@ List<ScrapCandidate> buildCandidates(SumpModel model)
       cm.updateResult(cr1);
       System.err.println("MAPPED MATCH: " + cm.getCoseResult().getSource() + ":\n" + 
             cm.getCoseResult().getEditText());   
-      CoseResult tr1 = updateTestResult(cm.getLocalTestResult(),cr,cm,etcher);
+      CoseResult tr1 = updateTestResult(cm.getLocalTestResult(),cr1,cm,etcher);
       cm.updateLocalTestResult(tr1);
-      CoseResult tr2 = updateTestResult(cm.getGlobalTestResult(),cr,cm,etcher);
+      CoseResult tr2 = updateTestResult(cm.getGlobalTestResult(),cr1,cm,etcher);
       cm.updateGlobalTestResult(tr2);
+      IvyLog.logS("SCRAP","Output Test Count: " + getTestCount(tr1));
+      IvyLog.logS("SCRAP","Output Global Count: " + getTestCount(tr2));
     }
    
    long start2 = System.currentTimeMillis();
@@ -314,11 +322,11 @@ private void addTestCases(CandidateMatch cm,EtchFactory etcher)
       if (getTestCount(test2) == 0) test2 = null;
       addToGlobalTests(testreq,cm,test2);
       IvyLog.logS("SCRAP","Original Tests: " + testresult.getInnerResults().size());
-      IvyLog.logI("SCRAP","Local Tests: " + getTestCount(test1));
-      IvyLog.logI("SCRAP","Globa; Tests: " + getTestCount(test2));
+      IvyLog.logS("SCRAP","Start Local Tests: " + getTestCount(test1));
     }
    else {
-      IvyLog.logS("SCRAP","Merged Tests: " + 0);
+      IvyLog.logS("SCRAP","Original Tests: " + 0);
+      IvyLog.logS("SCRAP","Start Local Tests: " + 0);
     }
 }
 
@@ -328,7 +336,38 @@ private int getTestCount(CoseResult test)
    if (test == null) return 0;
    CompilationUnit cu = (CompilationUnit) test.getStructure();
    if (cu == null) return 0;
-   return cu.types().size();
+   int ct = 0;
+   for (Object o : cu.types()) {
+      AbstractTypeDeclaration atd = (AbstractTypeDeclaration) o;
+      for (Object o1 : atd.bodyDeclarations()) {
+         if (o1 instanceof MethodDeclaration) {
+            MethodDeclaration md = (MethodDeclaration) o1;
+            if (md.isConstructor()) continue;
+            for (Object o2 : md.modifiers()) {
+               if (o2 instanceof Annotation) {
+                  Annotation an = (Annotation) o2;
+                  JcompType jt = JcompAst.getJavaType(an.getTypeName());
+                  if (jt != null) {
+                     String jtn = jt.getName();
+                     if (jtn.contains("junit") && jtn.endsWith("Test")) {
+                        ++ct;
+                        break;
+                      }
+                   }
+                  else {
+                     String nm = an.getTypeName().getFullyQualifiedName();
+                     if (nm.equals("Test") ||
+                           (nm.contains("junit") && nm.endsWith("Test"))) {
+                        ++ct;
+                        break;
+                      }
+                   }
+                }
+             }
+          }
+       }
+    }
+   return ct;
 }
 
 

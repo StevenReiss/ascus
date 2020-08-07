@@ -148,7 +148,8 @@ public void packageTest01()
 public void packageTest02()
 {
    ScrapDriver sd3 = new ScrapDriver("-pu","-nr","500","-REPO","checkers","game","player",
-	 "-t","swing","ai","heuristics","board","red","black","king","jump","move");
+	 "-t","swing","ai","heuristics","board","red","black","king","jump","move",
+         "piece","square");
 
    sd3.processAbstractor();
 }

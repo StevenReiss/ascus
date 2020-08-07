@@ -144,7 +144,7 @@ public CoseResult fixTests(CoseResult test,CoseResult base,
       EtchTransformFixPackage fixpackage = new EtchTransformFixPackage(work,namemap);
       work = fixpackage.transform(work,base,srcmdl,target_model); 
       
-      EtchTransformPostRename renamer = new EtchTransformPostRename(namemap);
+      EtchTransformPostRename renamer = new EtchTransformPostRename(namemap,base);
       work = renamer.transform(work,base,srcmdl,target_model); 
       
       EtchTransformCallFix callfix = new EtchTransformCallFix(namemap);
