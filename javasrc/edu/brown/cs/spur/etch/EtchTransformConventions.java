@@ -43,6 +43,7 @@ import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompSymbol;
 import edu.brown.cs.ivy.jcomp.JcompType;
+import edu.brown.cs.ivy.jcomp.JcompTyper;
 import edu.brown.cs.spur.sump.SumpParameters;
 import edu.brown.cs.spur.sump.SumpConstants.SumpModel;
 import edu.brown.cs.spur.swift.SwiftIdfBuilder;
@@ -374,7 +375,8 @@ private class NameVisitor extends ASTVisitor {
       if (nam == null || nam.equals(js.getName())) return;
       name_mapper.addMapping(js,nam);
       if (js.isTypeSymbol()) {
-         JcompType jt = js.getDeclaredType();
+         JcompTyper typer = JcompAst.getTyper(n);
+         JcompType jt = js.getDeclaredType(typer);
          name_mapper.addMapping(jt,nam);
        }
       String s = js.getFullName();
