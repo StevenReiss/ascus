@@ -35,6 +35,7 @@
 
 package edu.brown.cs.spur.scrap;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -101,8 +102,10 @@ private SumpParameters		search_params;
 
 static {
    IvyLog.setupLogging("SCRAP",true);
-   IvyLog.useStdErr(false);
-   IvyLog.setLogFile("/ws/volfred/spr/scrap.log");
+   File f = new File(System.getProperty("user.home"));
+   File f1 = new File(f,"scrap.log");
+   IvyLog.useStdErr(true);
+   IvyLog.setLogFile(f1.getPath());
    IvyLog.setLogLevel(IvyLog.LogLevel.DEBUG);
 }
 
