@@ -570,8 +570,8 @@ private void computeTestCases(ScrapAbstractor sa,AbstractionType at)
    // compute test cases for the abstraction as originally given
 
    for (ScrapAbstraction abs : sa.getAbstractions(at)) {
-      System.err.println("TESTS FOR " + abs.getCoseResult().getSource());
       List<CoseResult> rslts = abs.getTestResults();
+      System.err.println("TESTS FOR " + abs.getCoseResult().getSource());
       for (CoseResult tr : rslts) {
 	 System.err.println("\t" + tr.getSource().getDisplayName());
        }

@@ -317,7 +317,7 @@ private void addTestCases(CandidateMatch cm,EtchFactory etcher)
       CoseResult test1 = etcher.fixTests(testresult,cr,cm.getModel(),namemap,false,false);
       if (getTestCount(test1) == 0) test1 = null;
       cm.updateLocalTestResult(test1);
-      if (test1 != null) System.err.println("TEST CODE:\n" + test1.getEditText());
+      if (test1 != null) IvyLog.logD("SCRAP","TEST CODE:\n" + test1.getEditText());
       CoseResult test2 = etcher.fixTests(testresult,cr,cm.getModel(),namemap,true,false);
       if (getTestCount(test2) == 0) test2 = null;
       addToGlobalTests(testreq,cm,test2);

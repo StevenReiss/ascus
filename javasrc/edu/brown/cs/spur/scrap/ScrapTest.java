@@ -273,6 +273,14 @@ public void candidateTest03()
 }
 
 
+@Test
+public void candidateTest04()
+{
+   String f = "test06.ascus"; 
+   candidateTest(f);
+}
+
+
 
 private void candidateTest(String name)
 {
