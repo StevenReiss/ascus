@@ -115,8 +115,12 @@ ScrapCandidateBuilder(CoseRequest req,List<CoseResult> ar,SumpParameters sp)
 List<ScrapCandidate> buildCandidates(SumpModel model)
 {
    List<CandidateMatch> match = findInitialMatches(model);
-   
-   if (match.size() == 0) return null;
+  
+   IvyLog.logS("SCRAP","Initial match size: " + match.size()); 
+         
+   if (match.size() == 0) {
+      return null;
+    }   
    
    EtchFactory etcher = new EtchFactory(model);
    
@@ -199,7 +203,7 @@ private List<CandidateMatch> findInitialMatches(SumpModel model)
    Map<CoseResult,SumpModel> mmap = new HashMap<>();
    for (CoseResult orig : all_results) {
       CompilationUnit cu = (CompilationUnit) orig.getStructure();
-      System.err.println("CHECK RESULT: " + orig.getSource() + ":\n" + cu);
+      IvyLog.logD("SCRAP","CHECK RESULT: " + orig.getSource() + ":\n" + cu);
       JcompProject proj = null;
       try { 
          if (!JcompAst.isResolved(cu)) {
@@ -214,7 +218,7 @@ private List<CandidateMatch> findInitialMatches(SumpModel model)
                continue;
              }
             sdata.addLibrary(ll);
-            System.err.println("ADD LIBRARY PATTERN " + ll);
+            IvyLog.logD("SCRAP","ADD LIBRARY PATTERN " + ll);
           }
          LidsFinder lids = ScrapDriver.findLibraries(cu,orig);
          for (LidsLibrary ll : lids.findLibraries()) {
@@ -222,13 +226,13 @@ private List<CandidateMatch> findInitialMatches(SumpModel model)
                continue;
              }
             sdata.addLibrary(ll);
-            System.err.println("ADD LIBRARY " + ll);
+            IvyLog.logD("SCRAP","ADD LIBRARY " + ll);
           }
          Collection<String> missing = lids.getMissingImports();
          if (missing != null && !missing.isEmpty()) {
             for (String s : missing) sdata.addMissingImport(s);
             for (String s : missing) {
-               System.err.println("MISSING IMPORT " + s + " FROM " + orig.getSource());
+               IvyLog.logE("SCRAP","MISSING IMPORT " + s + " FROM " + orig.getSource());
              }
             // continue;
           } 
@@ -256,7 +260,7 @@ private List<CandidateMatch> findInitialMatches(SumpModel model)
       if (sv != 0) {
          CandidateMatch cm = new CandidateMatch(model,emdl,ent.getKey(),sv,rmap);
          match.add(cm);
-         System.err.println("ADD MATCH " + sv + ": " + ent.getKey().getSource());
+         IvyLog.logD("SCRAP","ADD MATCH " + sv + ": " + ent.getKey().getSource());
        }
     }
    
