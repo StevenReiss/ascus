@@ -133,7 +133,7 @@ public void classTest01()
 public void packageTest01()
 {
    ScrapDriver sd1 = new ScrapDriver("-pu","-nr","500","-nt","8",
-	 "-REPO","@embedded","@web","server",
+	 "-REPO","@lightweight","@http","server",
 	 "-t","url","uri","application","property","port","http","https","ftp","routing",
 	 "callback","request","response");
    sd1.processAbstractor();
@@ -285,7 +285,24 @@ public void candidateTest04()
 @Test
 public void candidateTest05()
 {
-   String f = "test02.ascus"; 
+   String f = "test24.ascus"; 
+   candidateTest(f);
+}
+
+
+@Test
+public void candidateTest06()
+{
+   String f = "test25.ascus"; 
+   candidateTest(f);
+}
+
+
+
+@Test
+public void candidateTest07()
+{
+   String f = "test26.ascus"; 
    candidateTest(f);
 }
 

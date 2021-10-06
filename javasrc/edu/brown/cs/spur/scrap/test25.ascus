@@ -1,0 +1,169 @@
+@Ascus(source="GITREPO:https://github.com/sergiss/http-server/blob/b19c8010a016161a3270aa333bd3736abd02dd3d/test/com/delmesoft/httpserver/PathHandlerTest.java")
+@Ascus(search="PACKAGE,PACKAGE_USED,500,GITREPO")
+@Ascus(keywords={"@lightweight","@http","server"})
+@Ascus(keyterms={"server","request","ftp","@lightweight","uri","url","routing","application","port","response","property","http","callback","https","@http"})
+@Ascus(suggestedTerms={"socket","server","session","response","content","byte"})
+package edu.brown.cs.SAMPLE;
+
+import edu.brown.cs.sump.annot.Ascus;
+import edu.brown.cs.sump.annot.AscusPackage;
+import edu.brown.cs.sump.annot.AscusClass;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+
+@AscusPackage
+public interface PathHandlerTest {
+
+
+@AscusClass(uses={Cookie_SameSite.class})
+abstract class Cookie {
+   private boolean secure;
+   private String name;
+   private Date expires;
+   private boolean httpOnly;
+   private String path;
+   private String value;
+   private Cookie_SameSite sameSite;
+   private Long maxAge;
+   public Cookie(String name,String value) { }
+   public Cookie(String name,String value,String path,Long maxAge) { }
+   public Cookie(String name,String value,String path,Date expires) { }
+   public Cookie(String name,String value,String path,Long maxAge,Date expires,boolean secure,boolean httpOnly,Cookie_SameSite sameSite) { }
+   public abstract void setHttpOnly(boolean httpOnly);
+   public abstract String toString();
+}
+
+@AscusClass(uses={Session.class,LineReader.class})
+abstract class HttpRequest {
+   private String protocol;
+   private String method;
+   private Map<String,String> cookies;
+   private Map<String,String> parameters;
+   private Session session;
+   private InetSocketAddress remoteAddress;
+   private String path;
+   public HttpRequest() { }
+   public abstract HttpRequest addHeader(String key,String value);
+   public abstract String toString();
+}
+
+@AscusClass(uses={HttpResponse.class})
+enum HttpResponse_Status {
+SWITCHING_PROTOCOL, OK, CREATED, NO_CONTENT, FOUND,
+NOT_MODIFIED, BAD_REQUEST, UNAUTHORIZED, FORBIDDEN, NOT_FOUND,
+NOT_ALLOWED, CONFLICT, INTERNAL_SERVER_ERROR;
+   public HttpResponse_Status(int code,String message) { }
+   public abstract int getCode();
+   public abstract String getMessage();
+}
+
+@AscusClass
+interface ServerSocketProvider {
+   ServerSocket createServerSocket();
+}
+
+@AscusClass
+abstract class HttpClient implements Runnable {
+   private boolean connected;
+   public HttpClient(long id,Socket socket,HttpServerImpl httpServer) { }
+   public abstract void run();
+   public abstract void disconnect();
+}
+
+@AscusClass
+abstract class LineReader {
+   public abstract String readLine(InputStream is);
+}
+
+@AscusClass(uses={HttpListener.class})
+interface HttpServer {
+/**
+ * Connect Server
+ * @throws HttpException
+ */
+   void connect();
+/**
+ * Connect Server
+ * @param daemon set connection thread daemon
+ * @throws HttpException
+ */
+   void connect(boolean daemon);
+/**
+ * Check if server is connected
+ * @return true if connected
+ */
+   boolean isConnected();
+/**
+ * Disconnect Server
+ */
+   void disconnect();
+/**
+ * Return listening host
+ * @return host
+ */
+   String getHost();
+/**
+ * Return listening port
+ * @return port
+ */
+   int getPort();
+/**
+ * Set httpListener
+ * @param httpListener
+ */
+   void setHttpListener(HttpListener httpListener);
+/**
+ * Get HttpListener
+ * @return
+ */
+   HttpListener getHttpListener();
+}
+
+@AscusClass(uses={Session.class,Cookie.class})
+abstract class HttpResponse {
+   private int code;
+   private List<Cookie> cookies;
+   private InputStream content;
+   private int contentLength;
+   private String message;
+   private Session session;
+   public HttpResponse() { }
+   public HttpResponse(int code,String message) { }
+   public abstract HttpResponse addHeader(String key,String value);
+   public abstract HttpResponse addCookie(Cookie cookie);
+}
+
+@AscusClass(uses={HttpResponse.class})
+interface HttpListener {
+   void onHttpResponse(HttpResponse httpResponse);
+}
+
+@AscusClass
+abstract class Session {
+   public Object userData;
+   public Session(Socket socket) { }
+   public abstract long getId();
+   public abstract Socket getSocket();
+   public abstract InputStream getInputStream();
+   public abstract OutputStream getOutputStream();
+   public abstract Properties getProperties();
+   public abstract void close();
+   public abstract String toString();
+}
+
+@AscusClass(uses={Cookie.class})
+enum Cookie_SameSite {
+STRICT, LAX, NONE;
+   public Cookie_SameSite(String name) { }
+   public abstract String getName();
+}
+
+}
+

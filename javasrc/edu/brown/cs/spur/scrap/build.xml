@@ -20,7 +20,7 @@
       <pathelement location='${COSE}/java' />
       <pathelement location='${SPUR}/lib/jtar-1.1.jar'  />
       <fileset dir='${SPUR}/lib/' includes='velocity-1.7*.jar' />
-      <fileset dir='${PRO}/ivy/lib/' includes='asm6.jar' />
+      <fileset dir='${PRO}/ivy/lib/' includes='asm.jar' />
       <fileset dir='${PRO}/ivy/lib/eclipsejar' includes='*.jar' />
    </path>
    <path id='test.classpath'>
@@ -34,64 +34,104 @@
       <pathelement location='${COSE}/java' />
       <pathelement location='${SPUR}/lib/jtar-1.1.jar'  />
       <fileset dir='${SPUR}/lib/' includes='velocity-1.7*.jar' />
-      <fileset dir='${PRO}/ivy/lib/' includes='asm6.jar' />
+      <fileset dir='${PRO}/ivy/lib/' includes='asm.jar' />
       <fileset dir='${PRO}/ivy/lib/eclipsejar' includes='*.jar' />
    </path>
 
    <target name='compile'>
       <javac srcdir='.' destdir='${SPUR}/java' debug='on' deprecation='on'
-                includeantruntime='false'>
-         <classpath refid='spur.classpath' />
+		includeantruntime='false'>
+	 <classpath refid='spur.classpath' />
       </javac>
    </target>
 
    <target name='test'>
       <junit fork='yes' printsummary='true' haltonerror='false' >
-         <classpath refid='test.classpath' />
-         <assertions><enable/></assertions>
-         <formatter type='plain' usefile='true' />
-         <test name='edu.brown.cs.spur.scrap.ScrapTest' haltonfailure='no'
-              methods='candidateTest01' outfile='ctest' />
+	 <classpath refid='test.classpath' />
+	 <assertions><enable/></assertions>
+	 <formatter type='plain' usefile='true' />
+	 <test name='edu.brown.cs.spur.scrap.ScrapTest' haltonfailure='no'
+	      methods='candidateTest01' outfile='ctest' />
       </junit>
    </target>
 
    <target name='ctest2'>
       <junit fork='yes' printsummary='true' haltonerror='false' >
-         <classpath refid='test.classpath' />
-         <assertions><enable/></assertions>
-         <formatter type='plain' usefile='true' />
-         <test name='edu.brown.cs.spur.scrap.ScrapTest' haltonfailure='no'
-              methods='candidateTest02' outfile='ctest2' />
+	 <classpath refid='test.classpath' />
+	 <assertions><enable/></assertions>
+	 <formatter type='plain' usefile='true' />
+	 <test name='edu.brown.cs.spur.scrap.ScrapTest' haltonfailure='no'
+	      methods='candidateTest02' outfile='ctest2' />
       </junit>
    </target>
 
    <target name='ctest3'>
       <junit fork='yes' printsummary='true' haltonerror='false' >
-         <classpath refid='test.classpath' />
-         <assertions><enable/></assertions>
-         <formatter type='plain' usefile='true' />
-         <test name='edu.brown.cs.spur.scrap.ScrapTest' haltonfailure='no'
-              methods='candidateTest03' outfile='candidate3' />
+	 <classpath refid='test.classpath' />
+	 <assertions><enable/></assertions>
+	 <formatter type='plain' usefile='true' />
+	 <test name='edu.brown.cs.spur.scrap.ScrapTest' haltonfailure='no'
+	      methods='candidateTest03' outfile='candidate3' />
+      </junit>
+   </target>
+
+   <target name='ctest4'>
+      <junit fork='yes' printsummary='true' haltonerror='false' >
+	 <classpath refid='test.classpath' />
+	 <assertions><enable/></assertions>
+	 <formatter type='plain' usefile='true' />
+	 <test name='edu.brown.cs.spur.scrap.ScrapTest' haltonfailure='no'
+	      methods='candidateTest04' outfile='candidate4' />
+      </junit>
+   </target>
+
+   <target name='ctest5'>
+      <junit fork='yes' printsummary='true' haltonerror='false' >
+	 <classpath refid='test.classpath' />
+	 <assertions><enable/></assertions>
+	 <formatter type='plain' usefile='true' />
+	 <test name='edu.brown.cs.spur.scrap.ScrapTest' haltonfailure='no'
+	      methods='candidateTest05' outfile='candidate5' />
+      </junit>
+   </target>
+
+   <target name='ctest6'>
+      <junit fork='yes' printsummary='true' haltonerror='false' >
+	 <classpath refid='test.classpath' />
+	 <assertions><enable/></assertions>
+	 <formatter type='plain' usefile='true' />
+	 <test name='edu.brown.cs.spur.scrap.ScrapTest' haltonfailure='no'
+	      methods='candidateTest06' outfile='candidate6' />
+      </junit>
+   </target>
+
+   <target name='ctest7'>
+      <junit fork='yes' printsummary='true' haltonerror='false' >
+	 <classpath refid='test.classpath' />
+	 <assertions><enable/></assertions>
+	 <formatter type='plain' usefile='true' />
+	 <test name='edu.brown.cs.spur.scrap.ScrapTest' haltonfailure='no'
+	      methods='candidateTest07' outfile='candidate7' />
       </junit>
    </target>
 
    <target name='ptest'>
       <junit fork='yes' printsummary='true' haltonerror='false' >
-         <classpath refid='test.classpath' />
-         <assertions><enable/></assertions>
-         <formatter type='plain' usefile='true' />
-         <test name='edu.brown.cs.spur.scrap.ScrapTest' haltonfailure='no'
-              methods='packageTest01' outfile='ptest' />
+	 <classpath refid='test.classpath' />
+	 <assertions><enable/></assertions>
+	 <formatter type='plain' usefile='true' />
+	 <test name='edu.brown.cs.spur.scrap.ScrapTest' haltonfailure='no'
+	      methods='packageTest01' outfile='ptest' />
       </junit>
    </target>
 
    <target name='ptest2'>
       <junit fork='yes' printsummary='true' haltonerror='false' >
-         <classpath refid='test.classpath' />
-         <assertions><enable/></assertions>
-         <formatter type='plain' usefile='true' />
-         <test name='edu.brown.cs.spur.scrap.ScrapTest' haltonfailure='no'
-              methods='packageTest02' outfile='ptest2' />
+	 <classpath refid='test.classpath' />
+	 <assertions><enable/></assertions>
+	 <formatter type='plain' usefile='true' />
+	 <test name='edu.brown.cs.spur.scrap.ScrapTest' haltonfailure='no'
+	      methods='packageTest02' outfile='ptest2' />
       </junit>
    </target>
 
